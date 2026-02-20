@@ -24,8 +24,12 @@ export async function sendBriefingEmail({
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
 
+      // Use custom domain once DNS is verified, fall back to Resend default
+      const fromAddress =
+        process.env.RESEND_FROM_EMAIL || "Brain Brief <onboarding@resend.dev>";
+
       const { data, error } = await resend.emails.send({
-        from: "Brain Brief <brief@brainbrief.app>",
+        from: fromAddress,
         to,
         subject,
         html: wrapInEmailTemplate(html),

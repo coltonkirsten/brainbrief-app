@@ -17,7 +17,10 @@ export async function generateBriefing(
   topics: string[],
   displayName?: string | null
 ): Promise<BriefingResult> {
-  const name = displayName || "there";
+  const name = displayName?.trim() || null;
+  const greeting = name
+    ? `Good morning, ${name}!`
+    : `Good morning!`;
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -30,7 +33,7 @@ export async function generateBriefing(
   const prompt = `You are Brain Brief — a smart, well-read friend who stays on top of the news so your reader doesn't have to. Your job: give a concise, grounded briefing on the topics below using REAL, CURRENT information from the web.
 
 Date: ${today}
-Reader's name: ${name}
+${name ? `Reader's name: ${name}` : "Reader: (no name provided — just say \"Good morning!\")"}
 Topics to cover:
 ${topicList}
 
@@ -40,7 +43,7 @@ VOICE & TONE:
 - Every sentence earns its place — no filler, no padding, no throat-clearing
 
 STRUCTURE (follow exactly):
-1. Opening line: "Good morning, ${name}! Here's what's happening in the topics you care about."
+1. Opening line: "${greeting} Here's what's happening in the topics you care about."
 2. For EACH topic, write:
    - A bold, specific headline (not just the topic name — make it about the news)
    - 2-4 bullet points of KEY recent developments (include dates, names, numbers — be specific)

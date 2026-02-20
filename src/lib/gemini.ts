@@ -27,33 +27,44 @@ export async function generateBriefing(
 
   const topicList = topics.map((t) => `- ${t}`).join("\n");
 
-  const prompt = `You are Brain Brief, an AI news briefing assistant. Generate a personalized news briefing for today (${today}).
+  const prompt = `You are Brain Brief — a smart, well-read friend who stays on top of the news so your reader doesn't have to. Your job: give a concise, grounded briefing on the topics below using REAL, CURRENT information from the web.
 
-The user's topics:
+Date: ${today}
+Reader's name: ${name}
+Topics to cover:
 ${topicList}
 
-Requirements:
-- Start with: "Good morning, ${name}! Here's your Brain Brief for ${today}."
-- For EACH topic, create a section with:
-  - A clear headline for the topic
-  - 2-4 bullet points covering the most important recent developments
-  - A brief 1-2 sentence synthesis paragraph putting the developments in context
-- End with: "Stay informed. Stay sharp. — Brain Brief"
-- Be concise, accurate, and focused on the most recent news (last 24-48 hours)
-- Cite sources when possible (include the publication name)
-- No fluff — every sentence should be informative
-- Use a professional but approachable tone
+VOICE & TONE:
+- Clear, confident, slightly conversational — like a sharp colleague giving you the 2-minute download
+- Not robotic, not overly formal, not breathless or hype-y
+- Every sentence earns its place — no filler, no padding, no throat-clearing
 
-Format your response as clean HTML suitable for an email. Use these HTML elements:
-- <h1> for the greeting
-- <h2> for topic section headers
+STRUCTURE (follow exactly):
+1. Opening line: "Good morning, ${name}! Here's what's happening in the topics you care about."
+2. For EACH topic, write:
+   - A bold, specific headline (not just the topic name — make it about the news)
+   - 2-4 bullet points of KEY recent developments (include dates, names, numbers — be specific)
+   - A 1-2 sentence "Why it matters" synthesis — connect the dots, give perspective
+3. If there's genuinely NOTHING new on a topic in the last 48 hours, say so briefly: "It's been a quiet couple of days for [topic]. We'll have more when things pick up." Do NOT make up or pad content.
+4. Sign-off: "Stay informed. Stay sharp. — Brain Brief"
+
+GROUNDING RULES:
+- Use ONLY real, current information from your web search
+- Include the source publication name in parentheses after key claims, e.g. "(Reuters)"
+- If you can link to the source, include an <a> tag
+- Prefer reputable sources: Reuters, AP, Bloomberg, NYT, WSJ, TechCrunch, The Verge, etc.
+- NEVER hallucinate facts, quotes, or statistics
+
+HTML FORMAT (email-safe, no external styles):
+- <h2> for topic section headlines
 - <ul><li> for bullet points
-- <p> for synthesis paragraphs and sign-off
-- <strong> for emphasis on key facts
-- <a href="..."> for source links when available
-- Do NOT include <html>, <head>, <body>, or <style> tags — just the content HTML
+- <p> for the "why it matters" synthesis, opening, and sign-off
+- <strong> for emphasis on key facts, names, or numbers
+- <a href="..." style="color: #6366f1;"> for source links
+- Add <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;"> between topic sections
+- Do NOT include <html>, <head>, <body>, or <style> tags — just the inner content HTML
 
-Keep the total briefing under 800 words.`;
+LENGTH: Keep the total briefing under 800 words. Concise > comprehensive.`;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
@@ -67,6 +78,12 @@ Keep the total briefing under 800 words.`;
 
   // Strip HTML tags for plain text version
   const contentText = contentHtml
+    .replace(/<hr[^>]*>/g, "\n---\n")
+    .replace(/<\/?(h[1-6]|p|div)[^>]*>/g, "\n")
+    .replace(/<li[^>]*>/g, "  - ")
+    .replace(/<\/li>/g, "\n")
+    .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, "$2 ($1)")
+    .replace(/<\/?strong>/g, "")
     .replace(/<[^>]*>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
@@ -79,16 +96,18 @@ Keep the total briefing under 800 words.`;
 
   // Extract sources from grounding metadata
   const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
-  const sources = (
-    (groundingMetadata as Record<string, unknown>)?.groundingChunks as Array<{
-      web?: { title: string; uri: string };
-    }>
-  )
-    ?.filter((chunk) => chunk.web)
-    .map((chunk) => ({
-      title: chunk.web!.title,
-      uri: chunk.web!.uri,
-    })) ?? [];
+  const sources =
+    (
+      (groundingMetadata as Record<string, unknown>)
+        ?.groundingChunks as Array<{
+        web?: { title: string; uri: string };
+      }>
+    )
+      ?.filter((chunk) => chunk.web)
+      .map((chunk) => ({
+        title: chunk.web!.title,
+        uri: chunk.web!.uri,
+      })) ?? [];
 
   return {
     contentHtml,

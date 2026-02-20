@@ -174,9 +174,14 @@ export default function LandingPage() {
                 Coming Soon
               </div>
               <h3 className="text-lg font-semibold">Pro</h3>
-              <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold">$9</span>
-                <span className="text-muted-foreground">/month</span>
+              <div className="mt-4">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold">$6</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  or $50/year (save 30%)
+                </p>
               </div>
               <ul className="mt-8 space-y-3 text-sm">
                 <li className="flex items-start gap-2">

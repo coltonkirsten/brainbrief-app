@@ -40,8 +40,8 @@ export default function SignupPage() {
   if (success) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center">
-          <div className="mb-4 text-4xl">📬</div>
+        <div className="w-full max-w-sm text-center" role="status" aria-live="polite">
+          <div className="mb-4 text-4xl" aria-hidden="true">📬</div>
           <h1 className="text-2xl font-semibold">Check your email</h1>
           <p className="mt-3 text-sm text-muted-foreground">
             We sent a confirmation link to{" "}
@@ -92,6 +92,7 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
               placeholder="you@example.com"
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
@@ -110,6 +111,7 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="new-password"
               placeholder="At least 6 characters"
               minLength={6}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"

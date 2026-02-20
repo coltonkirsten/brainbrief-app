@@ -28,6 +28,8 @@ export default function TopicManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const canAddMore = topics.length < maxTopics;
@@ -60,6 +62,8 @@ export default function TopicManager({
 
   async function deleteTopic(id: string) {
     setError(null);
+    setDeletingId(id);
+
     const supabase = createClient();
     const { error: deleteError } = await supabase
       .from("topics")
@@ -68,10 +72,12 @@ export default function TopicManager({
 
     if (deleteError) {
       setError(deleteError.message);
+      setDeletingId(null);
       return;
     }
 
     setTopics(topics.filter((t) => t.id !== id));
+    setDeletingId(null);
     router.refresh();
   }
 
@@ -79,6 +85,8 @@ export default function TopicManager({
     if (!editValue.trim()) return;
 
     setError(null);
+    setSavingId(id);
+
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("topics")
@@ -87,6 +95,7 @@ export default function TopicManager({
 
     if (updateError) {
       setError(updateError.message);
+      setSavingId(null);
       return;
     }
 
@@ -95,6 +104,7 @@ export default function TopicManager({
     );
     setEditingId(null);
     setEditValue("");
+    setSavingId(null);
     router.refresh();
   }
 
@@ -137,6 +147,7 @@ export default function TopicManager({
                   type="text"
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
+                  aria-label="Edit topic name"
                   className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   autoFocus
                   onKeyDown={(e) => {
@@ -146,9 +157,10 @@ export default function TopicManager({
                 />
                 <button
                   onClick={() => updateTopic(topic.id)}
-                  className="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
+                  disabled={savingId === topic.id}
+                  className="text-sm font-medium text-primary hover:text-primary-hover transition-colors disabled:opacity-50"
                 >
-                  Save
+                  {savingId === topic.id ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={cancelEditing}
@@ -159,7 +171,7 @@ export default function TopicManager({
               </>
             ) : (
               <>
-                <span className="flex-1 font-medium">{topic.name}</span>
+                <span className="flex-1 font-medium truncate">{topic.name}</span>
                 <button
                   onClick={() => startEditing(topic)}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -168,9 +180,10 @@ export default function TopicManager({
                 </button>
                 <button
                   onClick={() => deleteTopic(topic.id)}
-                  className="text-sm text-red-500 hover:text-red-600 transition-colors"
+                  disabled={deletingId === topic.id}
+                  className="text-sm text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
                 >
-                  Delete
+                  {deletingId === topic.id ? "Deleting..." : "Delete"}
                 </button>
               </>
             )}
@@ -185,6 +198,7 @@ export default function TopicManager({
             type="text"
             value={newTopic}
             onChange={(e) => setNewTopic(e.target.value)}
+            aria-label="New topic name"
             placeholder="e.g., Artificial Intelligence, Climate Change, NBA..."
             className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
           />

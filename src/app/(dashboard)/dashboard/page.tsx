@@ -99,7 +99,7 @@ export default async function DashboardPage() {
                   </div>
                 )}
               <div
-                className="prose prose-sm max-w-none text-sm text-muted-foreground"
+                className="prose prose-sm max-w-none text-sm text-muted-foreground break-words overflow-hidden"
                 dangerouslySetInnerHTML={{
                   __html: latestBriefing.content_html,
                 }}

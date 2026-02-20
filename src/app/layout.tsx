@@ -19,9 +19,32 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Brain Brief - AI-Powered News Briefings",
+  title: {
+    default: "Brain Brief — AI-Powered Personalized Briefings",
+    template: "%s | Brain Brief",
+  },
   description:
-    "Get smarter about the things you care about. Personalized AI-generated news briefings delivered to your inbox.",
+    "Get smarter about the topics you care about. AI-generated briefings delivered to your inbox.",
+  metadataBase: new URL("https://brainbrief.app"),
+  openGraph: {
+    title: "Brain Brief — AI-Powered Personalized Briefings",
+    description:
+      "Get smarter about the topics you care about. AI-generated briefings delivered to your inbox.",
+    url: "https://brainbrief.app",
+    siteName: "Brain Brief",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Brain Brief — AI-Powered Personalized Briefings",
+    description:
+      "Get smarter about the topics you care about. AI-generated briefings delivered to your inbox.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

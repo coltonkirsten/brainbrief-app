@@ -44,7 +44,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from auth pages
+  // Redirect logged-in users away from auth pages (except reset-password)
   if (
     user &&
     (request.nextUrl.pathname === "/login" ||

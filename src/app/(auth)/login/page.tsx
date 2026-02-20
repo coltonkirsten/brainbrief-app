@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,6 +35,122 @@ export default function LoginPage() {
     router.refresh();
   }
 
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setError(null);
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    setResetSent(true);
+    setLoading(false);
+  }
+
+  // Password reset email sent — show confirmation
+  if (resetSent) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-sm text-center" role="status" aria-live="polite">
+          <div className="mb-4 text-4xl" aria-hidden="true">📧</div>
+          <h1 className="text-2xl font-semibold">Check your email</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            We sent a password reset link to{" "}
+            <span className="font-medium text-foreground">{email}</span>. Click
+            it to set a new password.
+          </p>
+          <button
+            onClick={() => {
+              setResetSent(false);
+              setResetMode(false);
+            }}
+            className="mt-6 inline-block text-sm font-medium text-primary hover:text-primary-hover transition-colors"
+          >
+            Back to login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Forgot password form
+  if (resetMode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 text-center">
+            <Link href="/" className="text-2xl font-bold tracking-tight">
+              <span className="text-primary">Brain</span>Brief
+            </Link>
+            <h1 className="mt-6 text-2xl font-semibold">Reset your password</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Enter your email and we&apos;ll send you a reset link
+            </p>
+          </div>
+
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            {error && (
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label
+                htmlFor="reset-email"
+                className="block text-sm font-medium mb-1.5"
+              >
+                Email
+              </label>
+              <input
+                id="reset-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                placeholder="you@example.com"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Sending..." : "Send reset link"}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Remember your password?{" "}
+            <button
+              onClick={() => {
+                setResetMode(false);
+                setError(null);
+              }}
+              className="font-medium text-primary hover:text-primary-hover transition-colors"
+            >
+              Sign in
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal login form
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -73,12 +191,24 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium mb-1.5"
-            >
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium"
+              >
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setResetMode(true);
+                  setError(null);
+                }}
+                className="text-xs text-primary hover:text-primary-hover transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
             <input
               id="password"
               type="password"

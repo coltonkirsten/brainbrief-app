@@ -1,0 +1,145 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { generateBriefing } from "@/lib/gemini";
+import { sendBriefingEmail } from "@/lib/email";
+
+const RATE_LIMIT_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * On-demand briefing generation for authenticated users.
+ * Rate-limited to once per hour.
+ */
+export async function POST() {
+  const startTime = Date.now();
+
+  const supabase = await createClient();
+
+  // Verify the user is authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Check rate limit — look at the most recent briefing
+  const { data: lastBriefing } = await supabase
+    .from("briefings")
+    .select("created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (lastBriefing) {
+    const lastCreated = new Date(lastBriefing.created_at).getTime();
+    const elapsed = Date.now() - lastCreated;
+    if (elapsed < RATE_LIMIT_MS) {
+      const minutesLeft = Math.ceil((RATE_LIMIT_MS - elapsed) / 60000);
+      return NextResponse.json(
+        {
+          error: "Rate limited",
+          message: `You can generate a new briefing in ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"}.`,
+        },
+        { status: 429 }
+      );
+    }
+  }
+
+  // Get user's active topics
+  const { data: topics, error: topicsError } = await supabase
+    .from("topics")
+    .select("name")
+    .eq("user_id", user.id)
+    .eq("is_active", true);
+
+  if (topicsError) {
+    return NextResponse.json(
+      { error: "Failed to fetch topics", details: topicsError.message },
+      { status: 500 }
+    );
+  }
+
+  if (!topics || topics.length === 0) {
+    return NextResponse.json(
+      { error: "No topics", message: "Add at least one topic before generating a briefing." },
+      { status: 400 }
+    );
+  }
+
+  const topicNames = topics.map((t) => t.name);
+
+  // Get user profile for display name
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, email")
+    .eq("user_id", user.id)
+    .single();
+
+  try {
+    // Generate briefing with Gemini + grounding
+    const briefing = await generateBriefing(
+      topicNames,
+      profile?.display_name
+    );
+
+    // Store in database
+    const { error: insertError } = await supabase
+      .from("briefings")
+      .insert({
+        user_id: user.id,
+        content_html: briefing.contentHtml,
+        content_text: briefing.contentText,
+        topics_covered: briefing.topicsCovered,
+      });
+
+    if (insertError) {
+      return NextResponse.json(
+        { error: "Failed to save briefing", details: insertError.message },
+        { status: 500 }
+      );
+    }
+
+    // Send email if we have their address
+    const emailAddress = profile?.email || user.email;
+    if (emailAddress) {
+      const today = new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
+
+      const emailResult = await sendBriefingEmail({
+        to: emailAddress,
+        subject: `Your Brain Brief — ${today}`,
+        html: briefing.contentHtml,
+        text: briefing.contentText,
+      });
+
+      if (emailResult.success) {
+        await supabase
+          .from("briefings")
+          .update({ sent_at: new Date().toISOString() })
+          .eq("user_id", user.id)
+          .is("sent_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
+      }
+    }
+
+    const elapsed = Date.now() - startTime;
+
+    return NextResponse.json({
+      success: true,
+      elapsed: `${elapsed}ms`,
+      topicsCovered: briefing.topicsCovered,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json(
+      { error: "Generation failed", details: message },
+      { status: 500 }
+    );
+  }
+}

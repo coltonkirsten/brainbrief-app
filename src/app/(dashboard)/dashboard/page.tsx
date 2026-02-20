@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import TopicManager from "./topic-manager";
+import GenerateButton from "./generate-button";
 
 export const metadata = {
-  title: "Dashboard - Brain Brief",
+  title: "Dashboard",
 };
 
 export default async function DashboardPage() {
@@ -40,19 +41,19 @@ export default async function DashboardPage() {
     <div className="min-h-screen">
       {/* Header */}
       <header className="border-b border-border">
-        <div className="flex items-center justify-between px-6 py-4 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 max-w-4xl mx-auto">
           <div className="text-xl font-bold tracking-tight">
             <span className="text-primary">Brain</span>Brief
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user.email}</span>
+            <span className="text-sm text-muted-foreground hidden sm:inline">{user.email}</span>
             <SignOutButton />
           </div>
         </div>
       </header>
 
       {/* Main */}
-      <main className="max-w-4xl mx-auto px-6 py-10">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-bold">Your Topics</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -67,8 +68,16 @@ export default async function DashboardPage() {
           maxTopics={3}
         />
 
+        {/* On-demand generate button */}
+        <div className="mt-8">
+          <GenerateButton
+            hasTopics={topics.length > 0}
+            lastBriefingAt={latestBriefing?.created_at ?? null}
+          />
+        </div>
+
         {/* Latest briefing or upcoming briefing info */}
-        <div className="mt-12">
+        <div className="mt-8">
           {latestBriefing ? (
             <div className="rounded-lg border border-border bg-background p-6">
               <div className="flex items-center justify-between mb-4">
@@ -87,7 +96,7 @@ export default async function DashboardPage() {
               </div>
               {latestBriefing.topics_covered &&
                 Array.isArray(latestBriefing.topics_covered) && (
-                  <div className="flex gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {latestBriefing.topics_covered.map((topic: string) => (
                       <span
                         key={topic}
@@ -107,12 +116,12 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="rounded-lg border border-dashed border-border bg-muted/50 p-6 text-center">
-              <div className="text-3xl mb-3">&#128236;</div>
+              <div className="text-3xl mb-3" aria-hidden="true">&#128236;</div>
               <h2 className="font-semibold">Your first briefing is coming!</h2>
               <p className="mt-1 text-sm text-muted-foreground max-w-md mx-auto">
-                Briefings are generated daily at 9am UTC. Once you&apos;ve added
-                topics, you&apos;ll receive your first briefing by email within
-                24 hours.
+                Add topics above, then hit &quot;Send my briefing now&quot; to
+                get your first briefing instantly — or wait for the daily email
+                at 9am UTC.
               </p>
             </div>
           )}

@@ -94,8 +94,140 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Social Proof */}
+      <section className="px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-8">
+            Trusted by professionals who value their time
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="rounded-lg border border-border p-6">
+              <p className="text-sm text-muted-foreground italic">
+                &ldquo;I used to spend 30 minutes scanning headlines. Now I get
+                everything I need in a 2-minute email.&rdquo;
+              </p>
+              <p className="mt-4 text-sm font-medium">— Early Beta User</p>
+            </div>
+            <div className="rounded-lg border border-border p-6">
+              <p className="text-sm text-muted-foreground italic">
+                &ldquo;The AI summaries are surprisingly good. Concise, accurate,
+                and always up-to-date.&rdquo;
+              </p>
+              <p className="mt-4 text-sm font-medium">— Early Beta User</p>
+            </div>
+            <div className="rounded-lg border border-border p-6">
+              <p className="text-sm text-muted-foreground italic">
+                &ldquo;Finally, a news digest that covers exactly what I care
+                about — nothing more, nothing less.&rdquo;
+              </p>
+              <p className="mt-4 text-sm font-medium">— Early Beta User</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="px-6 py-24 bg-muted">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">
+            Simple pricing
+          </h2>
+          <p className="text-center text-muted-foreground mb-16 max-w-lg mx-auto">
+            Start free. Upgrade when you need more.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Free tier */}
+            <div className="rounded-xl border border-border bg-background p-8">
+              <h3 className="text-lg font-semibold">Free</h3>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-bold">$0</span>
+                <span className="text-muted-foreground">/month</span>
+              </div>
+              <ul className="mt-8 space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">&#10003;</span>
+                  Up to 3 topics
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">&#10003;</span>
+                  Daily email briefings
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">&#10003;</span>
+                  AI-powered summaries
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">&#10003;</span>
+                  Web-grounded research
+                </li>
+              </ul>
+              <Link
+                href="/signup"
+                className="mt-8 block w-full rounded-lg border border-border py-2.5 text-center text-sm font-semibold hover:bg-muted transition-colors"
+              >
+                Get started free
+              </Link>
+            </div>
+            {/* Pro tier */}
+            <div className="rounded-xl border-2 border-primary bg-background p-8 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-white">
+                Coming Soon
+              </div>
+              <h3 className="text-lg font-semibold">Pro</h3>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-bold">$9</span>
+                <span className="text-muted-foreground">/month</span>
+              </div>
+              <ul className="mt-8 space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">&#10003;</span>
+                  Unlimited topics
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">&#10003;</span>
+                  Custom delivery schedule
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">&#10003;</span>
+                  Deeper briefings with more sources
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">&#10003;</span>
+                  Priority support
+                </li>
+              </ul>
+              <button
+                disabled
+                className="mt-8 block w-full rounded-lg bg-primary/50 py-2.5 text-center text-sm font-semibold text-white cursor-not-allowed"
+              >
+                Coming soon
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 py-24">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl font-bold">
+            Ready to get smarter?
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Join Brain Brief and start receiving personalized AI briefings — for
+            free.
+          </p>
+          <Link
+            href="/signup"
+            className="mt-8 inline-block rounded-full bg-primary px-8 py-3 text-base font-semibold text-white hover:bg-primary-hover transition-colors"
+          >
+            Sign up free
+          </Link>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="px-6 py-8 text-center text-sm text-muted-foreground">
+      <footer className="border-t border-border px-6 py-8 text-center text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} Brain Brief. All rights reserved.</p>
       </footer>
     </div>

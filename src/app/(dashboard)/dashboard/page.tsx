@@ -17,12 +17,24 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // Fetch user's topics
-  const { data: topics } = await supabase
-    .from("topics")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
+  // Fetch user's topics and latest briefing in parallel
+  const [topicsResult, briefingResult] = await Promise.all([
+    supabase
+      .from("topics")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("briefings")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const topics = topicsResult.data ?? [];
+  const latestBriefing = briefingResult.data;
 
   return (
     <div className="min-h-screen">
@@ -50,18 +62,60 @@ export default async function DashboardPage() {
         </div>
 
         <TopicManager
-          initialTopics={topics ?? []}
+          initialTopics={topics}
           userId={user.id}
           maxTopics={3}
         />
 
-        {/* Upcoming briefing info */}
-        <div className="mt-12 rounded-lg border border-border bg-muted/50 p-6">
-          <h2 className="font-semibold">Next briefing</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your briefings are generated daily. Once you&apos;ve added topics,
-            you&apos;ll receive your first briefing by email within 24 hours.
-          </p>
+        {/* Latest briefing or upcoming briefing info */}
+        <div className="mt-12">
+          {latestBriefing ? (
+            <div className="rounded-lg border border-border bg-background p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold">Latest Briefing</h2>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(latestBriefing.created_at).toLocaleDateString(
+                    "en-US",
+                    {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }
+                  )}
+                </span>
+              </div>
+              {latestBriefing.topics_covered &&
+                Array.isArray(latestBriefing.topics_covered) && (
+                  <div className="flex gap-2 mb-4">
+                    {latestBriefing.topics_covered.map((topic: string) => (
+                      <span
+                        key={topic}
+                        className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              <div
+                className="prose prose-sm max-w-none text-sm text-muted-foreground"
+                dangerouslySetInnerHTML={{
+                  __html: latestBriefing.content_html,
+                }}
+              />
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-border bg-muted/50 p-6 text-center">
+              <div className="text-3xl mb-3">&#128236;</div>
+              <h2 className="font-semibold">Your first briefing is coming!</h2>
+              <p className="mt-1 text-sm text-muted-foreground max-w-md mx-auto">
+                Briefings are generated daily at 9am UTC. Once you&apos;ve added
+                topics, you&apos;ll receive your first briefing by email within
+                24 hours.
+              </p>
+            </div>
+          )}
         </div>
       </main>
     </div>

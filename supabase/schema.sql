@@ -1,5 +1,6 @@
 -- Brain Brief Database Schema
 -- Run this in the Supabase SQL editor to set up tables
+-- Supabase Dashboard: https://supabase.com/dashboard/project/htwjxywlccqmsrnccgrr/sql
 
 -- Profiles table (extends Supabase Auth users)
 CREATE TABLE IF NOT EXISTS profiles (
@@ -8,9 +9,12 @@ CREATE TABLE IF NOT EXISTS profiles (
   display_name TEXT,
   email TEXT NOT NULL,
   tier TEXT NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'pro')),
-  briefing_frequency TEXT NOT NULL DEFAULT 'daily' CHECK (briefing_frequency IN ('daily', 'weekly')),
+  frequency TEXT NOT NULL DEFAULT 'daily' CHECK (frequency IN ('daily', 'weekly')),
+  preferred_time TEXT NOT NULL DEFAULT '08:00',
   timezone TEXT NOT NULL DEFAULT 'America/New_York',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  stripe_customer_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Topics table
@@ -18,6 +22,8 @@ CREATE TABLE IF NOT EXISTS topics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
+  description TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -25,8 +31,11 @@ CREATE TABLE IF NOT EXISTS topics (
 CREATE TABLE IF NOT EXISTS briefings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  content TEXT NOT NULL,
+  content_html TEXT NOT NULL,
+  content_text TEXT NOT NULL,
+  topics_covered JSONB NOT NULL DEFAULT '[]'::jsonb,
   sent_at TIMESTAMPTZ,
+  opened_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -80,3 +89,17 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Auto-update updated_at on profiles
+CREATE OR REPLACE FUNCTION public.update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS on_profile_updated ON profiles;
+CREATE TRIGGER on_profile_updated
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();

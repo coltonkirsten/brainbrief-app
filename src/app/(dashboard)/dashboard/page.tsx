@@ -49,7 +49,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="border-b border-border bg-white">
+      <header className="border-b border-border bg-card">
         <div className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
           <div className="text-xl font-bold tracking-tight font-serif text-primary">
             Brain<span className="text-accent">Brief</span>
@@ -130,8 +130,8 @@ export default async function DashboardPage() {
               Latest Archive
             </h2>
             {latestBriefing ? (
-              <div className="bg-white shadow-xl shadow-slate-200/50 border border-border rounded-2xl overflow-hidden">
-                <div className="bg-slate-50 border-b border-border px-8 py-6 flex items-center justify-between">
+              <div className="bg-card shadow-xl shadow-slate-200/50 border border-border rounded-2xl overflow-hidden">
+                <div className="bg-muted border-b border-border px-8 py-6 flex items-center justify-between">
                   <h2 className="font-serif text-xl font-bold text-primary">Today's Briefing</h2>
                   <span className="text-sm font-medium text-muted-foreground">
                     {new Date(latestBriefing.created_at).toLocaleDateString(
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
                         {latestBriefing.topics_covered.map((topic: string) => (
                           <span
                             key={topic}
-                            className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-primary border border-slate-200 uppercase tracking-wider"
+                            className="inline-flex items-center rounded-md bg-muted px-2.5 py-1 text-xs font-bold text-primary border border-border uppercase tracking-wider"
                           >
                             {topic}
                           </span>
@@ -161,7 +161,7 @@ export default async function DashboardPage() {
                       </div>
                     )}
                   <div
-                    className="prose prose-slate max-w-none text-base text-slate-700 leading-relaxed break-words overflow-hidden"
+                    className="prose prose-slate max-w-none text-base text-muted-foreground leading-relaxed break-words overflow-hidden"
                     dangerouslySetInnerHTML={{
                       __html: latestBriefing.content_html,
                     }}
@@ -169,8 +169,8 @@ export default async function DashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white shadow-sm border border-border rounded-2xl p-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6">
+              <div className="bg-card shadow-sm border border-border rounded-2xl p-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-6">
                   <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14 2v6h6" />

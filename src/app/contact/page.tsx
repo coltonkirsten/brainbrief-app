@@ -13,8 +13,8 @@ export default function ContactPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to home
         </Link>
-        <div className="bg-white shadow-xl shadow-slate-200/50 border border-border rounded-2xl p-12 text-center max-w-xl mx-auto">
-          <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6">
+        <div className="bg-card shadow-xl shadow-slate-200/50 border border-border rounded-2xl p-12 text-center max-w-xl mx-auto">
+          <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-6">
             <Mail className="w-8 h-8 text-accent" />
           </div>
           <h1 className="text-3xl font-bold font-serif text-primary mb-4">Contact Us</h1>

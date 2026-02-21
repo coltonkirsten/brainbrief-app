@@ -130,7 +130,7 @@ export default function TopicManager({
       {/* Topic list */}
       <div className="space-y-2">
         {topics.length === 0 && (
-          <div className="bg-white shadow-sm border border-border rounded-xl p-8 text-center">
+          <div className="bg-card shadow-sm border border-border rounded-xl p-8 text-center">
             <h3 className="text-lg font-serif font-bold text-primary mb-2">Welcome to Brain Brief</h3>
             <p className="text-muted-foreground mb-6 text-sm">You have no active topics. Add your own below, or start with a suggestion:</p>
             <div className="flex flex-wrap justify-center gap-2">
@@ -138,7 +138,7 @@ export default function TopicManager({
                 <button
                   key={suggestion}
                   onClick={(e) => { e.preventDefault(); setNewTopic(suggestion); }}
-                  className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-primary border border-border rounded-full text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-primary border border-border rounded-full text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                 >
                   + {suggestion}
                 </button>
@@ -150,7 +150,7 @@ export default function TopicManager({
         {topics.map((topic) => (
           <div
             key={topic.id}
-            className="flex items-center gap-3 bg-white shadow-sm border border-border rounded-xl px-4 py-3"
+            className="flex items-center gap-3 bg-card shadow-sm border border-border rounded-xl px-4 py-3"
           >
             {editingId === topic.id ? (
               <>
@@ -243,7 +243,7 @@ export default function TopicManager({
           </button>
         </form>
       ) : (
-        <p className="text-sm text-muted-foreground bg-slate-50 border border-border p-4 rounded-md text-center">
+        <p className="text-sm text-muted-foreground bg-muted border border-border p-4 rounded-md text-center">
           You&apos;ve reached the maximum of {maxTopics} topics. <a href="/subscribe" className="font-semibold text-primary hover:underline">Upgrade to add more</a>.
         </p>
       )}

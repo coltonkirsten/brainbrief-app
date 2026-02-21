@@ -28,13 +28,13 @@ export default function LandingPage() {
       {/* Hero */}
       <main className="flex flex-1 flex-col items-center justify-center px-6 pt-20 pb-32 text-center">
         <div className="max-w-3xl mx-auto">
-          <div className="inline-flex items-center rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-muted-foreground mb-8 shadow-sm">
+          <div className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground mb-8 shadow-sm">
             <span className="flex h-2 w-2 rounded-full bg-accent mr-2"></span>
             Now open for early access
           </div>
           <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl font-serif leading-tight text-primary">
             The antidote to <br className="hidden sm:block" />
-            <span className="italic font-light text-slate-600">information overload.</span>
+            <span className="italic font-light text-muted-foreground">information overload.</span>
           </h1>
           <p className="mt-8 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Brain Brief delivers sophisticated, AI-generated intelligence briefings
@@ -58,7 +58,7 @@ export default function LandingPage() {
         {/* Editorial Preview Card */}
         <div className="mt-24 relative mx-auto w-full max-w-4xl text-left hidden sm:block">
           <div className="absolute -inset-1 bg-gradient-to-r from-border via-accent/20 to-border rounded-2xl blur opacity-30"></div>
-          <div className="relative bg-white shadow-xl border border-border rounded-xl p-10 overflow-hidden">
+          <div className="relative bg-card shadow-xl border border-border rounded-xl p-10 overflow-hidden">
             <div className="flex items-center justify-between border-b border-border pb-6 mb-8">
               <div className="text-xl font-bold tracking-tight font-serif text-primary">
                 Brain<span className="text-accent">Brief</span>
@@ -72,7 +72,7 @@ export default function LandingPage() {
               <div className="md:col-span-2 space-y-8">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="inline-block px-2.5 py-1 rounded-md bg-slate-100 text-primary text-[10px] font-bold uppercase tracking-wider">Artificial Intelligence</span>
+                    <span className="inline-block px-2.5 py-1 rounded-md bg-muted text-primary text-[10px] font-bold uppercase tracking-wider">Artificial Intelligence</span>
                     <span className="text-xs text-muted-foreground">4 min read</span>
                   </div>
                   <h2 className="text-2xl font-serif font-bold text-primary mb-4 leading-snug">The shift from chatbots to autonomous agents accelerates</h2>
@@ -92,7 +92,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="md:col-span-1 border-l border-border pl-8">
-                <div className="p-5 bg-slate-50 rounded-lg border border-slate-100 h-full">
+                <div className="p-5 bg-muted/50 rounded-lg border border-border h-full">
                   <div className="flex items-center gap-2 mb-3 text-accent">
                     <Zap className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">The Bottom Line</span>
@@ -108,7 +108,7 @@ export default function LandingPage() {
       </main>
 
       {/* How it works */}
-      <section id="how-it-works" className="px-6 py-24 bg-white border-y border-border">
+      <section id="how-it-works" className="px-6 py-24 bg-card border-y border-border">
         <div className="max-w-5xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold font-serif text-primary mb-4">
@@ -121,7 +121,7 @@ export default function LandingPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <div className="flex flex-col">
-              <div className="w-12 h-12 rounded-lg bg-slate-50 border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
+              <div className="w-12 h-12 rounded-lg bg-muted border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
                 <Inbox className="w-6 h-6 text-accent" />
               </div>
               <h3 className="font-serif font-bold text-xl mb-3 text-primary">1. Curate your focus</h3>
@@ -130,7 +130,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="flex flex-col">
-              <div className="w-12 h-12 rounded-lg bg-slate-50 border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
+              <div className="w-12 h-12 rounded-lg bg-muted border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
                 <BrainCircuit className="w-6 h-6 text-accent" />
               </div>
               <h3 className="font-serif font-bold text-xl mb-3 text-primary">2. AI synthesis</h3>
@@ -139,7 +139,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="flex flex-col">
-              <div className="w-12 h-12 rounded-lg bg-slate-50 border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
+              <div className="w-12 h-12 rounded-lg bg-muted border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
                 <Clock className="w-6 h-6 text-accent" />
               </div>
               <h3 className="font-serif font-bold text-xl mb-3 text-primary">3. Read in minutes</h3>
@@ -152,18 +152,18 @@ export default function LandingPage() {
       </section>
 
       {/* Social Proof */}
-      <section className="px-6 py-24 bg-slate-50">
+      <section className="px-6 py-24 bg-muted">
         <div className="max-w-5xl mx-auto text-center">
           <p className="text-sm font-bold text-primary uppercase tracking-widest mb-12">
             Trusted by professionals who value their time
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white shadow-sm border border-border rounded-xl p-8 text-left">
+            <div className="bg-card shadow-sm border border-border rounded-xl p-8 text-left">
               <p className="text-base text-primary font-serif italic mb-6 leading-relaxed">
                 &ldquo;I used to spend an hour every morning scanning headlines and newsletters. Now I get exactly what I need to know in a 3-minute read. It's completely changed my morning routine.&rdquo;
               </p>
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-primary">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-primary">
                   AM
                 </div>
                 <div>
@@ -172,12 +172,12 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-white shadow-sm border border-border rounded-xl p-8 text-left">
+            <div className="bg-card shadow-sm border border-border rounded-xl p-8 text-left">
               <p className="text-base text-primary font-serif italic mb-6 leading-relaxed">
                 &ldquo;The signal-to-noise ratio is unmatched. Brain Brief manages to pull the most critical updates on my niche topics without the fluff of standard tech media.&rdquo;
               </p>
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-primary">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-primary">
                   JR
                 </div>
                 <div>
@@ -186,12 +186,12 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-            <div className="bg-white shadow-sm border border-border rounded-xl p-8 text-left">
+            <div className="bg-card shadow-sm border border-border rounded-xl p-8 text-left">
               <p className="text-base text-primary font-serif italic mb-6 leading-relaxed">
                 &ldquo;Finally, an intelligence tool that respects my time. The 'Bottom Line' summaries are consistently insightful and give me exactly what I need for my executive meetings.&rdquo;
               </p>
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-primary">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-primary">
                   SK
                 </div>
                 <div>
@@ -205,7 +205,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="px-6 py-24 bg-white border-t border-border">
+      <section id="pricing" className="px-6 py-24 bg-card border-t border-border">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold font-serif text-primary mb-4">
@@ -217,7 +217,7 @@ export default function LandingPage() {
           </div>
           
           <div className="max-w-lg mx-auto">
-            <div className="bg-slate-50 shadow-lg border border-border rounded-2xl p-10 relative">
+            <div className="bg-muted shadow-lg border border-border rounded-2xl p-10 relative">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent px-4 py-1 text-xs font-bold text-white uppercase tracking-wider shadow-sm">
                 14-Day Free Trial
               </div>
@@ -267,7 +267,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border bg-slate-50 px-6 py-12">
+      <footer className="border-t border-border bg-muted px-6 py-12">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-xl font-bold tracking-tight font-serif text-primary">
             Brain<span className="text-accent">Brief</span>

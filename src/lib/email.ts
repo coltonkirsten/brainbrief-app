@@ -16,11 +16,7 @@ interface SendBriefingEmailParams {
   html: string;
   text: string;
   structured?: BriefingData;
-<<<<<<< HEAD
   trialInfo?: TrialInfo;
-=======
-  trialDay?: number; // Added to support 14-day trial countdown
->>>>>>> e006053 (feat: complete brand and frontend redesign sprint)
 }
 
 export async function sendBriefingEmail({
@@ -29,11 +25,7 @@ export async function sendBriefingEmail({
   html,
   text,
   structured,
-<<<<<<< HEAD
   trialInfo,
-=======
-  trialDay,
->>>>>>> e006053 (feat: complete brand and frontend redesign sprint)
 }: SendBriefingEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -48,11 +40,7 @@ export async function sendBriefingEmail({
         process.env.RESEND_FROM_EMAIL || "Brain Brief <onboarding@resend.dev>";
 
       const emailHtml = structured
-<<<<<<< HEAD
         ? buildStructuredEmailTemplate(structured, trialInfo)
-=======
-        ? buildStructuredEmailTemplate(structured, trialDay)
->>>>>>> e006053 (feat: complete brand and frontend redesign sprint)
         : buildLegacyEmailTemplate(html);
 
       const { data, error } = await resend.emails.send({
@@ -92,11 +80,7 @@ export async function sendBriefingEmail({
 // Structured email template — Chelsea's "Premium Editorial" design
 // ---------------------------------------------------------------------------
 
-<<<<<<< HEAD
 function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo): string {
-=======
-function buildStructuredEmailTemplate(data: BriefingData, trialDay?: number): string {
->>>>>>> e006053 (feat: complete brand and frontend redesign sprint)
   const year = new Date().getFullYear();
   const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -104,13 +88,13 @@ function buildStructuredEmailTemplate(data: BriefingData, trialDay?: number): st
     day: "numeric",
   });
 
-  const trialBanner = trialDay !== undefined && trialDay <= 14
+  const trialBanner = trialInfo && trialInfo.isTrialActive && !trialInfo.isSubscriber
     ? `
       <!-- ============ TRIAL BANNER ============ -->
       <tr>
         <td style="background-color: #10B981; padding: 12px 32px; text-align: center;">
           <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #FFFFFF; letter-spacing: 0.5px;">
-            Day \${trialDay} of 14 — <a href="https://brainbrief.app/pricing" style="color: #FFFFFF; text-decoration: underline;">Subscribe to keep your briefings</a>
+            Free Trial — Day \${trialInfo.trialDayNumber} of 14. <a href="https://brainbrief.app/pricing" style="color: #FFFFFF; text-decoration: underline;">Upgrade to keep your briefings.</a>
           </p>
         </td>
       </tr>
@@ -260,9 +244,6 @@ function buildStructuredEmailTemplate(data: BriefingData, trialDay?: number): st
           <!-- ============ TOPICS ============ -->
           \${topicBlocks}
 
-          <!-- ============ TRIAL COUNTDOWN ============ -->
-          ${buildTrialBanner(trialInfo)}
-
           <!-- ============ FOOTER ============ -->
           <tr>
             <td class="email-footer" style="padding: 32px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
@@ -290,42 +271,6 @@ function buildStructuredEmailTemplate(data: BriefingData, trialDay?: number): st
   </table>
 </body>
 </html>`;
-}
-
-// ---------------------------------------------------------------------------
-// Trial countdown banner for email
-// ---------------------------------------------------------------------------
-
-function buildTrialBanner(trialInfo?: TrialInfo): string {
-  // Don't show for subscribers
-  if (!trialInfo || trialInfo.isSubscriber) return "";
-
-  // Don't show if trial is already expired (they shouldn't receive emails anyway)
-  if (trialInfo.isTrialExpired) return "";
-
-  const daysLeft = trialInfo.trialDaysRemaining;
-  const dayNum = trialInfo.trialDayNumber;
-  const isUrgent = daysLeft <= 3;
-
-  const bgColor = isUrgent ? "#FEF3C7" : "#EEF2FF";
-  const textColor = isUrgent ? "#92400E" : "#4338CA";
-  const linkColor = isUrgent ? "#D97706" : "#6366F1";
-
-  return `
-          <tr>
-            <td style="padding: 0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0 0;">
-                <tr>
-                  <td style="padding: 14px 20px; background-color: ${bgColor}; border-radius: 8px; text-align: center;">
-                    <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: ${textColor}; line-height: 1.5;">
-                      Day ${dayNum} of 14 &mdash;
-                      <a href="https://brainbrief.app/#pricing" style="color: ${linkColor}; font-weight: 600; text-decoration: underline;">Subscribe to keep your briefings &rarr;</a>
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>`;
 }
 
 // ---------------------------------------------------------------------------

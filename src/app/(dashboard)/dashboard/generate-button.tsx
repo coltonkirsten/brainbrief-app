@@ -75,7 +75,7 @@ export default function GenerateButton({
           Trial ended
         </button>
         <p className="text-sm text-muted-foreground">
-          <a href="/#pricing" className="text-primary hover:underline font-medium">Subscribe to Brain Brief Pro</a> to generate briefings.
+          <a href="/subscribe" className="text-primary hover:underline font-medium">Subscribe to Brain Brief Pro</a> to generate briefings.
         </p>
       </div>
     );

@@ -96,7 +96,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
         ? `In the past week, we've delivered ${ctx.briefingCount} briefing${ctx.briefingCount !== 1 ? "s" : ""} covering ${ctx.topicNames.length} topic${ctx.topicNames.length !== 1 ? "s" : ""}.\n\n`
         : `You have ${ctx.topicNames.length} topic${ctx.topicNames.length !== 1 ? "s" : ""} set up.\n\n`) +
       `You have 7 days left in your free trial.\n\n` +
-      `Subscribe to keep your briefings: https://brainbrief.app/#pricing\n`,
+      `Subscribe to keep your briefings: https://brainbrief.app/subscribe\n`,
   },
   {
     key: "day12",
@@ -126,7 +126,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
       `Your Brain Brief free trial ends in 3 days. After that, your daily briefings will stop.\n\n` +
       `Your topics and account will stay saved. Subscribe to keep your briefings.\n\n` +
       `Brain Brief Pro: $6/month or $50/year (save 30%).\n\n` +
-      `Subscribe: https://brainbrief.app/#pricing\n`,
+      `Subscribe: https://brainbrief.app/subscribe\n`,
   },
   {
     key: "day14",
@@ -159,7 +159,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
       (ctx.briefingCount > 0
         ? `Over the past two weeks, you've received ${ctx.briefingCount} briefings.\n\n`
         : "") +
-      `Subscribe to keep your briefings: https://brainbrief.app/#pricing\n`,
+      `Subscribe to keep your briefings: https://brainbrief.app/subscribe\n`,
   },
   {
     key: "day15",
@@ -189,7 +189,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
     buildText: (ctx) => `${greeting(ctx)} Your free trial has ended.\n\n` +
       `You won't receive any more daily briefings unless you subscribe.\n\n` +
       `Your account and topics are still saved. Subscribe anytime to pick up where you left off.\n\n` +
-      `Subscribe: https://brainbrief.app/#pricing\n`,
+      `Subscribe: https://brainbrief.app/subscribe\n`,
   },
   {
     key: "day30",
@@ -229,7 +229,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
         `Since your trial ended, ${daysMissed} days of news have gone by` +
         (ctx.topicNames.length > 0 ? ` in ${ctx.topicNames.join(", ")}` : "") + `.\n\n` +
         `Your topics are still saved. Subscribe to pick up where you left off.\n\n` +
-        `Subscribe: https://brainbrief.app/#pricing\n`;
+        `Subscribe: https://brainbrief.app/subscribe\n`;
     },
   },
 ];
@@ -479,7 +479,7 @@ function buildLifecycleHtml(params: {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 28px 0 8px;">
                 <tr>
                   <td align="center">
-                    <a href="https://brainbrief.app/#pricing" style="display: inline-block; padding: 14px 32px; background-color: ${ctaBg}; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 8px; mso-padding-alt: 0; text-align: center;">
+                    <a href="https://brainbrief.app/subscribe" style="display: inline-block; padding: 14px 32px; background-color: ${ctaBg}; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 8px; mso-padding-alt: 0; text-align: center;">
                       <!--[if mso]><i style="letter-spacing: 32px; mso-font-width: -100%; mso-text-raise: 30pt;">&nbsp;</i><![endif]-->
                       ${params.ctaText}
                       <!--[if mso]><i style="letter-spacing: 32px; mso-font-width: -100%;">&nbsp;</i><![endif]-->

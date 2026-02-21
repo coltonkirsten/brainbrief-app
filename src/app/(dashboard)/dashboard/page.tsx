@@ -90,7 +90,7 @@ export default async function DashboardPage() {
                   </p>
                 </div>
                 <a
-                  href="/#pricing"
+                  href="/subscribe"
                   className="rounded-md bg-red-600 px-4 py-2 text-sm font-bold text-white text-center hover:bg-red-700 transition-colors shadow-sm"
                 >
                   Subscribe &mdash; $6/mo

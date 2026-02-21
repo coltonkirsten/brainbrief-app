@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/pricing",
-        destination: "/#pricing",
+        destination: "/subscribe",
         permanent: false,
       },
     ];

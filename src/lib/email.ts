@@ -94,7 +94,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
       <tr>
         <td style="background-color: #10B981; padding: 12px 32px; text-align: center;">
           <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #FFFFFF; letter-spacing: 0.5px;">
-            Free Trial — Day \${trialInfo.trialDayNumber} of 14. <a href="https://brainbrief.app/pricing" style="color: #FFFFFF; text-decoration: underline;">Upgrade to keep your briefings.</a>
+            Free Trial — Day \${trialInfo.trialDayNumber} of 14. <a href="https://brainbrief.app/subscribe" style="color: #FFFFFF; text-decoration: underline;">Upgrade to keep your briefings.</a>
           </p>
         </td>
       </tr>

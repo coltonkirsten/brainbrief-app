@@ -244,7 +244,7 @@ export default function TopicManager({
         </form>
       ) : (
         <p className="text-sm text-muted-foreground bg-slate-50 border border-border p-4 rounded-md text-center">
-          You&apos;ve reached the maximum of {maxTopics} topics. Upgrade to add more.
+          You&apos;ve reached the maximum of {maxTopics} topics. <a href="/subscribe" className="font-semibold text-primary hover:underline">Upgrade to add more</a>.
         </p>
       )}
 

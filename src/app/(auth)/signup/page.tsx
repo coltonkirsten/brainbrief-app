@@ -94,7 +94,7 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link href="/" className="text-2xl font-bold tracking-tight">
+          <Link href="/" className="text-2xl font-bold tracking-tight font-sans">
             <span className="text-primary">Brain</span>Brief
           </Link>
           <h1 className="mt-6 text-2xl font-semibold">Create your account</h1>
@@ -124,7 +124,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
             />
           </div>
 
@@ -142,7 +142,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
               placeholder="At least 6 characters"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
             />
           </div>
 

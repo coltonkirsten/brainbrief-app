@@ -47,7 +47,11 @@ export default function ResetPasswordPage() {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-sm text-center" role="status" aria-live="polite">
-          <div className="mb-4 text-4xl" aria-hidden="true">&#10003;</div>
+          <div className="mb-4 flex justify-center" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 20 20" fill="currentColor" className="text-success">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          </div>
           <h1 className="text-2xl font-semibold">Password updated</h1>
           <p className="mt-3 text-sm text-muted-foreground">
             Your password has been reset successfully. Redirecting to your
@@ -62,7 +66,7 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <Link href="/" className="text-2xl font-bold tracking-tight">
+          <Link href="/" className="text-2xl font-bold tracking-tight font-sans">
             <span className="text-primary">Brain</span>Brief
           </Link>
           <h1 className="mt-6 text-2xl font-semibold">Set new password</h1>
@@ -94,7 +98,7 @@ export default function ResetPasswordPage() {
               autoComplete="new-password"
               placeholder="At least 6 characters"
               minLength={6}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
             />
           </div>
 
@@ -114,7 +118,7 @@ export default function ResetPasswordPage() {
               autoComplete="new-password"
               placeholder="Confirm your new password"
               minLength={6}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
             />
           </div>
 

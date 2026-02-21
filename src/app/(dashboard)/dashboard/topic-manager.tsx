@@ -130,7 +130,7 @@ export default function TopicManager({
       {/* Topic list */}
       <div className="space-y-2">
         {topics.length === 0 && (
-          <div className="rounded-lg border border-dashed border-border p-8 text-center">
+          <div className="bg-card shadow-sm border border-dashed border-slate-200 rounded-xl p-8 text-center">
             <p className="text-muted-foreground">
               No topics yet. Add your first topic below!
             </p>
@@ -140,7 +140,7 @@ export default function TopicManager({
         {topics.map((topic) => (
           <div
             key={topic.id}
-            className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3"
+            className="flex items-center gap-3 bg-card shadow-sm border border-slate-100 rounded-xl px-4 py-3"
           >
             {editingId === topic.id ? (
               <>
@@ -149,7 +149,7 @@ export default function TopicManager({
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                   aria-label="Edit topic name"
-                  className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") updateTopic(topic.id);
@@ -222,7 +222,7 @@ export default function TopicManager({
             onChange={(e) => setNewTopic(e.target.value)}
             aria-label="New topic name"
             placeholder="e.g., Artificial Intelligence, Climate Change, NBA..."
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
           />
           <button
             type="submit"

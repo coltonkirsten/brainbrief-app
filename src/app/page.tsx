@@ -5,7 +5,7 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col">
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto w-full">
-        <div className="text-xl font-bold tracking-tight">
+        <div className="text-xl font-bold tracking-tight font-sans">
           <span className="text-primary">Brain</span>Brief
         </div>
         <div className="flex items-center gap-4">
@@ -39,7 +39,7 @@ export default function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/signup"
-              className="rounded-full bg-primary px-8 py-3 text-base font-semibold text-white hover:bg-primary-hover transition-colors"
+              className="rounded-full bg-primary px-8 py-3 text-base font-semibold text-white hover:bg-primary-hover transition-colors shadow-md shadow-primary/20"
             >
               Start for free
             </Link>
@@ -59,33 +59,33 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-center mb-16">
             How it works
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold mx-auto mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold font-sans mx-auto mb-4">
                 1
               </div>
               <h3 className="font-semibold text-lg mb-2">Pick your topics</h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 AI, climate, sports, tech — whatever you care about. Add up to 3
                 topics for free.
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold mx-auto mb-4">
+            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold font-sans mx-auto mb-4">
                 2
               </div>
               <h3 className="font-semibold text-lg mb-2">We do the research</h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Our AI scours the web for the latest developments on your topics,
                 powered by Google Gemini.
               </p>
             </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold mx-auto mb-4">
+            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-bold font-sans mx-auto mb-4">
                 3
               </div>
               <h3 className="font-semibold text-lg mb-2">Get your briefing</h3>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 A clean, concise email briefing lands in your inbox on your
                 schedule. No noise, just signal.
               </p>
@@ -101,26 +101,50 @@ export default function LandingPage() {
             Trusted by professionals who value their time
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="rounded-lg border border-border p-6">
+            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-6">
               <p className="text-sm text-muted-foreground italic">
                 &ldquo;I used to spend 30 minutes scanning headlines. Now I get
                 everything I need in a 2-minute email.&rdquo;
               </p>
-              <p className="mt-4 text-sm font-medium">— Early Beta User</p>
+              <div className="mt-4 flex items-center gap-3 justify-center">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary font-sans">
+                  AM
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium">Alex M.</p>
+                  <p className="text-xs text-muted-foreground">Product Manager</p>
+                </div>
+              </div>
             </div>
-            <div className="rounded-lg border border-border p-6">
+            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-6">
               <p className="text-sm text-muted-foreground italic">
                 &ldquo;The AI summaries are surprisingly good. Concise, accurate,
                 and always up-to-date.&rdquo;
               </p>
-              <p className="mt-4 text-sm font-medium">— Early Beta User</p>
+              <div className="mt-4 flex items-center gap-3 justify-center">
+                <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center text-xs font-bold text-success font-sans">
+                  JR
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium">Jamie R.</p>
+                  <p className="text-xs text-muted-foreground">Software Engineer</p>
+                </div>
+              </div>
             </div>
-            <div className="rounded-lg border border-border p-6">
+            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-6">
               <p className="text-sm text-muted-foreground italic">
                 &ldquo;Finally, a news digest that covers exactly what I care
                 about — nothing more, nothing less.&rdquo;
               </p>
-              <p className="mt-4 text-sm font-medium">— Early Beta User</p>
+              <div className="mt-4 flex items-center gap-3 justify-center">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary font-sans">
+                  SK
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium">Sam K.</p>
+                  <p className="text-xs text-muted-foreground">Startup Founder</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -137,27 +161,27 @@ export default function LandingPage() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {/* Free tier */}
-            <div className="rounded-xl border border-border bg-background p-8">
+            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-8">
               <h3 className="text-lg font-semibold">Free</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-bold">$0</span>
+                <span className="text-4xl font-bold font-sans">$0</span>
                 <span className="text-muted-foreground">/month</span>
               </div>
               <ul className="mt-8 space-y-3 text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">&#10003;</span>
+                  <svg className="w-4 h-4 mt-0.5 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   Up to 3 topics
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">&#10003;</span>
+                  <svg className="w-4 h-4 mt-0.5 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   Daily email briefings
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">&#10003;</span>
+                  <svg className="w-4 h-4 mt-0.5 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   AI-powered summaries
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">&#10003;</span>
+                  <svg className="w-4 h-4 mt-0.5 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   Web-grounded research
                 </li>
               </ul>
@@ -169,14 +193,14 @@ export default function LandingPage() {
               </Link>
             </div>
             {/* Pro tier */}
-            <div className="rounded-xl border-2 border-primary bg-background p-8 relative">
+            <div className="bg-card shadow-md border-2 border-primary rounded-xl p-8 relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-white">
                 Coming Soon
               </div>
               <h3 className="text-lg font-semibold">Pro</h3>
               <div className="mt-4">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold">$6</span>
+                  <span className="text-4xl font-bold font-sans">$6</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -185,19 +209,19 @@ export default function LandingPage() {
               </div>
               <ul className="mt-8 space-y-3 text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">&#10003;</span>
+                  <svg className="w-4 h-4 mt-0.5 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   Unlimited topics
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">&#10003;</span>
+                  <svg className="w-4 h-4 mt-0.5 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   Custom delivery schedule
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">&#10003;</span>
+                  <svg className="w-4 h-4 mt-0.5 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   Deeper briefings with more sources
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">&#10003;</span>
+                  <svg className="w-4 h-4 mt-0.5 text-success flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   Priority support
                 </li>
               </ul>
@@ -224,7 +248,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/signup"
-            className="mt-8 inline-block rounded-full bg-primary px-8 py-3 text-base font-semibold text-white hover:bg-primary-hover transition-colors"
+            className="mt-8 inline-block rounded-full bg-primary px-8 py-3 text-base font-semibold text-white hover:bg-primary-hover transition-colors shadow-md shadow-primary/20"
           >
             Sign up free
           </Link>

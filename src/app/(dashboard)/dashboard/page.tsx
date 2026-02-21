@@ -42,7 +42,7 @@ export default async function DashboardPage() {
       {/* Header */}
       <header className="border-b border-border">
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 max-w-4xl mx-auto">
-          <div className="text-xl font-bold tracking-tight">
+          <div className="text-xl font-bold tracking-tight font-sans">
             <span className="text-primary">Brain</span>Brief
           </div>
           <div className="flex items-center gap-4">
@@ -79,7 +79,7 @@ export default async function DashboardPage() {
         {/* Latest briefing or upcoming briefing info */}
         <div className="mt-8">
           {latestBriefing ? (
-            <div className="rounded-lg border border-border bg-background p-6">
+            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold">Latest Briefing</h2>
                 <span className="text-xs text-muted-foreground">
@@ -115,7 +115,7 @@ export default async function DashboardPage() {
               />
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed border-border bg-muted/50 p-6 text-center">
+            <div className="bg-card shadow-sm border border-dashed border-slate-200 rounded-xl p-6 text-center">
               <div className="mb-3 flex justify-center" aria-hidden="true">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
                   <rect x="2" y="4" width="20" height="16" rx="2" />

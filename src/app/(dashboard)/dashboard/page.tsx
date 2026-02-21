@@ -5,7 +5,7 @@ import GenerateButton from "./generate-button";
 import { getTrialInfo } from "@/lib/trial";
 
 export const metadata = {
-  title: "Dashboard",
+  title: "Dashboard | Brain Brief",
 };
 
 export default async function DashboardPage() {
@@ -47,142 +47,142 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="border-b border-border">
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 max-w-4xl mx-auto">
-          <div className="text-xl font-bold tracking-tight font-sans">
-            <span className="text-primary">Brain</span>Brief
+      <header className="border-b border-border bg-white">
+        <div className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
+          <div className="text-xl font-bold tracking-tight font-serif text-primary">
+            Brain<span className="text-accent">Brief</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:inline">{user.email}</span>
+          <div className="flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-3">
+              {trialInfo.isTrialActive && !trialInfo.isSubscriber && (
+                <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent border border-accent/20">
+                  {trialInfo.trialDaysRemaining} days left in trial
+                </span>
+              )}
+              {trialInfo.isTrialExpired && !trialInfo.isSubscriber && (
+                <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700 border border-red-200">
+                  Trial Expired
+                </span>
+              )}
+              <span className="text-sm font-medium text-muted-foreground">{user.email}</span>
+            </div>
             <SignOutButton />
           </div>
         </div>
       </header>
 
       {/* Main */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-        {/* Trial status banner */}
-        {trialInfo.isTrialActive && !trialInfo.isSubscriber && (
-          <div className="mb-6 rounded-xl border border-indigo-100 bg-indigo-50/50 dark:bg-indigo-500/5 dark:border-indigo-500/20 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                <span className="font-semibold">Free trial</span> &mdash; Day {trialInfo.trialDayNumber} of {14}
-                {trialInfo.trialDaysRemaining <= 3 && (
-                  <span className="ml-1 text-amber-600 dark:text-amber-400 font-medium">
-                    ({trialInfo.trialDaysRemaining} day{trialInfo.trialDaysRemaining !== 1 ? "s" : ""} left)
-                  </span>
-                )}
-              </p>
-              <a
-                href="/#pricing"
-                className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-              >
-                Upgrade to Pro &rarr;
-              </a>
-            </div>
-          </div>
-        )}
-
-        {trialInfo.isTrialExpired && !trialInfo.isSubscriber && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-500/5 dark:border-amber-500/20 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                  Your free trial has ended
-                </p>
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-                  Subscribe to Brain Brief Pro to resume your daily briefings.
-                </p>
+      <main className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="lg:col-span-5 space-y-10">
+          
+          {/* Trial status banner */}
+          {trialInfo.isTrialExpired && !trialInfo.isSubscriber && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4">
+              <div className="flex flex-col gap-3">
+                <div>
+                  <p className="text-sm font-bold text-red-900">
+                    Your free trial has ended
+                  </p>
+                  <p className="text-xs text-red-700 mt-1">
+                    Subscribe to Brain Brief Premium to resume your daily briefings.
+                  </p>
+                </div>
+                <a
+                  href="/#pricing"
+                  className="rounded-md bg-red-600 px-4 py-2 text-sm font-bold text-white text-center hover:bg-red-700 transition-colors shadow-sm"
+                >
+                  Subscribe &mdash; $6/mo
+                </a>
               </div>
-              <a
-                href="/#pricing"
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
-              >
-                Subscribe &mdash; $6/mo
-              </a>
-            </div>
-          </div>
-        )}
-
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold">Your Topics</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Add up to {trialInfo.maxTopics} topics you want briefings on. We&apos;ll research the
-            latest news and send you a summary.
-          </p>
-        </div>
-
-        <TopicManager
-          initialTopics={topics}
-          userId={user.id}
-          maxTopics={trialInfo.maxTopics}
-          canAddTopics={trialInfo.canAddTopics}
-        />
-
-        {/* On-demand generate button */}
-        <div className="mt-8">
-          <GenerateButton
-            hasTopics={topics.length > 0}
-            lastBriefingAt={latestBriefing?.created_at ?? null}
-            canGenerate={trialInfo.canGenerateBriefings}
-          />
-        </div>
-
-        {/* Latest briefing or upcoming briefing info */}
-        <div className="mt-8">
-          {latestBriefing ? (
-            <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold">Latest Briefing</h2>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(latestBriefing.created_at).toLocaleDateString(
-                    "en-US",
-                    {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    }
-                  )}
-                </span>
-              </div>
-              {latestBriefing.topics_covered &&
-                Array.isArray(latestBriefing.topics_covered) && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {latestBriefing.topics_covered.map((topic: string) => (
-                      <span
-                        key={topic}
-                        className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              <div
-                className="prose prose-sm max-w-none text-sm text-muted-foreground break-words overflow-hidden"
-                dangerouslySetInnerHTML={{
-                  __html: latestBriefing.content_html,
-                }}
-              />
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 rounded-2xl p-10 text-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-emerald-500 to-indigo-500 opacity-20"></div>
-              <div className="mb-4 flex justify-center text-indigo-200 dark:text-indigo-900" aria-hidden="true">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" fill="none" />
-                  <polyline points="3 7 12 13 21 7" stroke="currentColor" fill="none" />
-                </svg>
-              </div>
-              <h2 className="font-serif text-xl font-bold text-slate-900 dark:text-slate-100">Ready for your first briefing?</h2>
-              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                Add your favorite topics above, then hit <strong className="font-medium text-slate-700 dark:text-slate-300">&quot;Send my briefing now&quot;</strong> to receive your first curated intelligence report instantly.
-              </p>
             </div>
           )}
+
+          <div>
+            <h1 className="text-3xl font-bold font-serif text-primary tracking-tight">Intelligence Feed</h1>
+            <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+              Define the topics, industries, or events you want to track. We'll curate the most critical updates into your daily briefing.
+            </p>
+          </div>
+
+          <TopicManager
+            initialTopics={topics}
+            userId={user.id}
+            maxTopics={trialInfo.maxTopics}
+            canAddTopics={trialInfo.canAddTopics}
+          />
+
+          <div className="pt-6 border-t border-border">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4">On-Demand Briefing</h3>
+            <GenerateButton
+              hasTopics={topics.length > 0}
+              lastBriefingAt={latestBriefing?.created_at ?? null}
+              canGenerate={trialInfo.canGenerateBriefings}
+            />
+          </div>
+        </div>
+
+        <div className="lg:col-span-7">
+          {/* Latest briefing or upcoming briefing info */}
+          <div className="sticky top-12">
+            <h2 className="text-sm font-bold text-primary uppercase tracking-wider mb-4">
+              Latest Archive
+            </h2>
+            {latestBriefing ? (
+              <div className="bg-white shadow-xl shadow-slate-200/50 border border-border rounded-2xl overflow-hidden">
+                <div className="bg-slate-50 border-b border-border px-8 py-6 flex items-center justify-between">
+                  <h2 className="font-serif text-xl font-bold text-primary">Today's Briefing</h2>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {new Date(latestBriefing.created_at).toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
+                  </span>
+                </div>
+                
+                <div className="p-8">
+                  {latestBriefing.topics_covered &&
+                    Array.isArray(latestBriefing.topics_covered) && (
+                      <div className="flex flex-wrap gap-2 mb-8">
+                        {latestBriefing.topics_covered.map((topic: string) => (
+                          <span
+                            key={topic}
+                            className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-bold text-primary border border-slate-200 uppercase tracking-wider"
+                          >
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  <div
+                    className="prose prose-slate max-w-none text-base text-slate-700 leading-relaxed break-words overflow-hidden"
+                    dangerouslySetInnerHTML={{
+                      __html: latestBriefing.content_html,
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white shadow-sm border border-border rounded-2xl p-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v10a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 2v6h6" />
+                  </svg>
+                </div>
+                <h2 className="font-serif text-2xl font-bold text-primary mb-3">Ready for your first briefing?</h2>
+                <p className="text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
+                  Add your target topics on the left, then click <strong className="font-medium text-primary">Generate Briefing</strong> to receive your first curated intelligence report instantly.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
@@ -194,7 +194,7 @@ function SignOutButton() {
     <form action="/api/auth/signout" method="post">
       <button
         type="submit"
-        className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
       >
         Sign out
       </button>

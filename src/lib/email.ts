@@ -16,7 +16,11 @@ interface SendBriefingEmailParams {
   html: string;
   text: string;
   structured?: BriefingData;
+<<<<<<< HEAD
   trialInfo?: TrialInfo;
+=======
+  trialDay?: number; // Added to support 14-day trial countdown
+>>>>>>> e006053 (feat: complete brand and frontend redesign sprint)
 }
 
 export async function sendBriefingEmail({
@@ -25,7 +29,11 @@ export async function sendBriefingEmail({
   html,
   text,
   structured,
+<<<<<<< HEAD
   trialInfo,
+=======
+  trialDay,
+>>>>>>> e006053 (feat: complete brand and frontend redesign sprint)
 }: SendBriefingEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -40,7 +48,11 @@ export async function sendBriefingEmail({
         process.env.RESEND_FROM_EMAIL || "Brain Brief <onboarding@resend.dev>";
 
       const emailHtml = structured
+<<<<<<< HEAD
         ? buildStructuredEmailTemplate(structured, trialInfo)
+=======
+        ? buildStructuredEmailTemplate(structured, trialDay)
+>>>>>>> e006053 (feat: complete brand and frontend redesign sprint)
         : buildLegacyEmailTemplate(html);
 
       const { data, error } = await resend.emails.send({
@@ -59,7 +71,7 @@ export async function sendBriefingEmail({
         return { success: false };
       }
 
-      console.log(`[email] Sent to ${to}, messageId: ${data?.id}`);
+      console.log(`[email] Sent to \${to}, messageId: \${data?.id}`);
       return { success: true, messageId: data?.id };
     } catch (err) {
       console.error("[email] Failed to send via Resend:", err);
@@ -68,42 +80,45 @@ export async function sendBriefingEmail({
   }
 
   // Stub: log to console when Resend isn't configured
-  console.log(`[email-stub] Would send to: ${to}`);
-  console.log(`[email-stub] Subject: ${subject}`);
-  console.log(`[email-stub] HTML length: ${html.length} chars`);
-  console.log(`[email-stub] Text preview: ${text.substring(0, 200)}...`);
+  console.log(`[email-stub] Would send to: \${to}`);
+  console.log(`[email-stub] Subject: \${subject}`);
+  console.log(`[email-stub] HTML length: \${html.length} chars`);
+  console.log(`[email-stub] Text preview: \${text.substring(0, 200)}...`);
 
-  return { success: true, messageId: `stub-${Date.now()}` };
+  return { success: true, messageId: `stub-\${Date.now()}` };
 }
-
-// ---------------------------------------------------------------------------
-// Topic badge color palette — cycles through for each topic
-// ---------------------------------------------------------------------------
-
-const BADGE_COLORS = [
-  { bg: "#EEF2FF", text: "#4F46E5", accent: "#6366F1" }, // Indigo
-  { bg: "#ECFDF5", text: "#047857", accent: "#059669" }, // Emerald
-  { bg: "#FFF7ED", text: "#C2410C", accent: "#EA580C" }, // Orange
-  { bg: "#ECFEFF", text: "#0E7490", accent: "#0891B2" }, // Cyan
-  { bg: "#FDF2F8", text: "#BE185D", accent: "#DB2777" }, // Pink
-  { bg: "#F5F3FF", text: "#6D28D9", accent: "#7C3AED" }, // Violet
-];
 
 // ---------------------------------------------------------------------------
 // Structured email template — Chelsea's "Premium Editorial" design
 // ---------------------------------------------------------------------------
 
+<<<<<<< HEAD
 function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo): string {
+=======
+function buildStructuredEmailTemplate(data: BriefingData, trialDay?: number): string {
+>>>>>>> e006053 (feat: complete brand and frontend redesign sprint)
   const year = new Date().getFullYear();
   const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
-    month: "short",
+    month: "long",
     day: "numeric",
   });
 
+  const trialBanner = trialDay !== undefined && trialDay <= 14
+    ? `
+      <!-- ============ TRIAL BANNER ============ -->
+      <tr>
+        <td style="background-color: #10B981; padding: 12px 32px; text-align: center;">
+          <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #FFFFFF; letter-spacing: 0.5px;">
+            Day \${trialDay} of 14 — <a href="https://brainbrief.app/pricing" style="color: #FFFFFF; text-decoration: underline;">Subscribe to keep your briefings</a>
+          </p>
+        </td>
+      </tr>
+      `
+    : "";
+
   const topicBlocks = data.topics
     .map((topic, i) => {
-      const color = BADGE_COLORS[i % BADGE_COLORS.length];
       const isLast = i === data.topics.length - 1;
 
       const bulletItems = topic.bullets
@@ -111,10 +126,10 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
           (bullet) => `
               <tr>
                 <td style="padding: 0 0 12px 0; vertical-align: top; width: 20px;">
-                  <span style="color: ${color.accent}; font-size: 18px; line-height: 1;">&#8226;</span>
+                  <span style="color: #10B981; font-size: 18px; line-height: 1;">&#8226;</span>
                 </td>
-                <td style="padding: 0 0 12px 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #334155;">
-                  ${escapeHtml(bullet)}
+                <td style="padding: 0 0 12px 8px; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #334155;">
+                  \${escapeHtml(bullet)}
                 </td>
               </tr>`
         )
@@ -126,9 +141,10 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
               <td style="padding: 16px 0 0 0;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="padding: 16px; background-color: #F8FAFC; border-left: 4px solid ${color.accent}; border-radius: 0 8px 8px 0;">
-                      <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-style: italic; color: #475569; line-height: 1.6;">
-                        <strong style="font-style: normal;">The Bottom Line:</strong> ${escapeHtml(topic.bottomLine)}
+                    <td style="padding: 20px; background-color: #F8FAFC; border-left: 3px solid #10B981; border-radius: 0 6px 6px 0;">
+                      <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 14px; font-style: italic; color: #0F172A; line-height: 1.6;">
+                        <strong style="font-style: normal; font-family: Helvetica, Arial, sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #10B981; display: block; margin-bottom: 6px;">The Bottom Line</strong>
+                        \${escapeHtml(topic.bottomLine)}
                       </p>
                     </td>
                   </tr>
@@ -138,23 +154,23 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
         : "";
 
       return `
-          <!-- Topic: ${escapeHtml(topic.name)} -->
+          <!-- Topic: \${escapeHtml(topic.name)} -->
           <tr>
-            <td style="padding: 28px 32px${isLast ? "" : "; border-bottom: 1px solid #E2E8F0"};">
+            <td style="padding: 36px 32px\${isLast ? "" : "; border-bottom: 1px solid #E2E8F0"};">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <!-- Badge -->
                 <tr>
-                  <td style="padding: 0 0 12px 0;">
-                    <span style="display: inline-block; padding: 3px 10px; border-radius: 4px; background-color: ${color.bg}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 10px; font-weight: 700; color: ${color.text}; text-transform: uppercase; letter-spacing: 0.05em;">
-                      ${escapeHtml(topic.name)}
+                  <td style="padding: 0 0 16px 0;">
+                    <span style="display: inline-block; padding: 4px 12px; border-radius: 4px; background-color: #F1F5F9; font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #E2E8F0;">
+                      \${escapeHtml(topic.name)}
                     </span>
                   </td>
                 </tr>
                 <!-- Headline -->
                 <tr>
-                  <td style="padding: 0 0 16px 0;">
-                    <h2 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #0F172A; line-height: 1.45;">
-                      ${escapeHtml(topic.headline)}
+                  <td style="padding: 0 0 20px 0;">
+                    <h2 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; color: #0F172A; line-height: 1.3;">
+                      \${escapeHtml(topic.headline)}
                     </h2>
                   </td>
                 </tr>
@@ -162,11 +178,11 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
                 <tr>
                   <td>
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                      ${bulletItems}
+                      \${bulletItems}
                     </table>
                   </td>
                 </tr>
-                ${bottomLineBlock}
+                \${bottomLineBlock}
               </table>
             </td>
           </tr>`;
@@ -193,34 +209,38 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
       .email-bg { background-color: #0F172A !important; }
       .email-card { background-color: #1E293B !important; border-color: #334155 !important; }
       .email-header { border-color: #334155 !important; }
-      .email-intro { background-color: rgba(30, 41, 59, 0.5) !important; }
-      .email-footer { background-color: rgba(30, 41, 59, 0.5) !important; }
-      .text-heading { color: #F1F5F9 !important; }
+      .email-intro { background-color: rgba(15, 23, 42, 0.8) !important; border-color: #334155 !important; }
+      .email-footer { background-color: rgba(30, 41, 59, 0.5) !important; border-color: #334155 !important; }
+      .text-heading { color: #F8FAFC !important; }
       .text-body { color: #CBD5E1 !important; }
       .text-muted { color: #94A3B8 !important; }
-      .bottom-line-block { background-color: #1E293B !important; }
+      .topic-badge { background-color: #334155 !important; color: #F8FAFC !important; border-color: #475569 !important; }
+      .bottom-line-bg { background-color: #0F172A !important; }
+      .bottom-line-text { color: #F8FAFC !important; }
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%;">
-  <table role="presentation" class="email-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FBFBFD;">
+<body style="margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; background-color: #F8FAFC;">
+  <table role="presentation" class="email-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC;">
     <tr>
-      <td align="center" style="padding: 32px 16px;">
-        <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+      <td align="center" style="padding: 40px 16px;">
+        <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+
+          \${trialBanner}
 
           <!-- ============ HEADER ============ -->
           <tr>
-            <td class="email-header" style="padding: 24px 32px; border-bottom: 1px solid #E2E8F0;">
+            <td class="email-header" style="padding: 32px 32px 24px 32px; border-bottom: 1px solid #E2E8F0;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="vertical-align: middle;">
-                    <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; color: #0F172A; letter-spacing: -0.3px;">
-                      Brain<span style="color: #6366F1;">Brief</span>
+                    <h1 class="text-heading" style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 700; color: #0F172A; letter-spacing: -0.5px;">
+                      Brain<span style="color: #10B981;">Brief</span>
                     </h1>
                   </td>
                   <td align="right" style="vertical-align: middle;">
-                    <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 500; color: #64748B; text-transform: uppercase; letter-spacing: 1.5px;">
-                      ${escapeHtml(dateStr)}
+                    <span class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px;">
+                      \${escapeHtml(dateStr)}
                     </span>
                   </td>
                 </tr>
@@ -230,29 +250,30 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
 
           <!-- ============ INTRO ============ -->
           <tr>
-            <td class="email-intro" style="padding: 24px 32px; background-color: rgba(248, 250, 252, 0.5);">
-              <p class="text-body" style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #475569;">
-                ${escapeHtml(data.greeting)} Here's your personalized briefing on the topics that matter most today. Stay informed. Stay sharp.
+            <td class="email-intro" style="padding: 24px 32px; background-color: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+              <p class="text-body" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #475569;">
+                \${escapeHtml(data.greeting)} Here's your personalized intelligence briefing on the topics that matter most today.
               </p>
             </td>
           </tr>
 
           <!-- ============ TOPICS ============ -->
-          ${topicBlocks}
+          \${topicBlocks}
 
           <!-- ============ TRIAL COUNTDOWN ============ -->
           ${buildTrialBanner(trialInfo)}
 
           <!-- ============ FOOTER ============ -->
           <tr>
-            <td class="email-footer" style="padding: 28px 32px; background-color: #F8FAFC; text-align: center;">
-              <p class="text-muted" style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #94A3B8; line-height: 1.6;">
+            <td class="email-footer" style="padding: 32px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
+              <p class="text-muted" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B; line-height: 1.6;">
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
-              <p style="margin: 16px 0 0;">
-                <a href="https://brainbrief.app/dashboard" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1.5px; text-decoration: none;">Manage Topics</a>
-                <span style="color: #E2E8F0; padding: 0 12px;">|</span>
-                <a href="https://brainbrief.app/dashboard" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1.5px; text-decoration: none;">Unsubscribe</a>
+              <p style="margin: 20px 0 0;">
+                <a href="https://brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
+              </p>
+              <p style="margin: 20px 0 0;">
+                <a href="https://brainbrief.app/dashboard" class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -260,8 +281,9 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
         </table>
 
         <!-- Copyright below card -->
-        <p style="margin: 24px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #CBD5E1; text-transform: uppercase; letter-spacing: 1px; text-align: center;">
-          &copy; ${year} Brain Brief. All rights reserved.
+        <p class="text-muted" style="margin: 24px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8; text-align: center;">
+          &copy; \${year} Brain Brief. All rights reserved.<br>
+          <span style="font-size: 10px; opacity: 0.7;">Powered by AI • Grounded in Truth</span>
         </p>
       </td>
     </tr>
@@ -319,33 +341,21 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Brain Brief</title>
-  <!--[if mso]>
-  <noscript>
-    <xml>
-      <o:OfficeDocumentSettings>
-        <o:PixelsPerInch>96</o:PixelsPerInch>
-      </o:OfficeDocumentSettings>
-    </xml>
-  </noscript>
-  <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background-color: #FBFBFD; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FBFBFD;">
+<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC;">
     <tr>
-      <td align="center" style="padding: 32px 16px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+      <td align="center" style="padding: 40px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
           <!-- Header -->
           <tr>
-            <td style="padding: 24px 32px; border-bottom: 1px solid #E2E8F0;">
+            <td style="padding: 32px 32px 24px 32px; border-bottom: 1px solid #E2E8F0;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; color: #0F172A; letter-spacing: -0.3px;">
-                      Brain<span style="color: #6366F1;">Brief</span>
+                    <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 700; color: #0F172A; letter-spacing: -0.5px;">
+                      Brain<span style="color: #10B981;">Brief</span>
                     </h1>
-                  </td>
-                  <td align="right" style="font-size: 13px; color: #64748B;">
-                    Your daily briefing
                   </td>
                 </tr>
               </table>
@@ -353,24 +363,21 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
           </tr>
           <!-- Content -->
           <tr>
-            <td style="padding: 28px 32px; color: #0f172a; font-size: 15px; line-height: 1.7;">
-              ${contentHtml}
+            <td style="padding: 32px; color: #334155; font-size: 15px; line-height: 1.6;">
+              \${contentHtml}
             </td>
           </tr>
           <!-- Footer -->
           <tr>
-            <td style="padding: 28px 32px; background-color: #F8FAFC; text-align: center;">
-              <p style="margin: 0; font-size: 12px; color: #94A3B8; line-height: 1.6;">
-                You're receiving this because you subscribed to topics on
-                <a href="https://brainbrief.app" style="color: #6366f1; text-decoration: none;">Brain Brief</a>.
+            <td style="padding: 32px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
+              <p style="margin: 0; font-size: 13px; color: #64748B; line-height: 1.6;">
+                You're receiving this because you subscribed to topics on Brain Brief.
               </p>
-              <p style="margin: 12px 0 0;">
-                <a href="https://brainbrief.app/dashboard" style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1.5px; text-decoration: none;">Manage Topics</a>
-                <span style="color: #E2E8F0; padding: 0 12px;">|</span>
-                <a href="https://brainbrief.app/dashboard" style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1.5px; text-decoration: none;">Unsubscribe</a>
+              <p style="margin: 20px 0 0;">
+                <a href="https://brainbrief.app/dashboard" style="font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
               </p>
-              <p style="margin: 12px 0 0; font-size: 11px; color: #cbd5e1;">
-                &copy; ${year} Brain Brief. All rights reserved.
+              <p style="margin: 24px 0 0; font-size: 12px; color: #94A3B8;">
+                &copy; \${year} Brain Brief. All rights reserved.
               </p>
             </td>
           </tr>

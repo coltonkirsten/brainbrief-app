@@ -82,17 +82,17 @@ export default function GenerateButton({
   }
 
   return (
-    <div className="flex flex-col items-start gap-2">
+    <div className="flex flex-col items-start gap-3">
       <button
         onClick={handleGenerate}
         disabled={loading || isRateLimited}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="rounded-md bg-primary px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-sm hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading
           ? "Generating..."
           : isRateLimited
             ? `Available in ${minutesLeft}m`
-            : "Send my briefing now"}
+            : "Generate Briefing"}
       </button>
 
       {error && (

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Lora, Geist_Mono } from "next/font/google";
+import { Inter, Merriweather, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,11 +8,11 @@ const inter = Inter({
   display: "swap",
 });
 
-const lora = Lora({
-  variable: "--font-lora",
+const merriweather = Merriweather({
+  variable: "--font-merriweather",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "700", "900"],
 });
 
 const geistMono = Geist_Mono({
@@ -28,16 +28,16 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Brain Brief — AI-Powered Personalized Briefings",
+    default: "Brain Brief — Your intelligent daily briefing",
     template: "%s | Brain Brief",
   },
   description:
-    "Get smarter about the topics you care about. AI-generated briefings delivered to your inbox.",
+    "The antidote to information overload. Get smarter about the topics you care about, delivered directly to your inbox.",
   metadataBase: new URL("https://brainbrief.app"),
   openGraph: {
-    title: "Brain Brief — AI-Powered Personalized Briefings",
+    title: "Brain Brief — Your intelligent daily briefing",
     description:
-      "Get smarter about the topics you care about. AI-generated briefings delivered to your inbox.",
+      "The antidote to information overload. Get smarter about the topics you care about, delivered directly to your inbox.",
     url: "https://brainbrief.app",
     siteName: "Brain Brief",
     locale: "en_US",
@@ -45,9 +45,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Brain Brief — AI-Powered Personalized Briefings",
+    title: "Brain Brief — Your intelligent daily briefing",
     description:
-      "Get smarter about the topics you care about. AI-generated briefings delivered to your inbox.",
+      "The antidote to information overload. Get smarter about the topics you care about.",
   },
   robots: {
     index: true,
@@ -63,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${lora.variable} ${geistMono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${merriweather.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}
       >
         {children}
       </body>

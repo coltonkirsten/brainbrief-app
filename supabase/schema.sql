@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   stripe_customer_id TEXT,
   trial_ends_at TIMESTAMPTZ,
   subscription_status TEXT NOT NULL DEFAULT 'trialing' CHECK (subscription_status IN ('trialing', 'active', 'past_due', 'canceled')),
+  lifecycle_emails_sent JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

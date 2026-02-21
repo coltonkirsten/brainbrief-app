@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
 import { sendBriefingEmail } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
+import { processLifecycleEmails } from "@/lib/lifecycle-emails";
 
 // Allow up to 300s for processing multiple users
 export const maxDuration = 300;
@@ -199,12 +200,27 @@ export async function GET(request: Request) {
     }
   }
 
+  // Step 4: Process lifecycle emails (trial conversion sequence)
+  console.log("[cron] Processing lifecycle emails...");
+  let lifecycleResult = { sent: 0, errors: 0, details: [] as string[] };
+  try {
+    lifecycleResult = await processLifecycleEmails(supabase);
+    console.log(
+      `[cron] Lifecycle emails: ${lifecycleResult.sent} sent, ${lifecycleResult.errors} errors`
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("[cron] Lifecycle email processing failed:", msg);
+    lifecycleResult.errors = 1;
+    lifecycleResult.details = [`Fatal error: ${msg}`];
+  }
+
   const elapsed = Date.now() - startTime;
   const successCount = results.filter((r) => r.success).length;
   const failCount = results.filter((r) => !r.success).length;
 
   console.log(
-    `[cron] Done in ${elapsed}ms. ${successCount} succeeded, ${failCount} failed.`
+    `[cron] Done in ${elapsed}ms. Briefings: ${successCount} ok, ${failCount} failed. Lifecycle: ${lifecycleResult.sent} sent.`
   );
 
   return NextResponse.json({
@@ -215,5 +231,6 @@ export async function GET(request: Request) {
     succeeded: successCount,
     failed: failCount,
     details: results,
+    lifecycle: lifecycleResult,
   });
 }

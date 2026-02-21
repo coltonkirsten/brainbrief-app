@@ -115,19 +115,17 @@ export default async function DashboardPage() {
               />
             </div>
           ) : (
-            <div className="bg-card shadow-sm border border-dashed border-slate-200 rounded-xl p-6 text-center">
-              <div className="mb-3 flex justify-center" aria-hidden="true">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                  <circle cx="18" cy="18" r="3" fill="currentColor" stroke="none" />
+            <div className="bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 rounded-2xl p-10 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-emerald-500 to-indigo-500 opacity-20"></div>
+              <div className="mb-4 flex justify-center text-indigo-200 dark:text-indigo-900" aria-hidden="true">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" fill="none" />
+                  <polyline points="3 7 12 13 21 7" stroke="currentColor" fill="none" />
                 </svg>
               </div>
-              <h2 className="font-semibold">Your first briefing is coming!</h2>
-              <p className="mt-1 text-sm text-muted-foreground max-w-md mx-auto">
-                Add topics above, then hit &quot;Send my briefing now&quot; to
-                get your first briefing instantly — or wait for the daily email
-                at 9am UTC.
+              <h2 className="font-serif text-xl font-bold text-slate-900 dark:text-slate-100">Ready for your first briefing?</h2>
+              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                Add your favorite topics above, then hit <strong className="font-medium text-slate-700 dark:text-slate-300">&quot;Send my briefing now&quot;</strong> to receive your first curated intelligence report instantly.
               </p>
             </div>
           )}

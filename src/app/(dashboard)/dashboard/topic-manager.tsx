@@ -130,10 +130,20 @@ export default function TopicManager({
       {/* Topic list */}
       <div className="space-y-2">
         {topics.length === 0 && (
-          <div className="bg-card shadow-sm border border-dashed border-slate-200 rounded-xl p-8 text-center">
-            <p className="text-muted-foreground">
-              No topics yet. Add your first topic below!
-            </p>
+          <div className="bg-card shadow-sm border border-slate-100 rounded-xl p-8 text-center">
+            <h3 className="text-lg font-serif font-bold text-slate-900 dark:text-slate-100 mb-2">Welcome to Brain Brief</h3>
+            <p className="text-slate-500 mb-6 text-sm">You have no active topics. Add your own below, or start with a suggestion:</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {["Generative AI", "SpaceX & NASA", "Venture Capital", "Climate Tech", "Formula 1", "Longevity Research"].map(suggestion => (
+                <button
+                  key={suggestion}
+                  onClick={(e) => { e.preventDefault(); setNewTopic(suggestion); }}
+                  className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/30 rounded-full text-xs font-medium transition-colors cursor-pointer"
+                >
+                  + {suggestion}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

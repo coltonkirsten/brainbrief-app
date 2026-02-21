@@ -50,6 +50,36 @@ export default function LandingPage() {
               How it works
             </Link>
           </div>
+
+          {/* Briefing Preview */}
+          <div className="mt-16 relative mx-auto max-w-3xl text-left hidden sm:block">
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none rounded-xl" style={{ bottom: '-20px' }}></div>
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xl border border-slate-200 dark:border-slate-800 rounded-2xl p-8 overflow-hidden transform -rotate-1 transition-transform hover:rotate-0 duration-500">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
+                <div className="text-lg font-bold tracking-tight font-serif text-slate-900 dark:text-slate-100">
+                  Brain<span className="text-primary">Brief</span>
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Today's Briefing
+                </div>
+              </div>
+              <div className="mb-6">
+                <span className="inline-block px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider mb-3">Artificial Intelligence</span>
+                <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-slate-100 mb-3 leading-snug">Gemini 1.5 Pro introduces 1M token context window</h2>
+                <ul className="space-y-2 text-slate-600 dark:text-slate-300 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-indigo-500 mt-0.5">•</span>
+                    <span>Google expands context window for enterprise users, allowing for processing of entire codebases or long videos.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border-l-4 border-indigo-500">
+                <p className="text-sm italic text-slate-600 dark:text-slate-300">
+                  <strong>The Bottom Line:</strong> This move signals a shift from "chatting" to "processing," enabling AI to handle complex, high-volume data analysis.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
 

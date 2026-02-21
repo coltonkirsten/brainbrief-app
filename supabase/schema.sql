@@ -70,9 +70,15 @@ CREATE POLICY "Users can update own topics" ON topics
 CREATE POLICY "Users can delete own topics" ON topics
   FOR DELETE USING (auth.uid() = user_id);
 
--- Briefings: users can read their own briefings
+-- Briefings: users can read/insert/update their own briefings
 CREATE POLICY "Users can view own briefings" ON briefings
   FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own briefings" ON briefings
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own briefings" ON briefings
+  FOR UPDATE USING (auth.uid() = user_id);
 
 -- Auto-create profile on user signup (trigger)
 CREATE OR REPLACE FUNCTION public.handle_new_user()

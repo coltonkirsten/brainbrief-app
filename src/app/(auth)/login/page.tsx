@@ -14,6 +14,20 @@ export default function LoginPage() {
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
+  /** Map raw Supabase error messages to user-friendly text */
+  function friendlyError(msg: string): string {
+    const lower = msg.toLowerCase();
+    if (lower.includes("email rate limit") || lower.includes("rate limit"))
+      return "Too many attempts — please try again in a few minutes.";
+    if (lower.includes("invalid login credentials") || lower.includes("invalid credentials"))
+      return "Incorrect email or password. Please try again.";
+    if (lower.includes("email not confirmed"))
+      return "Please confirm your email address before signing in. Check your inbox.";
+    if (lower.includes("invalid") && lower.includes("email"))
+      return "Please enter a valid email address.";
+    return msg;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -26,7 +40,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(friendlyError(error.message));
       setLoading(false);
       return;
     }
@@ -48,7 +62,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(friendlyError(error.message));
       setLoading(false);
       return;
     }

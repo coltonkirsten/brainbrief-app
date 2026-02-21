@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
 import { sendBriefingEmail } from "@/lib/email";
 
@@ -9,6 +10,18 @@ export const maxDuration = 60;
 const RATE_LIMIT_MS = 60 * 60 * 1000; // 1 hour
 
 /**
+ * Create a service-role Supabase client that bypasses RLS.
+ * Used for DB writes (briefings table only has SELECT RLS policy).
+ */
+function createServiceClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies: { getAll() { return []; }, setAll() {} } }
+  );
+}
+
+/**
  * On-demand briefing generation for authenticated users.
  * Rate-limited to once per hour.
  */
@@ -16,6 +29,7 @@ export async function POST() {
   const startTime = Date.now();
 
   try {
+    // User-scoped client for auth + reading user data (respects RLS)
     const supabase = await createClient();
 
     // Verify the user is authenticated
@@ -27,8 +41,11 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Service-role client for DB writes (bypasses RLS)
+    const adminDb = createServiceClient();
+
     // Check rate limit — look at the most recent briefing
-    const { data: lastBriefing } = await supabase
+    const { data: lastBriefing } = await adminDb
       .from("briefings")
       .select("created_at")
       .eq("user_id", user.id)
@@ -97,8 +114,8 @@ export async function POST() {
       );
     }
 
-    // Store in database
-    const { error: insertError } = await supabase
+    // Store in database (using admin client to bypass RLS)
+    const { error: insertError } = await adminDb
       .from("briefings")
       .insert({
         user_id: user.id,
@@ -108,7 +125,7 @@ export async function POST() {
       });
 
     if (insertError) {
-      console.error("[generate] DB insert error:", insertError);
+      console.error("[generate] DB insert error:", JSON.stringify(insertError));
       return NextResponse.json(
         { error: "Failed to save briefing" },
         { status: 500 }
@@ -133,7 +150,7 @@ export async function POST() {
       });
 
       if (emailResult.success) {
-        await supabase
+        await adminDb
           .from("briefings")
           .update({ sent_at: new Date().toISOString() })
           .eq("user_id", user.id)

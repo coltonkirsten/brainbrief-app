@@ -129,6 +129,7 @@ export async function POST() {
         subject: `Your Brain Brief — ${today}`,
         html: briefing.contentHtml,
         text: briefing.contentText,
+        structured: briefing.structured,
       });
 
       if (emailResult.success) {

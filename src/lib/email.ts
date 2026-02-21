@@ -150,7 +150,7 @@ function buildStructuredEmailTemplate(data: BriefingData): string {
                 <!-- Headline -->
                 <tr>
                   <td style="padding: 0 0 16px 0;">
-                    <h2 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #0F172A; line-height: 1.3;">
+                    <h2 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #0F172A; line-height: 1.45;">
                       ${escapeHtml(topic.headline)}
                     </h2>
                   </td>

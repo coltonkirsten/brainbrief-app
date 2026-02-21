@@ -99,7 +99,7 @@ export default function SignupPage() {
           </Link>
           <h1 className="mt-6 text-2xl font-semibold">Create your account</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Start getting smarter briefings in minutes
+            Your personal intelligence briefing starts here
           </p>
         </div>
 

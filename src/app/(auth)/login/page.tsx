@@ -20,7 +20,7 @@ export default function LoginPage() {
     if (lower.includes("email rate limit") || lower.includes("rate limit"))
       return "Too many attempts — please try again in a few minutes.";
     if (lower.includes("invalid login credentials") || lower.includes("invalid credentials"))
-      return "Incorrect email or password. Please try again.";
+      return "Incorrect email or password. (If you just signed up, please check your inbox to confirm your email).";
     if (lower.includes("email not confirmed"))
       return "Please confirm your email address before signing in. Check your inbox.";
     if (lower.includes("invalid") && lower.includes("email"))

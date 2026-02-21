@@ -259,7 +259,7 @@ export default function LandingPage() {
                 Start free trial
               </Link>
               <p className="text-center text-xs text-muted-foreground mt-4">
-                Cancel anytime. Secure payment via Stripe.
+                Cancel anytime. No credit card required to start.
               </p>
             </div>
           </div>
@@ -273,9 +273,9 @@ export default function LandingPage() {
             Brain<span className="text-accent">Brief</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Terms</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Contact</Link>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+            <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
           </div>
           <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} Brain Brief. All rights reserved.

@@ -116,7 +116,13 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="rounded-lg border border-dashed border-border bg-muted/50 p-6 text-center">
-              <div className="text-3xl mb-3" aria-hidden="true">&#128236;</div>
+              <div className="mb-3 flex justify-center" aria-hidden="true">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  <circle cx="18" cy="18" r="3" fill="currentColor" stroke="none" />
+                </svg>
+              </div>
               <h2 className="font-semibold">Your first briefing is coming!</h2>
               <p className="mt-1 text-sm text-muted-foreground max-w-md mx-auto">
                 Add topics above, then hit &quot;Send my briefing now&quot; to

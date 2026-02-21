@@ -77,7 +77,19 @@ LENGTH: Keep the total briefing under 800 words. Concise > comprehensive.`;
     },
   });
 
-  const contentHtml = response.text ?? "";
+  // response.text can throw if content was filtered or empty
+  let contentHtml: string;
+  try {
+    contentHtml = response.text ?? "";
+  } catch {
+    // Fallback: try to extract text from candidates directly
+    const parts = response.candidates?.[0]?.content?.parts;
+    contentHtml = parts?.map((p) => ("text" in p ? p.text : "")).join("") ?? "";
+  }
+
+  if (!contentHtml) {
+    throw new Error("Gemini returned no content — response may have been filtered");
+  }
 
   // Strip HTML tags for plain text version
   const contentText = contentHtml

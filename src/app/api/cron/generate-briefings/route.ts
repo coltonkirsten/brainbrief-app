@@ -3,6 +3,9 @@ import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
 import { sendBriefingEmail } from "@/lib/email";
 
+// Allow up to 300s for processing multiple users
+export const maxDuration = 300;
+
 /**
  * Cron endpoint: generates and sends briefings for all users.
  * Called by Vercel Cron daily at 9am UTC.

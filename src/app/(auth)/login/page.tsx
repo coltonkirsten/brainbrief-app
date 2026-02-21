@@ -62,7 +62,12 @@ export default function LoginPage() {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-sm text-center" role="status" aria-live="polite">
-          <div className="mb-4 text-4xl" aria-hidden="true">📧</div>
+          <div className="mb-4 flex justify-center" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+          </div>
           <h1 className="text-2xl font-semibold">Check your email</h1>
           <p className="mt-3 text-sm text-muted-foreground">
             We sent a password reset link to{" "}

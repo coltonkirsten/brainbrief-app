@@ -29,6 +29,7 @@ export default function TopicManager({
   const [editValue, setEditValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -178,13 +179,34 @@ export default function TopicManager({
                 >
                   Edit
                 </button>
-                <button
-                  onClick={() => deleteTopic(topic.id)}
-                  disabled={deletingId === topic.id}
-                  className="text-sm text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
-                >
-                  {deletingId === topic.id ? "Deleting..." : "Delete"}
-                </button>
+                {confirmDeleteId === topic.id ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground">Sure?</span>
+                    <button
+                      onClick={() => {
+                        setConfirmDeleteId(null);
+                        deleteTopic(topic.id);
+                      }}
+                      disabled={deletingId === topic.id}
+                      className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
+                    >
+                      {deletingId === topic.id ? "Deleting..." : "Yes"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      No
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(topic.id)}
+                    className="text-sm text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
               </>
             )}
           </div>

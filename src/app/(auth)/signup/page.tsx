@@ -16,6 +16,17 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    // Client-side validation (styled, not browser-native)
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
@@ -28,7 +39,7 @@ export default function SignupPage() {
     });
 
     if (error) {
-      setError(error.message);
+      setError(friendlyError(error.message));
       setLoading(false);
       return;
     }
@@ -37,11 +48,31 @@ export default function SignupPage() {
     setLoading(false);
   }
 
+  /** Map raw Supabase errors to user-friendly messages */
+  function friendlyError(msg: string): string {
+    const lower = msg.toLowerCase();
+    if (lower.includes("email rate limit"))
+      return "Too many attempts — please try again in a few minutes.";
+    if (lower.includes("already registered") || lower.includes("already been registered"))
+      return "An account with this email already exists. Try signing in instead.";
+    if (lower.includes("password") && lower.includes("6"))
+      return "Password must be at least 6 characters.";
+    if (lower.includes("invalid") && lower.includes("email"))
+      return "Please enter a valid email address.";
+    return msg;
+  }
+
   if (success) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <div className="w-full max-w-sm text-center" role="status" aria-live="polite">
-          <div className="mb-4 text-4xl" aria-hidden="true">📬</div>
+          <div className="mb-4 flex justify-center" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              <path d="M2 17 9 12" /><path d="M22 17 15 12" />
+            </svg>
+          </div>
           <h1 className="text-2xl font-semibold">Check your email</h1>
           <p className="mt-3 text-sm text-muted-foreground">
             We sent a confirmation link to{" "}
@@ -91,7 +122,6 @@ export default function SignupPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               autoComplete="email"
               placeholder="you@example.com"
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
@@ -110,10 +140,8 @@ export default function SignupPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               autoComplete="new-password"
               placeholder="At least 6 characters"
-              minLength={6}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
           </div>

@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { generateBriefing } from "@/lib/gemini";
 import { sendBriefingEmail } from "@/lib/email";
 
+// Allow up to 60s for Gemini generation + email delivery
+export const maxDuration = 60;
+
 const RATE_LIMIT_MS = 60 * 60 * 1000; // 1 hour
 
 /**
@@ -12,77 +15,87 @@ const RATE_LIMIT_MS = 60 * 60 * 1000; // 1 hour
 export async function POST() {
   const startTime = Date.now();
 
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  // Verify the user is authenticated
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    // Verify the user is authenticated
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  // Check rate limit — look at the most recent briefing
-  const { data: lastBriefing } = await supabase
-    .from("briefings")
-    .select("created_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    // Check rate limit — look at the most recent briefing
+    const { data: lastBriefing } = await supabase
+      .from("briefings")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  if (lastBriefing) {
-    const lastCreated = new Date(lastBriefing.created_at).getTime();
-    const elapsed = Date.now() - lastCreated;
-    if (elapsed < RATE_LIMIT_MS) {
-      const minutesLeft = Math.ceil((RATE_LIMIT_MS - elapsed) / 60000);
+    if (lastBriefing) {
+      const lastCreated = new Date(lastBriefing.created_at).getTime();
+      const elapsed = Date.now() - lastCreated;
+      if (elapsed < RATE_LIMIT_MS) {
+        const minutesLeft = Math.ceil((RATE_LIMIT_MS - elapsed) / 60000);
+        return NextResponse.json(
+          {
+            error: "Rate limited",
+            message: `You can generate a new briefing in ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"}.`,
+          },
+          { status: 429 }
+        );
+      }
+    }
+
+    // Get user's active topics
+    const { data: topics, error: topicsError } = await supabase
+      .from("topics")
+      .select("name")
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+
+    if (topicsError) {
+      console.error("[generate] Topics fetch error:", topicsError);
       return NextResponse.json(
-        {
-          error: "Rate limited",
-          message: `You can generate a new briefing in ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"}.`,
-        },
-        { status: 429 }
+        { error: "Failed to fetch topics" },
+        { status: 500 }
       );
     }
-  }
 
-  // Get user's active topics
-  const { data: topics, error: topicsError } = await supabase
-    .from("topics")
-    .select("name")
-    .eq("user_id", user.id)
-    .eq("is_active", true);
+    if (!topics || topics.length === 0) {
+      return NextResponse.json(
+        { error: "No topics", message: "Add at least one topic before generating a briefing." },
+        { status: 400 }
+      );
+    }
 
-  if (topicsError) {
-    return NextResponse.json(
-      { error: "Failed to fetch topics", details: topicsError.message },
-      { status: 500 }
-    );
-  }
+    const topicNames = topics.map((t) => t.name);
 
-  if (!topics || topics.length === 0) {
-    return NextResponse.json(
-      { error: "No topics", message: "Add at least one topic before generating a briefing." },
-      { status: 400 }
-    );
-  }
+    // Get user profile for display name (non-fatal if missing)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, email")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-  const topicNames = topics.map((t) => t.name);
-
-  // Get user profile for display name
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, email")
-    .eq("user_id", user.id)
-    .single();
-
-  try {
     // Generate briefing with Gemini + grounding
+    console.log(`[generate] Starting Gemini for user ${user.id}, topics: ${topicNames.join(", ")}`);
     const briefing = await generateBriefing(
       topicNames,
       profile?.display_name
     );
+
+    if (!briefing.contentHtml) {
+      console.error("[generate] Gemini returned empty content");
+      return NextResponse.json(
+        { error: "Generation failed", message: "AI returned empty content. Please try again." },
+        { status: 500 }
+      );
+    }
 
     // Store in database
     const { error: insertError } = await supabase
@@ -95,8 +108,9 @@ export async function POST() {
       });
 
     if (insertError) {
+      console.error("[generate] DB insert error:", insertError);
       return NextResponse.json(
-        { error: "Failed to save briefing", details: insertError.message },
+        { error: "Failed to save briefing" },
         { status: 500 }
       );
     }
@@ -129,6 +143,7 @@ export async function POST() {
     }
 
     const elapsed = Date.now() - startTime;
+    console.log(`[generate] Success for user ${user.id} in ${elapsed}ms`);
 
     return NextResponse.json({
       success: true,
@@ -137,8 +152,10 @@ export async function POST() {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
+    const stack = err instanceof Error ? err.stack : "";
+    console.error("[generate] Unhandled error:", message, stack);
     return NextResponse.json(
-      { error: "Generation failed", details: message },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS profiles (
   preferred_time TEXT NOT NULL DEFAULT '08:00',
   timezone TEXT NOT NULL DEFAULT 'America/New_York',
   stripe_customer_id TEXT,
+  trial_ends_at TIMESTAMPTZ,
+  subscription_status TEXT NOT NULL DEFAULT 'trialing' CHECK (subscription_status IN ('trialing', 'active', 'past_due', 'canceled')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -81,11 +83,12 @@ CREATE POLICY "Users can update own briefings" ON briefings
   FOR UPDATE USING (auth.uid() = user_id);
 
 -- Auto-create profile on user signup (trigger)
+-- Sets trial_ends_at to 14 days from signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, email)
-  VALUES (NEW.id, NEW.email);
+  INSERT INTO public.profiles (user_id, email, trial_ends_at)
+  VALUES (NEW.id, NEW.email, NOW() + INTERVAL '14 days');
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

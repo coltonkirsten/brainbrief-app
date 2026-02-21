@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 interface GenerateButtonProps {
   hasTopics: boolean;
   lastBriefingAt: string | null;
+  canGenerate: boolean;
 }
 
 const RATE_LIMIT_MS = 60 * 60 * 1000; // 1 hour
@@ -13,6 +14,7 @@ const RATE_LIMIT_MS = 60 * 60 * 1000; // 1 hour
 export default function GenerateButton({
   hasTopics,
   lastBriefingAt,
+  canGenerate,
 }: GenerateButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -61,6 +63,22 @@ export default function GenerateButton({
 
   if (!hasTopics) {
     return null;
+  }
+
+  if (!canGenerate) {
+    return (
+      <div className="flex flex-col items-start gap-2">
+        <button
+          disabled
+          className="rounded-lg bg-slate-300 dark:bg-slate-700 px-4 py-2 text-sm font-semibold text-slate-500 dark:text-slate-400 cursor-not-allowed"
+        >
+          Trial ended
+        </button>
+        <p className="text-sm text-muted-foreground">
+          <a href="/#pricing" className="text-primary hover:underline font-medium">Subscribe to Brain Brief Pro</a> to generate briefings.
+        </p>
+      </div>
+    );
   }
 
   return (

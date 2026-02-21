@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
 import { sendBriefingEmail } from "@/lib/email";
+import { getTrialInfo } from "@/lib/trial";
 
 // Allow up to 300s for processing multiple users
 export const maxDuration = 300;
@@ -74,11 +75,11 @@ export async function GET(request: Request) {
 
   console.log(`[cron] Found ${userTopics.size} users with active topics`);
 
-  // Step 2: Get user profiles for display names and emails
+  // Step 2: Get user profiles for display names, emails, and trial status
   const userIds = Array.from(userTopics.keys());
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("user_id, display_name, email")
+    .select("user_id, display_name, email, trial_ends_at, subscription_status")
     .in("user_id", userIds);
 
   if (profilesError) {
@@ -105,6 +106,20 @@ export async function GET(request: Request) {
     if (!profile) {
       console.warn(`[cron] No profile found for user ${userId}, skipping`);
       results.push({ userId, success: false, error: "No profile found" });
+      continue;
+    }
+
+    // Check trial/subscription status — skip users who can't receive briefings
+    const trialInfo = getTrialInfo(profile);
+    if (!trialInfo.canGenerateBriefings) {
+      console.log(
+        `[cron] Skipping ${profile.email} — trial expired, no active subscription (status: ${trialInfo.subscriptionStatus})`
+      );
+      results.push({
+        userId,
+        success: false,
+        error: "Trial expired, no active subscription",
+      });
       continue;
     }
 
@@ -155,6 +170,7 @@ export async function GET(request: Request) {
         html: briefing.contentHtml,
         text: briefing.contentText,
         structured: briefing.structured,
+        trialInfo,
       });
 
       if (emailResult.success) {

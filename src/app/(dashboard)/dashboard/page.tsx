@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import TopicManager from "./topic-manager";
 import GenerateButton from "./generate-button";
+import { getTrialInfo } from "@/lib/trial";
 
 export const metadata = {
   title: "Dashboard",
@@ -18,8 +19,13 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  // Fetch user's topics and latest briefing in parallel
-  const [topicsResult, briefingResult] = await Promise.all([
+  // Fetch user's profile, topics, and latest briefing in parallel
+  const [profileResult, topicsResult, briefingResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("trial_ends_at, subscription_status")
+      .eq("user_id", user.id)
+      .maybeSingle(),
     supabase
       .from("topics")
       .select("*")
@@ -36,6 +42,9 @@ export default async function DashboardPage() {
 
   const topics = topicsResult.data ?? [];
   const latestBriefing = briefingResult.data;
+  const trialInfo = getTrialInfo(
+    profileResult.data ?? { trial_ends_at: null, subscription_status: "trialing" }
+  );
 
   return (
     <div className="min-h-screen">
@@ -54,10 +63,53 @@ export default async function DashboardPage() {
 
       {/* Main */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+        {/* Trial status banner */}
+        {trialInfo.isTrialActive && !trialInfo.isSubscriber && (
+          <div className="mb-6 rounded-xl border border-indigo-100 bg-indigo-50/50 dark:bg-indigo-500/5 dark:border-indigo-500/20 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                <span className="font-semibold">Free trial</span> &mdash; Day {trialInfo.trialDayNumber} of {14}
+                {trialInfo.trialDaysRemaining <= 3 && (
+                  <span className="ml-1 text-amber-600 dark:text-amber-400 font-medium">
+                    ({trialInfo.trialDaysRemaining} day{trialInfo.trialDaysRemaining !== 1 ? "s" : ""} left)
+                  </span>
+                )}
+              </p>
+              <a
+                href="/#pricing"
+                className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+              >
+                Upgrade to Pro &rarr;
+              </a>
+            </div>
+          </div>
+        )}
+
+        {trialInfo.isTrialExpired && !trialInfo.isSubscriber && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-500/5 dark:border-amber-500/20 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  Your free trial has ended
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                  Subscribe to Brain Brief Pro to resume your daily briefings.
+                </p>
+              </div>
+              <a
+                href="/#pricing"
+                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
+              >
+                Subscribe &mdash; $6/mo
+              </a>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8">
           <h1 className="text-2xl font-bold">Your Topics</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add up to 3 topics you want briefings on. We&apos;ll research the
+            Add up to {trialInfo.maxTopics} topics you want briefings on. We&apos;ll research the
             latest news and send you a summary.
           </p>
         </div>
@@ -65,7 +117,8 @@ export default async function DashboardPage() {
         <TopicManager
           initialTopics={topics}
           userId={user.id}
-          maxTopics={3}
+          maxTopics={trialInfo.maxTopics}
+          canAddTopics={trialInfo.canAddTopics}
         />
 
         {/* On-demand generate button */}
@@ -73,6 +126,7 @@ export default async function DashboardPage() {
           <GenerateButton
             hasTopics={topics.length > 0}
             lastBriefingAt={latestBriefing?.created_at ?? null}
+            canGenerate={trialInfo.canGenerateBriefings}
           />
         </div>
 

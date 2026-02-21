@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
 import { sendBriefingEmail } from "@/lib/email";
+import { getTrialInfo } from "@/lib/trial";
 
 // Allow up to 60s for Gemini generation + email delivery
 export const maxDuration = 60;
@@ -92,12 +93,28 @@ export async function POST() {
 
     const topicNames = topics.map((t) => t.name);
 
-    // Get user profile for display name (non-fatal if missing)
+    // Get user profile for display name and trial status
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, email")
+      .select("display_name, email, trial_ends_at, subscription_status")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    // Check trial/subscription status
+    const trialInfo = getTrialInfo(
+      profile ?? { trial_ends_at: null, subscription_status: "trialing" }
+    );
+
+    if (!trialInfo.canGenerateBriefings) {
+      return NextResponse.json(
+        {
+          error: "Trial expired",
+          message:
+            "Your 14-day free trial has ended. Subscribe to Brain Brief Pro to keep receiving briefings.",
+        },
+        { status: 403 }
+      );
+    }
 
     // Generate briefing with Gemini + grounding
     console.log(`[generate] Starting Gemini for user ${user.id}, topics: ${topicNames.join(", ")}`);
@@ -147,6 +164,7 @@ export async function POST() {
         html: briefing.contentHtml,
         text: briefing.contentText,
         structured: briefing.structured,
+        trialInfo,
       });
 
       if (emailResult.success) {

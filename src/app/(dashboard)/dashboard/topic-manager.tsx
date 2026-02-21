@@ -15,12 +15,14 @@ interface TopicManagerProps {
   initialTopics: Topic[];
   userId: string;
   maxTopics: number;
+  canAddTopics: boolean;
 }
 
 export default function TopicManager({
   initialTopics,
   userId,
   maxTopics,
+  canAddTopics,
 }: TopicManagerProps) {
   const router = useRouter();
   const [topics, setTopics] = useState<Topic[]>(initialTopics);
@@ -33,7 +35,7 @@ export default function TopicManager({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const canAddMore = topics.length < maxTopics;
+  const canAddMore = canAddTopics && topics.length < maxTopics;
 
   async function addTopic(e: React.FormEvent) {
     e.preventDefault();
@@ -242,10 +244,15 @@ export default function TopicManager({
             {loading ? "Adding..." : "Add topic"}
           </button>
         </form>
+      ) : !canAddTopics ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-500/5 dark:border-amber-500/20 px-4 py-3">
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            Your free trial has ended. <a href="/#pricing" className="font-semibold underline hover:text-amber-900 dark:hover:text-amber-200">Subscribe to Brain Brief Pro</a> to add and manage topics.
+          </p>
+        </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          You&apos;ve reached the maximum of {maxTopics} topics on the free
-          plan.
+          You&apos;ve reached the maximum of {maxTopics} topics.
         </p>
       )}
 

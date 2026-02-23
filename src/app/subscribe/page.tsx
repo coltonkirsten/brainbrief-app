@@ -49,7 +49,7 @@ export default function SubscribePage() {
             onClick={() => setBilling("monthly")}
             className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
               billing === "monthly"
-                ? "bg-primary text-white shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground hover:text-primary"
             }`}
           >
@@ -59,7 +59,7 @@ export default function SubscribePage() {
             onClick={() => setBilling("annual")}
             className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
               billing === "annual"
-                ? "bg-primary text-white shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground hover:text-primary"
             }`}
           >
@@ -71,9 +71,9 @@ export default function SubscribePage() {
         </div>
 
         {/* Plan card */}
-        <div className="bg-white border border-border rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden">
           {/* Price */}
-          <div className="bg-slate-50 border-b border-border px-8 py-10 text-center">
+          <div className="bg-muted border-b border-border px-8 py-10 text-center">
             <h2 className="text-lg font-bold font-serif text-primary mb-4">
               Brain Brief Pro
             </h2>
@@ -135,7 +135,7 @@ export default function SubscribePage() {
             {/* CTA */}
             <button
               onClick={() => setShowComingSoon(true)}
-              className="block w-full rounded-md bg-primary py-3.5 text-center text-sm font-bold text-white hover:bg-primary-hover transition-all shadow-sm"
+              className="block w-full rounded-md bg-primary py-3.5 text-center text-sm font-bold text-primary-foreground hover:bg-primary-hover transition-all shadow-sm"
             >
               {billing === "annual"
                 ? "Subscribe — $50/year"
@@ -167,7 +167,7 @@ export default function SubscribePage() {
             Common questions
           </h3>
           <div className="space-y-4">
-            <details className="group bg-white border border-border rounded-xl px-6 py-4">
+            <details className="group bg-card border border-border rounded-xl px-6 py-4">
               <summary className="text-sm font-semibold text-primary cursor-pointer list-none flex items-center justify-between">
                 What happens when my trial ends?
                 <span className="text-muted-foreground group-open:rotate-45 transition-transform text-lg">+</span>
@@ -177,7 +177,7 @@ export default function SubscribePage() {
                 Subscribe anytime to pick up right where you left off — no setup needed.
               </p>
             </details>
-            <details className="group bg-white border border-border rounded-xl px-6 py-4">
+            <details className="group bg-card border border-border rounded-xl px-6 py-4">
               <summary className="text-sm font-semibold text-primary cursor-pointer list-none flex items-center justify-between">
                 Can I cancel anytime?
                 <span className="text-muted-foreground group-open:rotate-45 transition-transform text-lg">+</span>
@@ -187,7 +187,7 @@ export default function SubscribePage() {
                 If you cancel, you&apos;ll keep access until the end of your billing period.
               </p>
             </details>
-            <details className="group bg-white border border-border rounded-xl px-6 py-4">
+            <details className="group bg-card border border-border rounded-xl px-6 py-4">
               <summary className="text-sm font-semibold text-primary cursor-pointer list-none flex items-center justify-between">
                 Is my payment information secure?
                 <span className="text-muted-foreground group-open:rotate-45 transition-transform text-lg">+</span>

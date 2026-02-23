@@ -86,7 +86,7 @@ export default function GenerateButton({
       <button
         onClick={handleGenerate}
         disabled={loading || isRateLimited}
-        className="rounded-md bg-primary px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-sm hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="rounded-md bg-primary px-6 py-3 text-sm font-bold uppercase tracking-wider text-primary-foreground shadow-sm hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading
           ? "Generating..."

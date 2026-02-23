@@ -18,7 +18,7 @@ export default function LandingPage() {
           </Link>
           <Link
             href="/signup"
-            className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-hover transition-all"
+            className="rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover transition-all"
           >
             Start free trial
           </Link>
@@ -44,7 +44,7 @@ export default function LandingPage() {
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/signup"
-              className="group flex items-center justify-center gap-2 rounded-md bg-primary px-8 py-3.5 text-base font-medium text-white hover:bg-primary-hover transition-all shadow-sm"
+              className="group flex items-center justify-center gap-2 rounded-md bg-primary px-8 py-3.5 text-base font-medium text-primary-foreground hover:bg-primary-hover transition-all shadow-sm"
             >
               Start your 14-day free trial
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -254,7 +254,7 @@ export default function LandingPage() {
               
               <Link
                 href="/signup"
-                className="block w-full rounded-md bg-primary py-3.5 text-center text-sm font-medium text-white hover:bg-primary-hover transition-all shadow-sm"
+                className="block w-full rounded-md bg-primary py-3.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary-hover transition-all shadow-sm"
               >
                 Start free trial
               </Link>

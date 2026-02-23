@@ -23,7 +23,7 @@ export default function ContactPage() {
           </p>
           <a
             href="mailto:brief@brief.brainbrief.app"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-sm font-bold text-white uppercase tracking-wider hover:bg-primary-hover transition-all shadow-sm"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-sm font-bold text-primary-foreground uppercase tracking-wider hover:bg-primary-hover transition-all shadow-sm"
           >
             Email Support
           </a>

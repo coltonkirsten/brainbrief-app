@@ -237,7 +237,7 @@ export default function TopicManager({
           <button
             type="submit"
             disabled={loading || !newTopic.trim()}
-            className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-white uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-primary-foreground uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Adding..." : "Add topic"}
           </button>

@@ -17,6 +17,7 @@ export const maxDuration = 300;
  * 2. For each user, call Gemini with grounding to research their topics
  * 3. Store the briefing in Supabase
  * 4. Send the briefing via email (Resend, or stub if not configured)
+ * 5. Process post-trial emails (Day 8 + Day 10 standalone emails)
  */
 export async function GET(request: Request) {
   const startTime = Date.now();
@@ -95,7 +96,21 @@ export async function GET(request: Request) {
     (profiles ?? []).map((p) => [p.user_id, p])
   );
 
-  // Step 3: Generate and send briefings for each user
+  // Step 3: Get briefing counts per user (to detect first briefing for welcome section)
+  const { data: briefingCounts } = await supabase
+    .from("briefings")
+    .select("user_id")
+    .in("user_id", userIds);
+
+  const userBriefingCounts = new Map<string, number>();
+  for (const b of briefingCounts ?? []) {
+    userBriefingCounts.set(
+      b.user_id,
+      (userBriefingCounts.get(b.user_id) || 0) + 1
+    );
+  }
+
+  // Step 4: Generate and send briefings for each user
   const results: {
     userId: string;
     success: boolean;
@@ -158,6 +173,10 @@ export async function GET(request: Request) {
         continue;
       }
 
+      // Detect if this is the user's first briefing (for welcome section)
+      const existingCount = userBriefingCounts.get(userId) || 0;
+      const isFirstBriefing = existingCount === 0;
+
       // Send email
       const today = new Date().toLocaleDateString("en-US", {
         weekday: "long",
@@ -172,6 +191,7 @@ export async function GET(request: Request) {
         text: briefing.contentText,
         structured: briefing.structured,
         trialInfo,
+        isFirstBriefing,
       });
 
       if (emailResult.success) {
@@ -186,7 +206,7 @@ export async function GET(request: Request) {
       }
 
       console.log(
-        `[cron] Briefing for ${profile.email}: generated=${true}, emailed=${emailResult.success}`
+        `[cron] Briefing for ${profile.email}: generated=${true}, emailed=${emailResult.success}${isFirstBriefing ? " (first briefing, welcome included)" : ""}`
       );
 
       results.push({ userId, success: true });
@@ -200,8 +220,8 @@ export async function GET(request: Request) {
     }
   }
 
-  // Step 4: Process lifecycle emails (trial conversion sequence)
-  console.log("[cron] Processing lifecycle emails...");
+  // Step 5: Process post-trial lifecycle emails (Day 8 + Day 10 standalone emails)
+  console.log("[cron] Processing post-trial lifecycle emails...");
   let lifecycleResult = { sent: 0, errors: 0, details: [] as string[] };
   try {
     lifecycleResult = await processLifecycleEmails(supabase);

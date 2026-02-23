@@ -1,17 +1,45 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useState, useMemo, Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+const ROLE_OPTIONS = [
+  { value: "", label: "Skip" },
+  { value: "tech_professional", label: "Tech professional" },
+  { value: "executive_manager", label: "Executive / Manager" },
+  { value: "student", label: "Student" },
+  { value: "curious_generalist", label: "Curious generalist" },
+  { value: "other", label: "Other" },
+] as const;
+
 export default function SignupPage() {
-  const router = useRouter();
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [userRole, setUserRole] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Capture UTM params from URL (e.g., /signup?utm_source=twitter&utm_medium=social)
+  const utmParams = useMemo(
+    () => ({
+      utm_source: searchParams.get("utm_source") || undefined,
+      utm_medium: searchParams.get("utm_medium") || undefined,
+      utm_campaign: searchParams.get("utm_campaign") || undefined,
+    }),
+    [searchParams]
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,11 +58,21 @@ export default function SignupPage() {
     setLoading(true);
 
     const supabase = createClient();
+
+    // Build metadata — UTM params + optional role
+    // These are stored in auth.users.raw_user_meta_data and read by the profile trigger
+    const metadata: Record<string, string> = {};
+    if (utmParams.utm_source) metadata.utm_source = utmParams.utm_source;
+    if (utmParams.utm_medium) metadata.utm_medium = utmParams.utm_medium;
+    if (utmParams.utm_campaign) metadata.utm_campaign = utmParams.utm_campaign;
+    if (userRole) metadata.user_role = userRole;
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: metadata,
       },
     });
 
@@ -144,6 +182,29 @@ export default function SignupPage() {
               placeholder="At least 6 characters"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
+          </div>
+
+          {/* Optional role question */}
+          <div>
+            <label
+              htmlFor="user-role"
+              className="block text-sm font-medium mb-1.5"
+            >
+              What best describes you?{" "}
+              <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
+            <select
+              id="user-role"
+              value={userRole}
+              onChange={(e) => setUserRole(e.target.value)}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            >
+              {ROLE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button

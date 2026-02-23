@@ -27,7 +27,7 @@ export default function TermsPage() {
           <p>You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.</p>
           
           <h2 className="text-xl font-serif font-bold text-primary mt-8 mb-4">4. Subscriptions and Payments</h2>
-          <p>Brain Brief offers a 14-day free trial, after which a subscription is required to continue receiving briefings. You may cancel your subscription at any time. Refunds are handled on a case-by-case basis.</p>
+          <p>Brain Brief offers a 7-day free trial, after which a subscription is required to continue receiving briefings. You may cancel your subscription at any time. Refunds are handled on a case-by-case basis.</p>
           
           <h2 className="text-xl font-serif font-bold text-primary mt-8 mb-4">5. Limitation of Liability</h2>
           <p>Brain Brief uses AI to synthesize information from various sources. While we strive for accuracy, we do not guarantee the completeness or reliability of the information provided in the briefings. You agree that Brain Brief shall not be liable for any direct, indirect, incidental, special, or consequential damages resulting from the use or inability to use the service.</p>

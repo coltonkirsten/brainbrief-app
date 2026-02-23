@@ -46,7 +46,7 @@ export default function LandingPage() {
               href="/signup"
               className="group flex items-center justify-center gap-2 rounded-md bg-primary px-8 py-3.5 text-base font-medium text-primary-foreground hover:bg-primary-hover transition-all shadow-sm"
             >
-              Start your 14-day free trial
+              Start your 7-day free trial
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <p className="text-sm text-muted-foreground sm:ml-4 mt-4 sm:mt-0">
@@ -219,7 +219,7 @@ export default function LandingPage() {
           <div className="max-w-lg mx-auto">
             <div className="bg-muted shadow-lg border border-border rounded-2xl p-10 relative">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent px-4 py-1 text-xs font-bold text-white uppercase tracking-wider shadow-sm">
-                14-Day Free Trial
+                7-Day Free Trial
               </div>
               
               <div className="text-center mb-8">

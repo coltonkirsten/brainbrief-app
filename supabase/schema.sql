@@ -13,9 +13,16 @@ CREATE TABLE IF NOT EXISTS profiles (
   preferred_time TEXT NOT NULL DEFAULT '08:00',
   timezone TEXT NOT NULL DEFAULT 'America/New_York',
   stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  current_period_end TIMESTAMPTZ,
+  plan_type TEXT DEFAULT 'monthly' CHECK (plan_type IN ('monthly', 'annual')),
   trial_ends_at TIMESTAMPTZ,
   subscription_status TEXT NOT NULL DEFAULT 'trialing' CHECK (subscription_status IN ('trialing', 'active', 'past_due', 'canceled')),
   lifecycle_emails_sent JSONB NOT NULL DEFAULT '[]'::jsonb,
+  utm_source TEXT,
+  utm_medium TEXT,
+  utm_campaign TEXT,
+  user_role TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -84,12 +91,23 @@ CREATE POLICY "Users can update own briefings" ON briefings
   FOR UPDATE USING (auth.uid() = user_id);
 
 -- Auto-create profile on user signup (trigger)
--- Sets trial_ends_at to 14 days from signup
+-- Sets trial_ends_at to 7 days from signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, email, trial_ends_at)
-  VALUES (NEW.id, NEW.email, NOW() + INTERVAL '14 days');
+  INSERT INTO public.profiles (
+    user_id, email, trial_ends_at,
+    utm_source, utm_medium, utm_campaign, user_role
+  )
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NOW() + INTERVAL '7 days',
+    NEW.raw_user_meta_data->>'utm_source',
+    NEW.raw_user_meta_data->>'utm_medium',
+    NEW.raw_user_meta_data->>'utm_campaign',
+    NEW.raw_user_meta_data->>'user_role'
+  );
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

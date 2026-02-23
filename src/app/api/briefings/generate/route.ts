@@ -110,7 +110,7 @@ export async function POST() {
         {
           error: "Trial expired",
           message:
-            "Your 14-day free trial has ended. Subscribe to Brain Brief Pro to keep receiving briefings.",
+            "Your free trial has ended. Subscribe to Brain Brief Pro to keep receiving briefings.",
         },
         { status: 403 }
       );
@@ -130,6 +130,14 @@ export async function POST() {
         { status: 500 }
       );
     }
+
+    // Check if this is the user's first briefing (for welcome section)
+    const { count: existingCount } = await adminDb
+      .from("briefings")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    const isFirstBriefing = (existingCount ?? 0) === 0;
 
     // Store in database (using admin client to bypass RLS)
     const { error: insertError } = await adminDb
@@ -165,6 +173,7 @@ export async function POST() {
         text: briefing.contentText,
         structured: briefing.structured,
         trialInfo,
+        isFirstBriefing,
       });
 
       if (emailResult.success) {

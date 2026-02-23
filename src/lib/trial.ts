@@ -2,12 +2,12 @@
  * Trial and subscription status helpers.
  *
  * Business model:
- * - 14-day free trial (full access, up to 5 topics)
+ * - 7-day free trial (full access, up to 5 topics)
  * - After trial: briefings stop, account persists
  * - Brain Brief Pro ($6/mo or $50/yr): unlocks everything
  */
 
-export const TRIAL_DURATION_DAYS = 14;
+export const TRIAL_DURATION_DAYS = 7;
 export const TRIAL_TOPIC_LIMIT = 5;
 export const PRO_TOPIC_LIMIT = 5; // Same for now, can increase later
 
@@ -30,7 +30,7 @@ export interface TrialInfo {
   isTrialExpired: boolean;
   /** Days remaining in trial (0 if expired or subscriber) */
   trialDaysRemaining: number;
-  /** Day number in trial (1-14, capped at 14) */
+  /** Day number in trial (1-7, capped at 7) */
   trialDayNumber: number;
 }
 
@@ -56,7 +56,7 @@ export function getTrialInfo(profile: {
   const msRemaining = trialEndsAt ? trialEndsAt.getTime() - now.getTime() : 0;
   const trialDaysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
 
-  // Day number (1-indexed, for "Day X of 14")
+  // Day number (1-indexed, for "Day X of 7")
   const trialDayNumber = trialEndsAt
     ? Math.min(
         TRIAL_DURATION_DAYS,

@@ -1,16 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ArrowLeft } from "lucide-react";
+import { CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
 
 export default function SubscribePage() {
+  return (
+    <Suspense>
+      <SubscribeContent />
+    </Suspense>
+  );
+}
+
+function SubscribeContent() {
   const [billing, setBilling] = useState<"monthly" | "annual">("annual");
-  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
   const price = billing === "monthly" ? "$6" : "$50";
   const period = billing === "monthly" ? "/month" : "/year";
   const savings = billing === "annual" ? "Save 30% vs. monthly" : null;
+
+  // Show message if returning from canceled checkout
+  const checkoutStatus = searchParams.get("checkout");
+
+  async function handleSubscribe() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: billing }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError("No checkout URL returned. Please try again.");
+        setLoading(false);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -42,6 +88,22 @@ export default function SubscribePage() {
             One plan, everything included, cancel anytime.
           </p>
         </div>
+
+        {/* Checkout status messages */}
+        {checkoutStatus === "canceled" && (
+          <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 px-4 py-3 text-center">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              Checkout was canceled. No charges were made.
+            </p>
+          </div>
+        )}
+        {checkoutStatus === "success" && (
+          <div className="mb-8 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 px-4 py-3 text-center">
+            <p className="text-sm font-medium text-green-800 dark:text-green-200">
+              Welcome to Brain Brief Pro! Your subscription is active.
+            </p>
+          </div>
+        )}
 
         {/* Billing toggle */}
         <div className="flex items-center justify-center gap-3 mb-10">
@@ -133,26 +195,28 @@ export default function SubscribePage() {
             </ul>
 
             {/* CTA */}
-            <button
-              onClick={() => setShowComingSoon(true)}
-              className="block w-full rounded-md bg-primary py-3.5 text-center text-sm font-bold text-primary-foreground hover:bg-primary-hover transition-all shadow-sm"
-            >
-              {billing === "annual"
-                ? "Subscribe — $50/year"
-                : "Subscribe — $6/month"}
-            </button>
-
-            {showComingSoon && (
-              <div className="mt-4 rounded-lg border border-accent/30 bg-accent/5 px-4 py-3 text-center">
-                <p className="text-sm font-semibold text-accent">
-                  Payments launching soon!
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  We&apos;re setting up secure payments with Stripe.
-                  Your trial will be extended — you won&apos;t miss a briefing.
-                </p>
+            {error && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 px-4 py-3 text-center">
+                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </div>
             )}
+
+            <button
+              onClick={handleSubscribe}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 w-full rounded-md bg-primary py-3.5 text-center text-sm font-bold text-primary-foreground hover:bg-primary-hover transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Redirecting to checkout...
+                </>
+              ) : billing === "annual" ? (
+                "Subscribe — $50/year"
+              ) : (
+                "Subscribe — $6/month"
+              )}
+            </button>
 
             <p className="text-center text-xs text-muted-foreground mt-4">
               Cancel anytime. Secure payment via Stripe.
@@ -185,6 +249,16 @@ export default function SubscribePage() {
               <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
                 Yes — cancel with one click from your dashboard. No questions asked, no hidden fees.
                 If you cancel, you&apos;ll keep access until the end of your billing period.
+              </p>
+            </details>
+            <details className="group bg-card border border-border rounded-xl px-6 py-4">
+              <summary className="text-sm font-semibold text-primary cursor-pointer list-none flex items-center justify-between">
+                Will I be charged during my free trial?
+                <span className="text-muted-foreground group-open:rotate-45 transition-transform text-lg">+</span>
+              </summary>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+                No. If you subscribe during your trial, billing won&apos;t start until after your trial ends.
+                You get the full 7 days free regardless of when you subscribe.
               </p>
             </details>
             <details className="group bg-card border border-border rounded-xl px-6 py-4">

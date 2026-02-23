@@ -17,14 +17,14 @@ DO $$ BEGIN
 END $$;
 
 -- Set trial_ends_at for all existing profiles that don't have it
-UPDATE profiles SET trial_ends_at = NOW() + INTERVAL '14 days' WHERE trial_ends_at IS NULL;
+UPDATE profiles SET trial_ends_at = NOW() + INTERVAL '7 days' WHERE trial_ends_at IS NULL;
 
 -- Update the handle_new_user trigger to include trial_ends_at
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, email, trial_ends_at)
-  VALUES (NEW.id, NEW.email, NOW() + INTERVAL '14 days');
+  VALUES (NEW.id, NEW.email, NOW() + INTERVAL '7 days');
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

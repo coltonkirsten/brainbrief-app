@@ -127,7 +127,8 @@ export async function POST(request: Request) {
       sessionParams.customer_email = email;
     }
 
-    console.log("[checkout] Creating session for user:", user.id, "plan:", plan, "trial_active:", trialInfo.isTrialActive);
+    const baseUrl = getBaseUrl();
+    console.log("[checkout] Creating session for user:", user.id, "plan:", plan, "trial_active:", trialInfo.isTrialActive, "base_url:", baseUrl);
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
@@ -160,8 +161,9 @@ export async function POST(request: Request) {
 }
 
 function getBaseUrl(): string {
-  return (
+  const url = (
     process.env.NEXT_PUBLIC_SITE_URL ||
     "https://brainbrief-app.vercel.app"
-  );
+  ).trim().replace(/\/+$/, "");
+  return url;
 }

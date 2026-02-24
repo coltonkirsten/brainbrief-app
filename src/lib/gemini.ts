@@ -3,25 +3,33 @@ import { marked } from "marked";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
+/** A source link extracted from Gemini grounding metadata */
+export interface SourceLink {
+  title: string;
+  uri: string;
+}
+
 /** Structured data for a single topic in a briefing */
 export interface TopicBriefing {
   name: string;
   headline: string;
   bullets: string[];
   bottomLine: string;
+  sources?: SourceLink[];
 }
 
 /** Structured briefing data parsed from Gemini response */
 export interface BriefingData {
   greeting: string;
   topics: TopicBriefing[];
+  sources?: SourceLink[]; // Any sources not matched to a specific topic
 }
 
 export interface BriefingResult {
   contentHtml: string;
   contentText: string;
   topicsCovered: string[];
-  sources: { title: string; uri: string }[];
+  sources: SourceLink[];
   structured?: BriefingData;
 }
 
@@ -186,6 +194,16 @@ IMPORTANT:
     }
   }
 
+  // Match grounding sources to specific topics
+  if (structured && sources.length > 0) {
+    matchSourcesToTopics(sources, structured);
+    console.log(
+      `[gemini] Matched ${sources.length} sources across ${structured.topics.length} topics:`,
+      structured.topics.map((t) => `${t.name}: ${t.sources?.length ?? 0} sources`).join(", "),
+      structured.sources?.length ? `+ ${structured.sources.length} unmatched` : ""
+    );
+  }
+
   // Generate HTML from structured data, or convert markdown to HTML
   const contentHtml = structured
     ? generateHtmlFromStructured(structured)
@@ -203,6 +221,106 @@ IMPORTANT:
     sources,
     structured,
   };
+}
+
+/**
+ * Match grounding sources to specific topics using keyword overlap.
+ * Sources are assigned to the topic whose content (headline, bullets, bottomLine)
+ * has the most keyword overlap with the source title.
+ * Unmatched sources go to data.sources as a catch-all.
+ */
+function matchSourcesToTopics(
+  sources: SourceLink[],
+  data: BriefingData
+): void {
+  // Deduplicate sources by URI (Gemini sometimes returns duplicates)
+  const seen = new Set<string>();
+  const uniqueSources = sources.filter((s) => {
+    const key = s.uri.toLowerCase().replace(/\/+$/, "");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Build searchable text blobs per topic
+  const topicTexts = data.topics.map((topic) =>
+    [topic.name, topic.headline, ...topic.bullets, topic.bottomLine]
+      .join(" ")
+      .toLowerCase()
+  );
+
+  // Extract meaningful words (3+ chars) from each topic
+  const topicKeywords = topicTexts.map((text) => {
+    const words = text.match(/[a-z]{3,}/g) || [];
+    // Remove very common words
+    const stopwords = new Set([
+      "the", "and", "for", "that", "this", "with", "from", "are", "was",
+      "has", "have", "had", "been", "will", "but", "not", "its", "may",
+      "more", "also", "than", "into", "about", "could", "would", "after",
+      "new", "said", "while", "which", "their", "they", "these", "other",
+      "over", "most", "some",
+    ]);
+    return words.filter((w) => !stopwords.has(w));
+  });
+
+  // Initialize per-topic source arrays
+  for (const topic of data.topics) {
+    topic.sources = [];
+  }
+
+  const unmatchedSources: SourceLink[] = [];
+
+  for (const source of uniqueSources) {
+    const sourceText = `${source.title} ${source.uri}`.toLowerCase();
+    const sourceWords = new Set(
+      (sourceText.match(/[a-z]{3,}/g) || []).filter(
+        (w) => !["com", "www", "https", "html", "htm", "php", "org", "net", "news"].includes(w)
+      )
+    );
+
+    // Score each topic by how many of its keywords appear in the source
+    let bestTopicIdx = -1;
+    let bestScore = 0;
+
+    topicKeywords.forEach((keywords, idx) => {
+      let score = 0;
+      for (const word of keywords) {
+        if (sourceWords.has(word)) {
+          score += word.length; // Longer matching words = stronger signal
+        }
+      }
+      // Also check if source words appear in topic text
+      for (const word of sourceWords) {
+        if (topicTexts[idx].includes(word) && word.length >= 4) {
+          score += word.length * 0.5;
+        }
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        bestTopicIdx = idx;
+      }
+    });
+
+    // Require a minimum relevance score to match
+    if (bestTopicIdx >= 0 && bestScore >= 6) {
+      data.topics[bestTopicIdx].sources!.push(source);
+    } else {
+      unmatchedSources.push(source);
+    }
+  }
+
+  // Cap sources per topic to 3 (keep most relevant, move extras to unmatched)
+  for (const topic of data.topics) {
+    if (topic.sources && topic.sources.length > 3) {
+      const extras = topic.sources.splice(3);
+      unmatchedSources.push(...extras);
+    }
+  }
+
+  // Store unmatched sources at the data level
+  if (unmatchedSources.length > 0) {
+    data.sources = unmatchedSources;
+  }
 }
 
 /**
@@ -225,6 +343,14 @@ function generateHtmlFromStructured(data: BriefingData): string {
     if (topic.bottomLine) {
       html += `<p><em><strong>The Bottom Line:</strong> ${escapeHtml(topic.bottomLine)}</em></p>\n`;
     }
+    // Source links per topic
+    if (topic.sources && topic.sources.length > 0) {
+      html += `<p style="font-size: 0.85em; color: #64748b; margin-top: 8px;"><strong>Read more:</strong> `;
+      html += topic.sources
+        .map((s) => `<a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener" style="color: #10b981; text-decoration: underline;">${escapeHtml(s.title)}</a>`)
+        .join(" · ");
+      html += `</p>\n`;
+    }
   });
 
   html += `<p>Stay informed. Stay sharp. — Brain Brief</p>`;
@@ -245,6 +371,13 @@ function generateTextFromStructured(data: BriefingData): string {
     });
     if (topic.bottomLine) {
       text += `\nThe Bottom Line: ${topic.bottomLine}\n`;
+    }
+    // Source links per topic
+    if (topic.sources && topic.sources.length > 0) {
+      text += `\nRead more:\n`;
+      topic.sources.forEach((s) => {
+        text += `  → ${s.title}: ${s.uri}\n`;
+      });
     }
   });
 

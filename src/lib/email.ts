@@ -244,6 +244,36 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
             </tr>`
         : "";
 
+      // Source links — "Read More" section per topic
+      const sourceLinks =
+        topic.sources && topic.sources.length > 0
+          ? `
+            <tr>
+              <td style="padding: 16px 0 0 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding: 0;">
+                      <p style="margin: 0 0 8px 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94A3B8;">
+                        Read More
+                      </p>
+                      ${topic.sources
+                        .map(
+                          (source) => `
+                      <p style="margin: 0 0 4px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5;">
+                        <a href="${escapeHtml(source.uri)}" style="color: #10B981; text-decoration: none; border-bottom: 1px solid #D1FAE5;" target="_blank">
+                          ${escapeHtml(cleanSourceTitle(source.title))}
+                        </a>
+                        <span style="color: #94A3B8; font-size: 11px;"> · ${escapeHtml(extractDomain(source.uri))}</span>
+                      </p>`
+                        )
+                        .join("")}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`
+          : "";
+
       return `
           <!-- Topic: ${escapeHtml(topic.name)} -->
           <tr>
@@ -274,6 +304,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
                   </td>
                 </tr>
                 ${bottomLineBlock}
+                ${sourceLinks}
               </table>
             </td>
           </tr>`;
@@ -539,4 +570,25 @@ function escapeHtml(text: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Clean up a source title — remove trailing site names, truncate if too long */
+function cleanSourceTitle(title: string): string {
+  // Remove trailing " - Site Name" or " | Site Name" patterns
+  let cleaned = title.replace(/\s*[-|]\s*[^-|]{1,30}$/, "").trim();
+  // Truncate very long titles
+  if (cleaned.length > 80) {
+    cleaned = cleaned.substring(0, 77) + "...";
+  }
+  return cleaned || title;
+}
+
+/** Extract a clean domain name from a URL (e.g., "reuters.com") */
+function extractDomain(uri: string): string {
+  try {
+    const url = new URL(uri);
+    return url.hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
 }

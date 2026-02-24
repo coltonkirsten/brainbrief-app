@@ -9,10 +9,10 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-accent/20">
       <div className="max-w-3xl mx-auto px-6 py-20">
-        <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors mb-12">
+        <nav className="mb-12"><Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to home
-        </Link>
+        </Link></nav>
         <div className="bg-card shadow-xl shadow-slate-200/50 border border-border rounded-2xl p-12 text-center max-w-xl mx-auto">
           <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-6">
             <Mail className="w-8 h-8 text-accent" />

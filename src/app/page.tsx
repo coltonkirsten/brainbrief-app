@@ -5,10 +5,10 @@ export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-accent/20">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full">
-        <div className="text-2xl font-bold tracking-tight font-serif text-primary">
+      <nav className="flex flex-col sm:flex-row items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full gap-4 sm:gap-0">
+        <Link href="/" className="text-2xl font-bold tracking-tight font-serif text-primary hover:opacity-90 transition-opacity">
           Brain<span className="text-accent">Brief</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-6">
           <Link
             href="/login"

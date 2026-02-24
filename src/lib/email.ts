@@ -92,8 +92,8 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
     ? `
       <!-- ============ WELCOME HEADER (DAY 1) ============ -->
       <tr>
-        <td style="padding: 24px 32px 0 32px; background-color: #FFFFFF;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px;">
+        <td style="padding: 24px 0 0 0; background-color: transparent;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: transparent; border-bottom: 1px solid #E2E8F0; padding-bottom: 16px;">
             <tr>
               <td style="padding: 20px;">
                 <p style="margin: 0 0 12px 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
@@ -256,10 +256,10 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
   </style>
 </head>
 <body style="margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; background-color: #F8FAFC;">
-  <table role="presentation" class="email-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC;">
+  <table role="presentation" class="email-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: transparent;">
     <tr>
       <td align="center" style="padding: 40px 16px;">
-        <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 640px; background-color: transparent;">
 
           \${welcomeHeader}
 
@@ -297,7 +297,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
 
           <!-- ============ FOOTER ============ -->
           <tr>
-            <td class="email-footer" style="padding: 32px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
+            <td class="email-footer" style="padding: 32px 0; background-color: transparent; border-top: 1px solid #E2E8F0; text-align: center;">
               ${footerCountdown}
               <p class="text-muted" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B; line-height: 1.6;">
                 You're receiving this because you subscribed to topics on Brain Brief.

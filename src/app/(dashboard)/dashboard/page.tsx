@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import TopicManager from "./topic-manager";
 import GenerateButton from "./generate-button";
@@ -51,9 +52,9 @@ export default async function DashboardPage() {
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="flex items-center justify-between px-6 py-4 max-w-5xl mx-auto">
-          <div className="text-xl font-bold tracking-tight font-serif text-primary">
+          <Link href="/" className="text-xl font-bold tracking-tight font-serif text-primary hover:opacity-90 transition-opacity">
             Brain<span className="text-accent">Brief</span>
-          </div>
+          </Link>
           <div className="flex items-center gap-6">
             <div className="hidden sm:flex items-center gap-3">
               {trialInfo.isTrialActive && !trialInfo.isSubscriber && (

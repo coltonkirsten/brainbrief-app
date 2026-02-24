@@ -15,10 +15,10 @@ export default function SubscribePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full">
+      <nav className="flex flex-col sm:flex-row items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full gap-4 sm:gap-0">
         <Link
           href="/"
-          className="text-2xl font-bold tracking-tight font-serif text-primary"
+          className="text-2xl font-bold tracking-tight font-serif text-primary hover:opacity-90 transition-opacity"
         >
           Brain<span className="text-accent">Brief</span>
         </Link>

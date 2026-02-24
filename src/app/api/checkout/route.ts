@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { getStripe, getStripePrices } from "@/lib/stripe";
 import { getTrialInfo } from "@/lib/trial";
+import Stripe from "stripe";
 
 /**
  * Create a Stripe Checkout Session for subscription.
@@ -45,7 +46,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const priceId = getStripePrices()[plan];
+    const prices = getStripePrices();
+    const priceId = prices[plan];
 
     // Get user profile for trial info and existing Stripe customer
     const adminDb = createServerClient(
@@ -64,32 +66,42 @@ export async function POST(request: Request) {
     const email = profile?.email || user.email || "";
 
     // Reuse existing Stripe customer or create reference for new one
-    let customerId = profile?.stripe_customer_id || undefined;
+    const customerId = profile?.stripe_customer_id || undefined;
 
     // Build checkout session params
     const trialInfo = getTrialInfo(
       profile ?? { trial_ends_at: null, subscription_status: "trialing" }
     );
 
-    // If user is still in trial, set subscription trial_end so billing starts after trial
-    // Otherwise, billing starts immediately
-    const subscriptionData: Record<string, unknown> = {
+    // Subscription data with metadata
+    const subscriptionData: Stripe.Checkout.SessionCreateParams["subscription_data"] = {
       metadata: {
         supabase_user_id: user.id,
         plan_type: plan,
       },
     };
 
+    // If user is still in trial, set trial_end so billing starts after trial expires.
+    // Stripe requires trial_end to be at least 48 hours in the future.
     if (trialInfo.isTrialActive && profile?.trial_ends_at) {
-      const trialEnd = Math.floor(
+      const trialEndTimestamp = Math.floor(
         new Date(profile.trial_ends_at).getTime() / 1000
       );
-      subscriptionData.trial_end = trialEnd;
+      const minTrialEnd = Math.floor(Date.now() / 1000) + (48 * 60 * 60); // 48h from now
+
+      if (trialEndTimestamp > minTrialEnd) {
+        // Trial ends more than 48h from now — sync with our trial
+        subscriptionData.trial_end = trialEndTimestamp;
+      } else if (trialEndTimestamp > Math.floor(Date.now() / 1000)) {
+        // Trial ends within 48h — use Stripe's minimum (48h)
+        subscriptionData.trial_end = minTrialEnd;
+      }
+      // If trial already ended (shouldn't happen since isTrialActive is true),
+      // don't set trial_end — billing starts immediately
     }
 
-    const sessionParams: Record<string, unknown> = {
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "subscription",
-      payment_method_types: ["card"],
       line_items: [
         {
           price: priceId,
@@ -103,16 +115,38 @@ export async function POST(request: Request) {
         supabase_user_id: user.id,
         plan_type: plan,
       },
-      customer_email: customerId ? undefined : email,
-      customer: customerId || undefined,
     };
 
-    const session = await stripe.checkout.sessions.create(
-      sessionParams as Parameters<typeof stripe.checkout.sessions.create>[0]
-    );
+    // Set customer identification — can't pass both customer and customer_email
+    if (customerId) {
+      sessionParams.customer = customerId;
+    } else {
+      sessionParams.customer_email = email;
+    }
+
+    console.log("[checkout] Creating session for user:", user.id, "plan:", plan, "trial_active:", trialInfo.isTrialActive);
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    console.log("[checkout] Session created:", session.id);
 
     return NextResponse.json({ url: session.url });
   } catch (err) {
+    // Capture Stripe-specific error details
+    if (err instanceof Stripe.errors.StripeError) {
+      console.error("[checkout] Stripe error:", {
+        type: err.type,
+        code: err.code,
+        message: err.message,
+        param: err.param,
+        statusCode: err.statusCode,
+      });
+      return NextResponse.json(
+        { error: `Checkout failed: ${err.message}` },
+        { status: err.statusCode || 500 }
+      );
+    }
+
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[checkout] Error creating session:", message);
     return NextResponse.json(

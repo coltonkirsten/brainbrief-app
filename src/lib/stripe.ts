@@ -2,6 +2,8 @@
  * Stripe configuration and client helper.
  *
  * Uses test keys during development — Stripe is in test mode.
+ * All env vars are required — no silent fallbacks to prevent
+ * test/live mode mismatches.
  */
 
 import Stripe from "stripe";
@@ -20,10 +22,20 @@ export function getStripe(): Stripe {
   return stripeClient;
 }
 
-// Price IDs (configured in Stripe dashboard)
-export const STRIPE_PRICES = {
-  monthly: process.env.STRIPE_MONTHLY_PRICE_ID || "price_1T46Yb6TbFt3vZ69Rz5eE2n8",
-  annual: process.env.STRIPE_ANNUAL_PRICE_ID || "price_1T46Yv6TbFt3vZ69klPXgdgT",
-} as const;
+// Price IDs (configured in Stripe dashboard — no fallbacks to prevent test/live mismatch)
+export function getStripePrices() {
+  const monthly = process.env.STRIPE_MONTHLY_PRICE_ID;
+  const annual = process.env.STRIPE_ANNUAL_PRICE_ID;
+  if (!monthly || !annual) {
+    throw new Error("STRIPE_MONTHLY_PRICE_ID and STRIPE_ANNUAL_PRICE_ID must be set");
+  }
+  return { monthly, annual } as const;
+}
 
-export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
+export function getStripeWebhookSecret(): string {
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) {
+    throw new Error("STRIPE_WEBHOOK_SECRET is not set");
+  }
+  return secret;
+}

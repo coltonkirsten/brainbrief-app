@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { getStripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
+import { getStripe, getStripeWebhookSecret } from "@/lib/stripe";
 import type Stripe from "stripe";
 
 /**
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      STRIPE_WEBHOOK_SECRET
+      getStripeWebhookSecret()
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

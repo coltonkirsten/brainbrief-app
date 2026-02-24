@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
-import { getStripe, STRIPE_PRICES } from "@/lib/stripe";
+import { getStripe, getStripePrices } from "@/lib/stripe";
 import { getTrialInfo } from "@/lib/trial";
 
 /**
@@ -27,7 +27,15 @@ export async function POST(request: Request) {
     }
 
     // Parse request body
-    const body = await request.json();
+    let body: { plan?: string };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
     const plan = body.plan as "monthly" | "annual";
 
     if (!plan || !["monthly", "annual"].includes(plan)) {
@@ -37,7 +45,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const priceId = STRIPE_PRICES[plan];
+    const priceId = getStripePrices()[plan];
 
     // Get user profile for trial info and existing Stripe customer
     const adminDb = createServerClient(

@@ -23,8 +23,13 @@ export async function GET(request: Request) {
   const startTime = Date.now();
 
   // Verify cron secret to prevent unauthorized access
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error("[cron] CRON_SECRET is not set — refusing to run");
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+  }
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -224,6 +229,9 @@ export async function GET(request: Request) {
     `[cron] Done in ${elapsed}ms. Briefings: ${successCount} ok, ${failCount} failed. Lifecycle: ${lifecycleResult.sent} sent.`
   );
 
+  // Log full details server-side but redact PII from response
+  console.log("[cron] Per-user results:", JSON.stringify(results));
+
   return NextResponse.json({
     success: true,
     timestamp: new Date().toISOString(),
@@ -231,7 +239,8 @@ export async function GET(request: Request) {
     usersProcessed: results.length,
     succeeded: successCount,
     failed: failCount,
-    details: results,
-    lifecycle: lifecycleResult,
+    failedErrors: results.filter((r) => !r.success).map((r) => r.error),
+    lifecycleSent: lifecycleResult.sent,
+    lifecycleErrors: lifecycleResult.errors,
   });
 }

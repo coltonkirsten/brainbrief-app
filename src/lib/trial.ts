@@ -65,8 +65,11 @@ export function getTrialInfo(profile: {
     : TRIAL_DURATION_DAYS;
 
   // Access rules
-  const canGenerateBriefings = isSubscriber || isTrialActive;
-  const canAddTopics = isSubscriber || isTrialActive;
+  // past_due = payment failed but Stripe is still retrying (grace period ~7 days)
+  // Users should keep getting briefings during the retry window
+  const isPastDue = subscriptionStatus === "past_due";
+  const canGenerateBriefings = isSubscriber || isTrialActive || isPastDue;
+  const canAddTopics = isSubscriber || isTrialActive || isPastDue;
   const maxTopics = isSubscriber ? PRO_TOPIC_LIMIT : TRIAL_TOPIC_LIMIT;
 
   return {

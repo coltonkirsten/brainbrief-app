@@ -1,7 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 import { marked } from "marked";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+function getGeminiClient(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
+  }
+  return new GoogleGenAI({ apiKey });
+}
+
 
 /** A source link extracted from Gemini grounding metadata */
 export interface SourceLink {
@@ -52,7 +59,11 @@ export async function generateBriefing(
     day: "numeric",
   });
 
-  const topicList = topics.map((t) => `- ${t}`).join("\n");
+  // Sanitize topic names: strip control chars, limit length, prevent prompt injection
+  const sanitizedTopics = topics.map((t) =>
+    t.replace(/[\x00-\x1f\x7f]/g, "").trim().substring(0, 100)
+  );
+  const topicList = sanitizedTopics.map((t) => `- ${t}`).join("\n");
 
   const prompt = `You are Brain Brief — a smart, well-read friend who stays on top of the news so your reader doesn't have to. Your job: give a concise, grounded briefing on the topics below using REAL, CURRENT information from the web.
 
@@ -104,7 +115,7 @@ IMPORTANT:
 - Keep each topic concise: 2-4 bullets, each bullet 1-2 sentences max.
 - Keep the total briefing under 800 words.`;
 
-  const response = await ai.models.generateContent({
+  const response = await getGeminiClient().models.generateContent({
     model: "gemini-2.5-flash",
     contents: prompt,
     config: {
@@ -544,7 +555,7 @@ Write 1-2 sentences in a concrete, editorial voice.
 Example: "Meanwhile, Apple announced a new AI chip, while Google's latest model is likely to shift the landscape."
 Do NOT say "Here is a teaser" or include any markdown fences or quotes. JUST the 1-2 sentences.`;
 
-    const response = await ai.models.generateContent({
+    const response = await getGeminiClient().models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
       config: {

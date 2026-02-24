@@ -147,8 +147,8 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
     ? `
       <!-- ============ WELCOME HEADER (DAY 1) ============ -->
       <tr>
-        <td style="padding: 24px 32px 0 32px; background-color: #FFFFFF;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px;">
+        <td style="padding: 20px 24px 0 24px; background-color: #FFFFFF;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAFAFA; border: 1px solid #F1F5F9; border-radius: 8px;">
             <tr>
               <td style="padding: 20px;">
                 <p style="margin: 0 0 12px 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
@@ -277,7 +277,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
       return `
           <!-- Topic: ${escapeHtml(topic.name)} -->
           <tr>
-            <td style="padding: 36px 32px${isLast ? "" : "; border-bottom: 1px solid #E2E8F0"};">
+            <td style="padding: 28px 24px${isLast ? "" : "; border-bottom: 1px solid #F1F5F9"};">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <!-- Badge -->
                 <tr>
@@ -329,10 +329,10 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
   <style>
     @media (prefers-color-scheme: dark) {
       .email-bg { background-color: #0F172A !important; }
-      .email-card { background-color: #1E293B !important; border-color: #334155 !important; }
+      .email-card { background-color: #1E293B !important; }
       .email-header { border-color: #334155 !important; }
-      .email-intro { background-color: rgba(15, 23, 42, 0.8) !important; border-color: #334155 !important; }
-      .email-footer { background-color: rgba(30, 41, 59, 0.5) !important; border-color: #334155 !important; }
+      .email-intro { background-color: rgba(15, 23, 42, 0.6) !important; }
+      .email-footer { background-color: rgba(30, 41, 59, 0.4) !important; border-color: #334155 !important; }
       .text-heading { color: #F8FAFC !important; }
       .text-body { color: #CBD5E1 !important; }
       .text-muted { color: #94A3B8 !important; }
@@ -342,17 +342,17 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; background-color: #F8FAFC;">
-  <table role="presentation" class="email-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC;">
+<body style="margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; background-color: #FFFFFF;">
+  <table role="presentation" class="email-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF;">
     <tr>
-      <td align="center" style="padding: 40px 16px;">
-        <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+      <td align="center" style="padding: 24px 12px;">
+        <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 640px; background-color: #FFFFFF;">
 
           ${welcomeHeader}
 
           <!-- ============ HEADER ============ -->
           <tr>
-            <td class="email-header" style="padding: 32px 32px 24px 32px; border-bottom: 1px solid #E2E8F0;">
+            <td class="email-header" style="padding: 28px 24px 20px 24px; border-bottom: 1px solid #F1F5F9;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="vertical-align: middle;">
@@ -372,7 +372,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
 
           <!-- ============ INTRO ============ -->
           <tr>
-            <td class="email-intro" style="padding: 24px 32px; background-color: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+            <td class="email-intro" style="padding: 20px 24px; background-color: #FAFAFA;">
               <p class="text-body" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #475569;">
                 ${escapeHtml(data.greeting)} Here's your personalized intelligence briefing on the topics that matter most today.
               </p>
@@ -384,7 +384,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
 
           <!-- ============ FOOTER ============ -->
           <tr>
-            <td class="email-footer" style="padding: 32px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
+            <td class="email-footer" style="padding: 28px 24px; background-color: #FAFAFA; border-top: 1px solid #F1F5F9; text-align: center;">
               ${footerCountdown}
               <p class="text-muted" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B; line-height: 1.6;">
                 You're receiving this because you subscribed to topics on Brain Brief.
@@ -443,14 +443,14 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
   </noscript>
   <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC;">
+<body style="margin: 0; padding: 0; background-color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF;">
     <tr>
-      <td align="center" style="padding: 40px 16px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+      <td align="center" style="padding: 24px 12px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 640px; background-color: #FFFFFF;">
           <!-- Header -->
           <tr>
-            <td style="padding: 32px 32px 24px 32px; border-bottom: 1px solid #E2E8F0;">
+            <td style="padding: 28px 24px 20px 24px; border-bottom: 1px solid #F1F5F9;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="vertical-align: middle;">
@@ -469,13 +469,13 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
           </tr>
           <!-- Content -->
           <tr>
-            <td style="padding: 32px; color: #334155; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6;">
+            <td style="padding: 24px; color: #334155; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6;">
               ${styledContent}
             </td>
           </tr>
           <!-- Footer -->
           <tr>
-            <td style="padding: 32px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
+            <td style="padding: 28px 24px; background-color: #FAFAFA; border-top: 1px solid #F1F5F9; text-align: center;">
               <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B; line-height: 1.6;">
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>

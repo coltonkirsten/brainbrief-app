@@ -24,11 +24,12 @@ function AuthNav() {
 }
 
 const ROLE_OPTIONS = [
-  { value: "", label: "Skip" },
-  { value: "tech_professional", label: "Tech professional" },
-  { value: "executive_manager", label: "Executive / Manager" },
-  { value: "student", label: "Student" },
-  { value: "curious_generalist", label: "Curious generalist" },
+  { value: "professional", label: "Professional" },
+  { value: "developer", label: "Developer / Engineer" },
+  { value: "executive", label: "Executive / Manager" },
+  { value: "entrepreneur", label: "Entrepreneur / Founder" },
+  { value: "student", label: "Student / Researcher" },
+  { value: "creator", label: "Creator / Freelancer" },
   { value: "other", label: "Other" },
 ] as const;
 
@@ -220,8 +221,13 @@ function SignupForm() {
               id="user-role"
               value={userRole}
               onChange={(e) => setUserRole(e.target.value)}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className={`w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors ${
+                !userRole ? "text-muted-foreground" : ""
+              }`}
             >
+              <option value="" disabled>
+                Choose one...
+              </option>
               {ROLE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}

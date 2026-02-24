@@ -3,7 +3,25 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, useMemo, Suspense } from "react";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+
+function AuthNav() {
+  return (
+    <nav className="flex items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full">
+      <Link href="/" className="text-2xl font-bold tracking-tight font-serif text-primary">
+        Brain<span className="text-accent">Brief</span>
+      </Link>
+      <Link
+        href="/"
+        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to home
+      </Link>
+    </nav>
+  );
+}
 
 const ROLE_OPTIONS = [
   { value: "", label: "Skip" },
@@ -102,7 +120,9 @@ function SignupForm() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="min-h-screen flex flex-col">
+        <AuthNav />
+        <div className="flex flex-1 items-center justify-center px-4">
         <div className="w-full max-w-sm text-center" role="status" aria-live="polite">
           <div className="mb-4 flex justify-center" aria-hidden="true">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
@@ -124,12 +144,15 @@ function SignupForm() {
             Back to login
           </Link>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col">
+      <AuthNav />
+      <div className="flex flex-1 items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <Link href="/" className="text-2xl font-bold tracking-tight font-serif text-primary">
@@ -225,6 +248,7 @@ function SignupForm() {
             Sign in
           </Link>
         </p>
+      </div>
       </div>
     </div>
   );

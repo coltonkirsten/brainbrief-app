@@ -413,6 +413,14 @@ function buildTrialFooter(trialInfo?: TrialInfo): string {
 
 function buildLegacyEmailTemplate(contentHtml: string): string {
   const year = new Date().getFullYear();
+  const dateStr = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
+  // Add inline styles to HTML elements for email client compatibility
+  const styledContent = addEmailInlineStyles(contentHtml);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -420,6 +428,15 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Your Brain Brief</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
 <body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC;">
@@ -431,10 +448,15 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
             <td style="padding: 32px 32px 24px 32px; border-bottom: 1px solid #E2E8F0;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td>
+                  <td style="vertical-align: middle;">
                     <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 700; color: #0F172A; letter-spacing: -0.5px;">
                       Brain<span style="color: #10B981;">Brief</span>
                     </h1>
+                  </td>
+                  <td align="right" style="vertical-align: middle;">
+                    <span style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px;">
+                      ${escapeHtml(dateStr)}
+                    </span>
                   </td>
                 </tr>
               </table>
@@ -442,20 +464,23 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
           </tr>
           <!-- Content -->
           <tr>
-            <td style="padding: 32px; color: #334155; font-size: 15px; line-height: 1.6;">
-              ${contentHtml}
+            <td style="padding: 32px; color: #334155; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6;">
+              ${styledContent}
             </td>
           </tr>
           <!-- Footer -->
           <tr>
             <td style="padding: 32px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
-              <p style="margin: 0; font-size: 13px; color: #64748B; line-height: 1.6;">
+              <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B; line-height: 1.6;">
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
               <p style="margin: 20px 0 0;">
-                <a href="https://brainbrief.app/dashboard" style="font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
+                <a href="https://brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
               </p>
-              <p style="margin: 24px 0 0; font-size: 12px; color: #94A3B8;">
+              <p style="margin: 20px 0 0;">
+                <a href="https://brainbrief.app/dashboard" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
+              </p>
+              <p style="margin: 24px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8;">
                 &copy; ${year} Brain Brief. All rights reserved.
               </p>
             </td>
@@ -466,6 +491,71 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
   </table>
 </body>
 </html>`;
+}
+
+/**
+ * Add inline styles to standard HTML elements for email client compatibility.
+ * Email clients (Gmail, Outlook, etc.) strip <style> tags and class-based CSS,
+ * so all styling must be inline on each element.
+ */
+function addEmailInlineStyles(html: string): string {
+  return html
+    // Headings — serif font, proper spacing, dark color
+    .replace(
+      /<h1(?:\s[^>]*)?>/g,
+      '<h1 style="margin: 0 0 16px; font-family: Georgia, \'Times New Roman\', serif; font-size: 26px; font-weight: 700; color: #0F172A; line-height: 1.3;">'
+    )
+    .replace(
+      /<h2(?:\s[^>]*)?>/g,
+      '<h2 style="margin: 32px 0 12px; font-family: Georgia, \'Times New Roman\', serif; font-size: 22px; font-weight: 700; color: #0F172A; line-height: 1.3;">'
+    )
+    .replace(
+      /<h3(?:\s[^>]*)?>/g,
+      '<h3 style="margin: 24px 0 10px; font-family: Georgia, \'Times New Roman\', serif; font-size: 18px; font-weight: 700; color: #0F172A; line-height: 1.4;">'
+    )
+    // Paragraphs — proper margin, readable line height
+    .replace(
+      /<p(?:\s[^>]*)?>/g,
+      '<p style="margin: 0 0 16px; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.7; color: #334155;">'
+    )
+    // Lists — indentation and spacing
+    .replace(
+      /<ul(?:\s[^>]*)?>/g,
+      '<ul style="margin: 0 0 20px; padding-left: 24px; list-style-type: disc;">'
+    )
+    .replace(
+      /<ol(?:\s[^>]*)?>/g,
+      '<ol style="margin: 0 0 20px; padding-left: 24px;">'
+    )
+    .replace(
+      /<li(?:\s[^>]*)?>/g,
+      '<li style="margin-bottom: 10px; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.7; color: #334155;">'
+    )
+    // Bold — darker color for emphasis
+    .replace(
+      /<strong(?:\s[^>]*)?>/g,
+      '<strong style="font-weight: 700; color: #0F172A;">'
+    )
+    // Italic
+    .replace(
+      /<em(?:\s[^>]*)?>/g,
+      '<em style="font-style: italic;">'
+    )
+    // Horizontal rules — styled separator
+    .replace(
+      /<hr(?:\s[^>]*)?(?:\/)?>/g,
+      '<hr style="border: none; border-top: 1px solid #E2E8F0; margin: 28px 0;">'
+    )
+    // Links — accent color
+    .replace(
+      /<a\s+href="/g,
+      '<a style="color: #10B981; text-decoration: underline;" href="'
+    )
+    // Blockquotes — left border accent
+    .replace(
+      /<blockquote(?:\s[^>]*)?>/g,
+      '<blockquote style="margin: 20px 0; padding: 16px 20px; border-left: 3px solid #10B981; background-color: #F8FAFC; border-radius: 0 6px 6px 0;">'
+    );
 }
 
 /** Escape HTML special characters in text content */

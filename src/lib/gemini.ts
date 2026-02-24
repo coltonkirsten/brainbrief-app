@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { marked } from "marked";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -172,19 +173,28 @@ IMPORTANT:
     }
   } catch {
     console.warn(
-      "[gemini] Failed to parse JSON response, falling back to raw HTML"
+      "[gemini] Failed to parse JSON response, trying to extract structured data from markdown"
     );
+
+    // Secondary fallback: try to extract structured data from markdown response
+    // Gemini sometimes returns markdown with our expected structure (headlines, bullets, bottom line)
+    structured = tryParseStructuredFromMarkdown(responseText, greeting);
+    if (structured) {
+      console.log("[gemini] Successfully extracted structured data from markdown");
+    } else {
+      console.warn("[gemini] Could not extract structured data, converting markdown to HTML");
+    }
   }
 
-  // Generate HTML from structured data, or use raw response as-is
+  // Generate HTML from structured data, or convert markdown to HTML
   const contentHtml = structured
     ? generateHtmlFromStructured(structured)
-    : responseText;
+    : convertMarkdownToHtml(responseText);
 
   // Generate plain text
   const contentText = structured
     ? generateTextFromStructured(structured)
-    : stripHtmlToText(responseText);
+    : stripMarkdownToText(responseText);
 
   return {
     contentHtml,
@@ -242,25 +252,147 @@ function generateTextFromStructured(data: BriefingData): string {
   return text;
 }
 
+
 /**
- * Strip HTML tags to produce plain text (fallback for non-structured responses).
+ * Convert markdown to clean HTML using the `marked` parser.
+ * This handles the case where Gemini returns markdown instead of JSON.
  */
-function stripHtmlToText(html: string): string {
-  return html
-    .replace(/<hr[^>]*>/g, "\n---\n")
-    .replace(/<\/?(h[1-6]|p|div)[^>]*>/g, "\n")
-    .replace(/<li[^>]*>/g, "  - ")
-    .replace(/<\/li>/g, "\n")
-    .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, "$2 ($1)")
-    .replace(/<\/?strong>/g, "")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, "\n\n")
+function convertMarkdownToHtml(markdown: string): string {
+  try {
+    // Configure marked for clean output
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+    });
+
+    const html = marked.parse(markdown);
+    if (typeof html === "string") {
+      return html;
+    }
+    // marked.parse can return a Promise if async is enabled — shouldn't happen with our config
+    return markdown;
+  } catch (err) {
+    console.error("[gemini] Markdown conversion failed:", err);
+    // Ultimate fallback: wrap in basic HTML paragraphs
+    return markdown
+      .split("\n\n")
+      .map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`)
+      .join("\n");
+  }
+}
+
+/**
+ * Try to extract structured BriefingData from markdown-formatted text.
+ * Gemini sometimes returns the right structure in markdown form instead of JSON:
+ * - ## Topic headlines
+ * - Bullet lists
+ * - **The Bottom Line:** paragraphs
+ */
+function tryParseStructuredFromMarkdown(
+  markdown: string,
+  defaultGreeting: string
+): BriefingData | undefined {
+  try {
+    // Split by h2/## headers to find topic sections
+    const sections = markdown.split(/^##\s+/m).filter((s) => s.trim());
+
+    if (sections.length === 0) return undefined;
+
+    // First section before any ## might contain greeting
+    let greetingText = defaultGreeting;
+    let topicSections = sections;
+
+    // Check if first section looks like a greeting (no bullets, short)
+    const firstSection = sections[0].trim();
+    if (
+      firstSection.length < 200 &&
+      !firstSection.includes("- ") &&
+      !firstSection.includes("* ")
+    ) {
+      // This might be a greeting/intro paragraph
+      const firstLine = firstSection.split("\n")[0].trim();
+      if (firstLine.length > 0 && firstLine.length < 100) {
+        greetingText = firstLine.replace(/^#+\s*/, "").replace(/\*\*/g, "");
+      }
+      topicSections = sections.slice(1);
+    }
+
+    if (topicSections.length === 0) return undefined;
+
+    const topics: TopicBriefing[] = topicSections
+      .map((section) => {
+        const lines = section.split("\n").filter((l) => l.trim());
+        if (lines.length === 0) return null;
+
+        // First line is the headline (was after ##)
+        const headline = lines[0].trim().replace(/\*\*/g, "");
+
+        // Extract bullets (lines starting with - or * or numbered)
+        const bullets: string[] = [];
+        let bottomLine = "";
+
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+
+          // Check for "The Bottom Line" or "Bottom Line"
+          if (/\*?\*?the bottom line\*?\*?:?/i.test(line)) {
+            // The bottom line content might be on this line or the next
+            const blContent = line
+              .replace(/\*?\*?the bottom line\*?\*?:?\s*/i, "")
+              .trim();
+            if (blContent) {
+              bottomLine = blContent.replace(/\*\*/g, "").replace(/\*/g, "");
+            } else if (i + 1 < lines.length) {
+              bottomLine = lines[i + 1]
+                .trim()
+                .replace(/\*\*/g, "")
+                .replace(/\*/g, "");
+            }
+            break;
+          }
+
+          // Bullet points
+          if (/^[-*•]\s+/.test(line) || /^\d+\.\s+/.test(line)) {
+            const bulletText = line
+              .replace(/^[-*•]\s+/, "")
+              .replace(/^\d+\.\s+/, "")
+              .replace(/\*\*/g, "")
+              .trim();
+            if (bulletText) bullets.push(bulletText);
+          }
+        }
+
+        if (bullets.length === 0) return null;
+
+        // Derive topic name from headline (strip specifics)
+        const name = headline;
+
+        return { name, headline, bullets, bottomLine };
+      })
+      .filter((t): t is TopicBriefing => t !== null);
+
+    if (topics.length === 0) return undefined;
+
+    return { greeting: greetingText, topics };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Strip markdown formatting to produce plain text (for text email version).
+ */
+function stripMarkdownToText(markdown: string): string {
+  return markdown
+    .replace(/^#{1,6}\s+/gm, "") // Remove heading markers
+    .replace(/\*\*([^*]+)\*\*/g, "$1") // Bold
+    .replace(/\*([^*]+)\*/g, "$1") // Italic
+    .replace(/`([^`]+)`/g, "$1") // Inline code
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Links
+    .replace(/^[-*]\s+/gm, "  • ") // Bullet points
+    .replace(/^\d+\.\s+/gm, "  • ") // Numbered lists
+    .replace(/---+/g, "---") // Horizontal rules
+    .replace(/\n{3,}/g, "\n\n") // Collapse extra newlines
     .trim();
 }
 

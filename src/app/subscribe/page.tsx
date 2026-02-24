@@ -240,6 +240,12 @@ function SubscribeContent() {
               Cancel anytime. Secure payment via Stripe.
               {billing === "annual" && " Billed annually."}
             </p>
+            <p className="text-center text-xs text-muted-foreground mt-2">
+              By subscribing, you agree to our{" "}
+              <Link href="/terms" className="underline hover:text-primary">Terms of Service</Link>
+              {" "}and{" "}
+              <Link href="/privacy" className="underline hover:text-primary">Privacy Policy</Link>.
+            </p>
           </div>
         </div>
 

@@ -395,6 +395,11 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
               <p style="margin: 20px 0 0;">
                 <a href="https://brainbrief.app/dashboard" class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
               </p>
+              <p style="margin: 16px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #94A3B8;">
+                <a href="https://brainbrief.app/terms" style="color: #94A3B8; text-decoration: underline;">Terms</a>
+                &nbsp;&middot;&nbsp;
+                <a href="https://brainbrief.app/privacy" style="color: #94A3B8; text-decoration: underline;">Privacy</a>
+              </p>
             </td>
           </tr>
 
@@ -484,6 +489,11 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
               </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://brainbrief.app/dashboard" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
+              </p>
+              <p style="margin: 16px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #94A3B8;">
+                <a href="https://brainbrief.app/terms" style="color: #94A3B8; text-decoration: underline;">Terms</a>
+                &nbsp;&middot;&nbsp;
+                <a href="https://brainbrief.app/privacy" style="color: #94A3B8; text-decoration: underline;">Privacy</a>
               </p>
               <p style="margin: 24px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8;">
                 &copy; ${year} Brain Brief. All rights reserved.

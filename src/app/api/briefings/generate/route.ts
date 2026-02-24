@@ -131,14 +131,6 @@ export async function POST() {
       );
     }
 
-    // Check if this is the user's first briefing (for welcome section)
-    const { count: existingCount } = await adminDb
-      .from("briefings")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id);
-
-    const isFirstBriefing = (existingCount ?? 0) === 0;
-
     // Store in database (using admin client to bypass RLS)
     const { error: insertError } = await adminDb
       .from("briefings")
@@ -173,7 +165,6 @@ export async function POST() {
         text: briefing.contentText,
         structured: briefing.structured,
         trialInfo,
-        isFirstBriefing,
       });
 
       if (emailResult.success) {

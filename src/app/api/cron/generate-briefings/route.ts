@@ -96,21 +96,7 @@ export async function GET(request: Request) {
     (profiles ?? []).map((p) => [p.user_id, p])
   );
 
-  // Step 3: Get briefing counts per user (to detect first briefing for welcome section)
-  const { data: briefingCounts } = await supabase
-    .from("briefings")
-    .select("user_id")
-    .in("user_id", userIds);
-
-  const userBriefingCounts = new Map<string, number>();
-  for (const b of briefingCounts ?? []) {
-    userBriefingCounts.set(
-      b.user_id,
-      (userBriefingCounts.get(b.user_id) || 0) + 1
-    );
-  }
-
-  // Step 4: Generate and send briefings for each user
+  // Step 3: Generate and send briefings for each user
   const results: {
     userId: string;
     success: boolean;
@@ -173,10 +159,6 @@ export async function GET(request: Request) {
         continue;
       }
 
-      // Detect if this is the user's first briefing (for welcome section)
-      const existingCount = userBriefingCounts.get(userId) || 0;
-      const isFirstBriefing = existingCount === 0;
-
       // Send email
       const today = new Date().toLocaleDateString("en-US", {
         weekday: "long",
@@ -191,7 +173,6 @@ export async function GET(request: Request) {
         text: briefing.contentText,
         structured: briefing.structured,
         trialInfo,
-        isFirstBriefing,
       });
 
       if (emailResult.success) {
@@ -206,7 +187,7 @@ export async function GET(request: Request) {
       }
 
       console.log(
-        `[cron] Briefing for ${profile.email}: generated=${true}, emailed=${emailResult.success}${isFirstBriefing ? " (first briefing, welcome included)" : ""}`
+        `[cron] Briefing for ${profile.email}: generated=${true}, emailed=${emailResult.success}`
       );
 
       results.push({ userId, success: true });

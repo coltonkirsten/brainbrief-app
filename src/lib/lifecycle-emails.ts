@@ -4,7 +4,7 @@
  * After a user's 7-day free trial ends, we send exactly two standalone emails:
  *
  *   Day  8 — "Your briefings have stopped" (trial ended notice)
- *   Day 10 — "Miss me?" follow-up (final email ever)
+ *   Day 10 — "Miss me?" follow-up with Gemini-generated topic teaser (final email ever)
  *
  * After Day 10, no more emails are sent. The user's account stays active
  * and they can subscribe at any time to resume briefings.
@@ -14,6 +14,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendStandaloneEmail } from "./email";
+import { generateTeaser } from "./gemini";
 import { TRIAL_DURATION_DAYS } from "./trial";
 
 // ---------------------------------------------------------------------------
@@ -35,6 +36,8 @@ interface EmailContext {
   displayName: string | null;
   email: string;
   topicNames: string[];
+  /** Gemini-generated teaser about the user's first topic (Day 10 only) */
+  teaser?: string;
 }
 
 interface UserProfile {
@@ -57,25 +60,24 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
     subject: () => "Your Brain Brief trial has ended",
     buildHtml: (ctx) =>
       buildStandaloneHtml({
-        preheader: "Your topics are saved and waiting for you",
+        preheader: "Your topics are saved and waiting",
         headline: `${greeting(ctx)} Your 7-day trial is over.`,
         body: `
           <p style="${bodyStyle}">
-            Today's briefing wasn't delivered because your free trial has ended.
+            Today's briefing wasn't delivered &mdash; but your topics are saved and waiting.
           </p>
           <p style="${bodyStyle}">
-            <strong>Your topics are saved and waiting for you.</strong>
-            Subscribe to pick up right where you left off &mdash; no setup needed.
+            If Brain Brief earned a place in your morning, we'd love to keep it there.
           </p>`,
-        ctaText: "Subscribe to Brain Brief Pro",
-        ctaSubtext: "$6/mo or $50/year &mdash; cancel anytime",
-        urgent: false,
+        ctaText: "Resume your briefings &rarr;",
+        ctaSubtext: "$6/month &middot; $50/year &middot; Cancel anytime",
       }),
     buildText: (ctx) =>
       `${greeting(ctx)} Your 7-day trial is over.\n\n` +
-      `Today's briefing wasn't delivered because your free trial has ended.\n\n` +
-      `Your topics are saved and waiting for you. Subscribe to pick up right where you left off.\n\n` +
-      `Subscribe: https://brainbrief.app/subscribe\n`,
+      "Today's briefing wasn't delivered — but your topics are saved and waiting.\n\n" +
+      "If Brain Brief earned a place in your morning, we'd love to keep it there.\n\n" +
+      "Resume your briefings: https://brainbrief.app/subscribe\n\n" +
+      "$6/month · $50/year · Cancel anytime\n",
   },
   {
     key: "day10_miss_me",
@@ -84,32 +86,35 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
       ctx.topicNames.length > 0
         ? `Still curious about ${ctx.topicNames[0]}?`
         : "Your briefings miss you",
-    buildHtml: (ctx) => {
-      const topicTeaser =
-        ctx.topicNames.length > 0
-          ? `<p style="${bodyStyle}">The world didn't stop &mdash; there's been a lot happening in <strong>${escapeHtml(ctx.topicNames[0])}</strong> since your last briefing.</p>`
-          : `<p style="${bodyStyle}">The world didn't stop &mdash; there's been a lot happening since your last briefing.</p>`;
-
-      return buildStandaloneHtml({
-        preheader: "It's been a few days since your last Brain Brief",
-        headline: `${greeting(ctx)} It's been a few days.`,
+    buildHtml: (ctx) =>
+      buildStandaloneHtml({
+        preheader: "The world didn't stop.",
+        headline: `${greeting(ctx)} It's been a few days since your last Brain Brief.`,
         body: `
-          ${topicTeaser}
           <p style="${bodyStyle}">
-            Your topics are still saved. One click and you're back to daily intelligence &mdash; no setup needed.
+            The world didn't stop. Here's a taste of what you missed${ctx.topicNames.length > 0 ? ` on <strong>${ctx.topicNames[0]}</strong>` : ""}:
+          </p>
+          <div style="margin: 0 0 16px 0; padding: 16px; border-left: 3px solid #10B981; background-color: #F8FAFC; border-radius: 0 6px 6px 0;">
+            <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-style: italic; color: #334155; line-height: 1.6;">
+              ${ctx.teaser || "Developments continue in your selected topics."}
+            </p>
+          </div>
+          <p style="${bodyStyle}">
+            Your other topics have been moving too.
+          </p>
+          <p style="${bodyStyle}">
+            This is our last note. We won't follow up again &mdash; but your account and topics will always be here if you change your mind.
           </p>`,
-        ctaText: "Get your briefings back",
-        ctaSubtext: "$6/mo &mdash; cancel anytime",
-        urgent: false,
-      });
-    },
+        ctaText: "Get your briefings back &rarr;",
+        ctaSubtext: "",
+      }),
     buildText: (ctx) =>
       `${greeting(ctx)} It's been a few days since your last Brain Brief.\n\n` +
-      (ctx.topicNames.length > 0
-        ? `There's been a lot happening in ${ctx.topicNames[0]} since your last briefing.\n\n`
-        : `There's been a lot happening since your last briefing.\n\n`) +
-      `Your topics are still saved. Subscribe to pick up where you left off.\n\n` +
-      `Subscribe: https://brainbrief.app/subscribe\n`,
+      `The world didn't stop. Here's a taste of what you missed${ctx.topicNames.length > 0 ? ` on ${ctx.topicNames[0]}` : ""}:\n\n` +
+      `"${ctx.teaser || "Developments continue in your selected topics."}"\n\n` +
+      "Your other topics have been moving too.\n\n" +
+      "This is our last note. We won't follow up again — but your account and topics will always be here if you change your mind.\n\n" +
+      "Get your briefings back: https://brainbrief.app/subscribe\n",
   },
 ];
 
@@ -188,7 +193,7 @@ export async function processLifecycleEmails(
       }
 
       // Build context
-      const ctx = await buildEmailContext(supabase, profile);
+      const ctx = await buildEmailContext(supabase, profile, emailDef.key, trialDay);
 
       try {
         const subject = emailDef.subject(ctx);
@@ -237,7 +242,9 @@ export async function processLifecycleEmails(
 
 async function buildEmailContext(
   supabase: SupabaseClient,
-  profile: UserProfile
+  profile: UserProfile,
+  emailKey: LifecycleEmailKey,
+  trialDay: number
 ): Promise<EmailContext> {
   const { data: topics } = await supabase
     .from("topics")
@@ -245,10 +252,25 @@ async function buildEmailContext(
     .eq("user_id", profile.user_id)
     .eq("is_active", true);
 
+  const topicNames = (topics ?? []).map((t) => t.name);
+
+  // For Day 10 "miss me?" email, generate a Gemini teaser about their first topic
+  let teaser: string | undefined;
+  if (emailKey === "day10_miss_me" && topicNames.length > 0) {
+    try {
+      teaser = await generateTeaser(topicNames[0]);
+      console.log(`[lifecycle] Generated teaser for ${profile.email} on "${topicNames[0]}"`);
+    } catch (err) {
+      console.error("[lifecycle] Failed to generate teaser:", err);
+      // Falls back to default text in the template
+    }
+  }
+
   return {
     displayName: profile.display_name,
     email: profile.email,
-    topicNames: (topics ?? []).map((t) => t.name),
+    topicNames,
+    teaser,
   };
 }
 

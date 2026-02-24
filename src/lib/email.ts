@@ -88,18 +88,69 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
     day: "numeric",
   });
 
-  const trialBanner = trialInfo && trialInfo.isTrialActive && !trialInfo.isSubscriber
+    const welcomeHeader = trialInfo && trialInfo.isTrialActive && !trialInfo.isSubscriber && trialInfo.trialDayNumber === 1
     ? `
-      <!-- ============ TRIAL BANNER ============ -->
+      <!-- ============ WELCOME HEADER (DAY 1) ============ -->
       <tr>
-        <td style="background-color: #10B981; padding: 12px 32px; text-align: center;">
-          <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #FFFFFF; letter-spacing: 0.5px;">
-            Free Trial — Day \${trialInfo.trialDayNumber} of 14. <a href="https://brainbrief.app/subscribe" style="color: #FFFFFF; text-decoration: underline;">Upgrade to keep your briefings.</a>
-          </p>
+        <td style="padding: 24px 32px 0 32px; background-color: #FFFFFF;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px;">
+            <tr>
+              <td style="padding: 20px;">
+                <p style="margin: 0 0 12px 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
+                  Good morning — your first Brain Brief is below.
+                </p>
+                <p style="margin: 0 0 12px 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #475569;">
+                  You'll get one like this every day for the next 7 days, covering the topics you selected. No filler, no noise. Just what's worth knowing.
+                </p>
+                <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #475569;">
+                  If it earns a place in your morning, subscribing is easy. For now, enjoy the read.
+                </p>
+              </td>
+            </tr>
+          </table>
         </td>
       </tr>
       `
     : "";
+
+  let footerCountdown = "";
+  if (trialInfo && trialInfo.isTrialActive && !trialInfo.isSubscriber) {
+    const day = trialInfo.trialDayNumber;
+    if (day === 1) {
+      footerCountdown = `
+              <p style="margin: 0 0 20px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
+                Day 1 of 7 — your free trial is active &middot; <a href="https://brainbrief.app/dashboard" style="color: #64748B; text-decoration: underline;">Manage Topics</a> &middot; <a href="https://brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to keep your briefings &rarr;</a>
+              </p>`;
+    } else if (day >= 2 && day <= 5) {
+      const daysLeft = 7 - day + 1;
+      footerCountdown = `
+              <p style="margin: 0 0 20px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
+                Day ${day} of 7 &middot; ${daysLeft} days left in your free trial &middot; <a href="https://brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to keep your briefings &rarr;</a>
+              </p>`;
+    } else if (day === 6) {
+      footerCountdown = `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; background-color: #F8FAFC; text-align: center;">
+                    <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 500; color: #334155;">
+                      Day 6 of 7 &middot; Your last free briefing is tomorrow. &middot; <a href="https://brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Keep your briefings going — $6/month &rarr;</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>`;
+    } else if (day === 7) {
+      footerCountdown = `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px 0;">
+                <tr>
+                  <td style="padding: 16px; border: 1px solid #CBD5E1; border-radius: 8px; background-color: #F1F5F9; text-align: center;">
+                    <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
+                      Day 7 of 7 &middot; This is your last free briefing. Your briefings will pause after today. &middot; <a href="https://brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to Brain Brief Pro — $6/month &rarr;</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>`;
+    }
+  }
 
   const topicBlocks = data.topics
     .map((topic, i) => {
@@ -210,7 +261,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
       <td align="center" style="padding: 40px 16px;">
         <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
 
-          \${trialBanner}
+          \${welcomeHeader}
 
           <!-- ============ HEADER ============ -->
           <tr>
@@ -247,6 +298,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
           <!-- ============ FOOTER ============ -->
           <tr>
             <td class="email-footer" style="padding: 32px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; text-align: center;">
+              ${footerCountdown}
               <p class="text-muted" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B; line-height: 1.6;">
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>

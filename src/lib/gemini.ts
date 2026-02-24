@@ -272,3 +272,39 @@ function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+/**
+ * Generate a 1-2 sentence teaser for a specific topic for the Day 10 "Miss me?" email.
+ */
+export async function generateTeaser(topic: string): Promise<string> {
+  try {
+    const prompt = `You are Brain Brief. We need a 1-2 sentence teaser about the topic "${topic}" to win back a user whose trial expired.
+    
+Using Google Search grounding, find a recent, notable development in this topic.
+Write 1-2 sentences in a concrete, editorial voice.
+Example: "Meanwhile, Apple announced a new AI chip, while Google's latest model is likely to shift the landscape."
+Do NOT say "Here is a teaser" or include any markdown fences or quotes. JUST the 1-2 sentences.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+    
+    let responseText: string;
+    try {
+      responseText = response.text ?? "";
+    } catch {
+      const parts = response.candidates?.[0]?.content?.parts;
+      responseText =
+        parts?.map((p) => ("text" in p ? p.text : "")).join("") ?? "";
+    }
+    
+    return responseText.trim() || `Developments continue in ${topic}. Significant updates and new information have emerged since your last briefing.`;
+  } catch (err) {
+    console.error("[gemini] Error generating teaser:", err);
+    return `Developments continue in ${topic}. Significant updates and new information have emerged since your last briefing.`;
+  }
+}

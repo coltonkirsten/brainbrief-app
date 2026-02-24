@@ -13,17 +13,13 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { generateTeaser } from "./gemini";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type LifecycleEmailKey =
-  | "day7"
-  | "day12"
-  | "day14"
-  | "day15"
-  | "day30";
+export type LifecycleEmailKey = "day8" | "day10";
 
 interface LifecycleEmailDef {
   key: LifecycleEmailKey;
@@ -37,14 +33,11 @@ interface LifecycleEmailDef {
 interface EmailContext {
   displayName: string | null;
   email: string;
-  /** Number of briefings sent to this user */
   briefingCount: number;
-  /** Topic names the user has */
   topicNames: string[];
-  /** Current day of trial (1-indexed) */
   trialDay: number;
-  /** Days remaining in trial (can be negative for post-trial emails) */
   daysRemaining: number;
+  teaser?: string;
 }
 
 interface UserProfile {
@@ -62,176 +55,62 @@ interface UserProfile {
 
 const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
   {
-    key: "day7",
-    triggerDay: 7,
-    subject: () => "Your first week with Brain Brief",
-    buildHtml: (ctx) => buildLifecycleHtml({
-      preheader: "Here's what your first week looked like",
-      headline: `${greeting(ctx)} Your first week in review.`,
-      body: `
-        <p style="${bodyStyle}">
-          You've been a Brain Brief member for <strong>one week</strong> now.
-          ${ctx.briefingCount > 0
-            ? `In that time, we've delivered <strong>${ctx.briefingCount} briefing${ctx.briefingCount !== 1 ? "s" : ""}</strong> covering ${ctx.topicNames.length} topic${ctx.topicNames.length !== 1 ? "s" : ""} you care about.`
-            : `You have ${ctx.topicNames.length} topic${ctx.topicNames.length !== 1 ? "s" : ""} set up and ready to go.`
-          }
-        </p>
-        ${ctx.topicNames.length > 0 ? `
-        <p style="${bodyStyle}">
-          Your topics: <strong>${ctx.topicNames.join(", ")}</strong>
-        </p>` : ""}
-        <p style="${bodyStyle}">
-          Every briefing saves you 20+ minutes of reading and keeps you sharp
-          on what matters. That's time back in your day, every day.
-        </p>
-        <p style="${bodyStyle}">
-          You have <strong>7 days left</strong> in your free trial. When you're
-          ready to make it permanent:
-        </p>`,
-      ctaText: "Subscribe to Brain Brief Pro",
-      ctaSubtext: "Plans start at $6/mo",
-    }),
-    buildText: (ctx) => `${greeting(ctx)} Your first week in review.\n\n` +
-      (ctx.briefingCount > 0
-        ? `In the past week, we've delivered ${ctx.briefingCount} briefing${ctx.briefingCount !== 1 ? "s" : ""} covering ${ctx.topicNames.length} topic${ctx.topicNames.length !== 1 ? "s" : ""}.\n\n`
-        : `You have ${ctx.topicNames.length} topic${ctx.topicNames.length !== 1 ? "s" : ""} set up.\n\n`) +
-      `You have 7 days left in your free trial.\n\n` +
-      `Subscribe to keep your briefings: https://brainbrief.app/subscribe\n`,
-  },
-  {
-    key: "day12",
-    triggerDay: 12,
-    subject: () => "3 days left in your free trial",
-    buildHtml: (ctx) => buildLifecycleHtml({
-      preheader: "Your briefings stop in 3 days",
-      headline: `${greeting(ctx)} Your trial ends in 3 days.`,
-      body: `
-        <p style="${bodyStyle}">
-          Just a heads-up: your Brain Brief free trial ends in <strong>3 days</strong>.
-          After that, your daily briefings will stop.
-        </p>
-        <p style="${bodyStyle}">
-          Your topics and account will stay saved &mdash; so if you subscribe later,
-          you'll pick up right where you left off. But we'd hate for you to miss a day.
-        </p>
-        <p style="${bodyStyle}">
-          Brain Brief Pro is <strong>$6/month</strong> (or $50/year &mdash; save 30%).
-          That's less than a coffee for daily intelligence on the topics you care about.
-        </p>`,
-      ctaText: "Subscribe now &mdash; $6/mo",
-      ctaSubtext: "Don't miss a briefing",
-      urgent: true,
-    }),
-    buildText: (ctx) => `${greeting(ctx)} Your trial ends in 3 days.\n\n` +
-      `Your Brain Brief free trial ends in 3 days. After that, your daily briefings will stop.\n\n` +
-      `Your topics and account will stay saved. Subscribe to keep your briefings.\n\n` +
-      `Brain Brief Pro: $6/month or $50/year (save 30%).\n\n` +
-      `Subscribe: https://brainbrief.app/subscribe\n`,
-  },
-  {
-    key: "day14",
-    triggerDay: 14,
-    subject: () => "Last briefing tomorrow",
-    buildHtml: (ctx) => buildLifecycleHtml({
-      preheader: "This is your last briefing unless you subscribe",
-      headline: `${greeting(ctx)} Tomorrow is your last free briefing.`,
-      body: `
-        <p style="${bodyStyle}">
-          Your 14-day free trial ends tomorrow. This means today's briefing
-          will be your <strong>second-to-last</strong> unless you subscribe.
-        </p>
-        <p style="${bodyStyle}">
-          ${ctx.briefingCount > 0
-            ? `Over the past two weeks, you've received <strong>${ctx.briefingCount} briefings</strong>. That's ${ctx.briefingCount * 20}+ minutes of research we've done for you.`
-            : `We've been covering ${ctx.topicNames.join(" and ")} for you.`
-          }
-        </p>
-        <p style="${bodyStyle}">
-          Don't lose your edge. Subscribe to Brain Brief Pro and keep your
-          daily intelligence flowing.
-        </p>`,
-      ctaText: "Keep my briefings &rarr;",
-      ctaSubtext: "$6/mo or $50/yr",
-      urgent: true,
-    }),
-    buildText: (ctx) => `${greeting(ctx)} Tomorrow is your last free briefing.\n\n` +
-      `Your 14-day free trial ends tomorrow.\n\n` +
-      (ctx.briefingCount > 0
-        ? `Over the past two weeks, you've received ${ctx.briefingCount} briefings.\n\n`
-        : "") +
-      `Subscribe to keep your briefings: https://brainbrief.app/subscribe\n`,
-  },
-  {
-    key: "day15",
-    triggerDay: 15,
+    key: "day8",
+    triggerDay: 8,
     subject: () => "Your Brain Brief trial has ended",
     buildHtml: (ctx) => buildLifecycleHtml({
-      preheader: "Your topics are still saved — come back anytime",
-      headline: `${greeting(ctx)} Your free trial has ended.`,
+      preheader: "Your topics are saved and waiting",
+      headline: `${greeting(ctx)} Your 7-day trial is over.`,
       body: `
         <p style="${bodyStyle}">
-          As of today, your Brain Brief free trial is over. You won't receive
-          any more daily briefings unless you subscribe.
+          Today's briefing wasn't delivered &mdash; but your topics are saved and waiting.
         </p>
         <p style="${bodyStyle}">
-          The good news: <strong>your account and topics are still saved</strong>.
-          ${ctx.topicNames.length > 0 ? `Your topics (${ctx.topicNames.join(", ")}) are waiting for you.` : ""}
-          Subscribe anytime and you'll pick up right where you left off &mdash; no setup needed.
-        </p>
-        <p style="${bodyStyle}">
-          We built Brain Brief because staying informed shouldn't take hours.
-          We hope you'll join us.
+          If Brain Brief earned a place in your morning, we'd love to keep it there.
         </p>`,
-      ctaText: "Subscribe to Brain Brief Pro",
-      ctaSubtext: "Start at $6/mo &mdash; cancel anytime",
-      urgent: false,
+      ctaText: "Resume your briefings &rarr;",
+      ctaSubtext: "$6/month &middot; $50/year &middot; Cancel anytime",
     }),
-    buildText: (ctx) => `${greeting(ctx)} Your free trial has ended.\n\n` +
-      `You won't receive any more daily briefings unless you subscribe.\n\n` +
-      `Your account and topics are still saved. Subscribe anytime to pick up where you left off.\n\n` +
-      `Subscribe: https://brainbrief.app/subscribe\n`,
+    buildText: (ctx) => `${greeting(ctx)} Your 7-day trial is over.\n\n` +
+      "Today's briefing wasn't delivered — but your topics are saved and waiting.\n\n" +
+      "If Brain Brief earned a place in your morning, we'd love to keep it there.\n\n" +
+      "Resume your briefings: https://brainbrief.app/subscribe\n\n" +
+      "$6/month · $50/year · Cancel anytime\n",
   },
   {
-    key: "day30",
-    triggerDay: 30,
-    subject: (ctx) =>
-      ctx.topicNames.length > 0
-        ? `A lot has happened in ${ctx.topicNames[0]}`
-        : "A lot has happened since you left",
-    buildHtml: (ctx) => {
-      const daysMissed = ctx.trialDay - 14;
-      return buildLifecycleHtml({
-        preheader: `${daysMissed} days of updates you haven't seen`,
-        headline: ctx.topicNames.length > 0
-          ? `${daysMissed} days of ${ctx.topicNames[0]} updates you haven't seen.`
-          : `${daysMissed} days of updates you haven't seen.`,
-        body: `
-          <p style="${bodyStyle}">
-            ${greeting(ctx)} It's been a while. Since your trial ended,
-            <strong>${daysMissed} days of news</strong> have gone by
-            ${ctx.topicNames.length > 0 ? ` in ${ctx.topicNames.join(", ")}` : ""}.
+    key: "day10",
+    triggerDay: 10,
+    subject: (ctx) => ctx.topicNames.length > 0
+      ? `Still curious about ${ctx.topicNames[0]}?`
+      : "Your briefings miss you",
+    buildHtml: (ctx) => buildLifecycleHtml({
+      preheader: "The world didn't stop.",
+      headline: `${greeting(ctx)} It's been a few days since your last Brain Brief.`,
+      body: `
+        <p style="${bodyStyle}">
+          The world didn't stop. Here's a taste of what you missed${ctx.topicNames.length > 0 ? ` on <strong>${ctx.topicNames[0]}</strong>` : ""}:
+        </p>
+        <div style="margin: 0 0 16px 0; padding: 16px; border-left: 3px solid #6366F1; background-color: #F8FAFC; border-radius: 0 6px 6px 0;">
+          <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-style: italic; color: #334155; line-height: 1.6;">
+            ${ctx.teaser || "Developments continue in your selected topics."}
           </p>
-          <p style="${bodyStyle}">
-            Your topics are still saved. Your account is still here.
-            One click and you're back to daily briefings &mdash; no setup needed.
-          </p>
-          <p style="${bodyStyle}">
-            We'd love to have you back.
-          </p>`,
-        ctaText: "Come back to Brain Brief",
-        ctaSubtext: "$6/mo or $50/yr &mdash; cancel anytime",
-        urgent: false,
-      });
-    },
-    buildText: (ctx) => {
-      const daysMissed = ctx.trialDay - 14;
-      return `${greeting(ctx)} It's been a while.\n\n` +
-        `Since your trial ended, ${daysMissed} days of news have gone by` +
-        (ctx.topicNames.length > 0 ? ` in ${ctx.topicNames.join(", ")}` : "") + `.\n\n` +
-        `Your topics are still saved. Subscribe to pick up where you left off.\n\n` +
-        `Subscribe: https://brainbrief.app/subscribe\n`;
-    },
-  },
+        </div>
+        <p style="${bodyStyle}">
+          Your other topics have been moving too.
+        </p>
+        <p style="${bodyStyle}">
+          This is our last note. We won't follow up again &mdash; but your account and topics will always be here if you change your mind.
+        </p>`,
+      ctaText: "Get your briefings back &rarr;",
+      ctaSubtext: "",
+    }),
+    buildText: (ctx) => `${greeting(ctx)} It's been a few days since your last Brain Brief.\n\n` +
+      `The world didn't stop. Here's a taste of what you missed${ctx.topicNames.length > 0 ? ` on ${ctx.topicNames[0]}` : ""}:\n\n` +
+      `"${ctx.teaser || "Developments continue in your selected topics."}"\n\n` +
+      "Your other topics have been moving too.\n\n" +
+      "This is our last note. We won't follow up again — but your account and topics will always be here if you change your mind.\n\n" +
+      "Get your briefings back: https://brainbrief.app/subscribe\n",
+  }
 ];
 
 // ---------------------------------------------------------------------------
@@ -268,7 +147,7 @@ export async function processLifecycleEmails(
     if (!profile.trial_ends_at) continue;
     const trialEndsAt = new Date(profile.trial_ends_at);
     const now = new Date();
-    const trialStartedAt = new Date(trialEndsAt.getTime() - 14 * 24 * 60 * 60 * 1000);
+    const trialStartedAt = new Date(trialEndsAt.getTime() - 7 * 24 * 60 * 60 * 1000);
     const trialDay = Math.floor((now.getTime() - trialStartedAt.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     const alreadySent = profile.lifecycle_emails_sent || [];
@@ -344,19 +223,31 @@ async function buildEmailContext(
     .select("name")
     .eq("user_id", profile.user_id)
     .eq("is_active", true);
+    
+  const topicNames = (topics ?? []).map((t) => t.name);
 
   const trialEndsAt = new Date(profile.trial_ends_at!);
   const daysRemaining = Math.ceil(
     (trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
 
+  let teaser = undefined;
+  if (trialDay === 10 && topicNames.length > 0) {
+    try {
+      teaser = await generateTeaser(topicNames[0]);
+    } catch (err) {
+      console.error("[lifecycle] Failed to generate teaser:", err);
+    }
+  }
+
   return {
     displayName: profile.display_name,
     email: profile.email,
     briefingCount: count ?? 0,
-    topicNames: (topics ?? []).map((t) => t.name),
+    topicNames,
     trialDay,
     daysRemaining,
+    teaser,
   };
 }
 

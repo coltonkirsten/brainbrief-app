@@ -119,18 +119,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
         {/* Article body */}
         <article
-          className="prose prose-slate dark:prose-invert max-w-none
-            prose-headings:font-serif prose-headings:font-bold prose-headings:tracking-tight
-            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
-            prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-            prose-p:text-base prose-p:leading-relaxed prose-p:text-muted-foreground
-            prose-li:text-muted-foreground prose-li:leading-relaxed
-            prose-strong:text-primary prose-strong:font-semibold
-            prose-em:text-muted-foreground
-            prose-a:text-accent prose-a:no-underline hover:prose-a:underline
-            prose-hr:border-border prose-hr:my-10
-            prose-blockquote:border-accent prose-blockquote:text-muted-foreground
-            prose-ul:my-4 prose-ol:my-4"
+          className="prose max-w-none text-muted-foreground"
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
 

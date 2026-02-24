@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import TopicManager from "./topic-manager";
 import GenerateButton from "./generate-button";
+import CheckoutSuccessBanner from "./checkout-success-banner";
 import { getTrialInfo } from "@/lib/trial";
 
 export const metadata = {
@@ -109,6 +111,11 @@ export default async function DashboardPage() {
           ) : null}
         </div>
       )}
+
+      {/* Checkout success banner (client component, shows only when ?checkout=success) */}
+      <Suspense>
+        <CheckoutSuccessBanner />
+      </Suspense>
 
       {/* Main */}
       <main className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">

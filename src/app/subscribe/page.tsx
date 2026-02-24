@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle2, ArrowLeft, Loader2, Sparkles } from "lucide-react";
 
 export default function SubscribePage() {
   return (
@@ -18,6 +18,7 @@ function SubscribeContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const price = billing === "monthly" ? "$6" : "$50";
   const period = billing === "monthly" ? "/month" : "/year";
@@ -36,6 +37,12 @@ function SubscribeContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan: billing }),
       });
+
+      // If unauthorized, redirect to login with return URL
+      if (res.status === 401) {
+        router.push("/login?redirect=/subscribe");
+        return;
+      }
 
       const data = await res.json();
 
@@ -133,7 +140,15 @@ function SubscribeContent() {
         </div>
 
         {/* Plan card */}
-        <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden relative">
+          {/* Trial badge */}
+          <div className="absolute top-4 right-4">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 px-3 py-1.5 text-xs font-bold text-accent uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              7-day free trial
+            </span>
+          </div>
+
           {/* Price */}
           <div className="bg-muted border-b border-border px-8 py-10 text-center">
             <h2 className="text-lg font-bold font-serif text-primary mb-4">
@@ -152,6 +167,9 @@ function SubscribeContent() {
                 {savings}
               </p>
             )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              Try free for 7 days — cancel anytime, no charge until trial ends
+            </p>
           </div>
 
           {/* Benefits */}
@@ -212,9 +230,9 @@ function SubscribeContent() {
                   Redirecting to checkout...
                 </>
               ) : billing === "annual" ? (
-                "Subscribe — $50/year"
+                "Start free trial — $50/year after trial"
               ) : (
-                "Subscribe — $6/month"
+                "Start free trial — $6/month after trial"
               )}
             </button>
 

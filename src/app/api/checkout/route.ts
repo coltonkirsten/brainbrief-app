@@ -5,6 +5,9 @@ import { getStripe, getStripePrices } from "@/lib/stripe";
 import { getTrialInfo } from "@/lib/trial";
 import Stripe from "stripe";
 
+// Allow up to 60s for Stripe API calls + retries
+export const maxDuration = 60;
+
 /**
  * Create a Stripe Checkout Session for subscription.
  *

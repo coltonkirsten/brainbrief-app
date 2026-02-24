@@ -58,13 +58,24 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-6">
             <div className="hidden sm:flex items-center gap-3">
               {trialInfo.isTrialActive && !trialInfo.isSubscriber && (
-                <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent border border-accent/20">
-                  {trialInfo.trialDaysRemaining} days left in trial
-                </span>
+                <Link
+                  href="/subscribe"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent border border-accent/20 hover:bg-accent/20 transition-colors"
+                >
+                  {trialInfo.trialDaysRemaining} days left — Upgrade
+                </Link>
               )}
               {trialInfo.isTrialExpired && !trialInfo.isSubscriber && (
-                <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700 border border-red-200">
-                  Trial Expired
+                <Link
+                  href="/subscribe"
+                  className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 border border-red-200 hover:bg-red-200 transition-colors"
+                >
+                  Trial Expired — Subscribe
+                </Link>
+              )}
+              {trialInfo.isSubscriber && (
+                <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent border border-accent/20">
+                  Pro
                 </span>
               )}
               <span className="text-sm font-medium text-muted-foreground">{user.email}</span>
@@ -73,6 +84,31 @@ export default async function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {/* Mobile trial/upgrade banner (hidden on desktop where header badge is visible) */}
+      {!trialInfo.isSubscriber && (
+        <div className="sm:hidden px-6 pt-4">
+          {trialInfo.isTrialActive ? (
+            <Link
+              href="/subscribe"
+              className="flex items-center justify-between rounded-lg bg-accent/5 border border-accent/20 px-4 py-3"
+            >
+              <span className="text-sm font-semibold text-accent">
+                {trialInfo.trialDaysRemaining} day{trialInfo.trialDaysRemaining !== 1 ? "s" : ""} left in trial
+              </span>
+              <span className="text-xs font-bold text-accent">Upgrade →</span>
+            </Link>
+          ) : trialInfo.isTrialExpired ? (
+            <Link
+              href="/subscribe"
+              className="flex items-center justify-between rounded-lg bg-red-50 border border-red-200 px-4 py-3"
+            >
+              <span className="text-sm font-semibold text-red-700">Trial expired</span>
+              <span className="text-xs font-bold text-red-700">Subscribe →</span>
+            </Link>
+          ) : null}
+        </div>
+      )}
 
       {/* Main */}
       <main className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -122,6 +158,30 @@ export default async function DashboardPage() {
               canGenerate={trialInfo.canGenerateBriefings}
             />
           </div>
+
+          {/* Upgrade CTA for trial users */}
+          {trialInfo.isTrialActive && !trialInfo.isSubscriber && (
+            <div className="pt-6 border-t border-border">
+              <Link
+                href="/subscribe"
+                className="block rounded-xl border border-accent/20 bg-accent/5 px-5 py-4 hover:bg-accent/10 transition-colors group"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-primary">
+                      Upgrade to Brain Brief Pro
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Lock in your briefings — {trialInfo.trialDaysRemaining} day{trialInfo.trialDaysRemaining !== 1 ? "s" : ""} left in trial
+                    </p>
+                  </div>
+                  <span className="text-accent group-hover:translate-x-0.5 transition-transform">
+                    →
+                  </span>
+                </div>
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="lg:col-span-7">

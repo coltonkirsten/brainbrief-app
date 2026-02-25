@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function SubscribePage() {
   return (
@@ -17,8 +18,19 @@ function SubscribeContent() {
   const [billing, setBilling] = useState<"monthly" | "annual">("annual");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+  }, []);
 
   const price = billing === "monthly" ? "$6" : "$50";
   const period = billing === "monthly" ? "/month" : "/year";
@@ -76,11 +88,11 @@ function SubscribeContent() {
           Brain<span className="text-accent">Brief</span>
         </Link>
         <Link
-          href="/dashboard"
+          href={isLoggedIn ? "/dashboard" : "/"}
           className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to dashboard
+          {isLoggedIn ? "Back to dashboard" : "Back to home"}
         </Link>
       </nav>
 
@@ -134,7 +146,7 @@ function SubscribeContent() {
           >
             Annual
             <span className="ml-1.5 inline-flex items-center rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">
-              -30%
+              Save 30%
             </span>
           </button>
         </div>

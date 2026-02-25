@@ -157,59 +157,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="px-6 py-24 bg-muted">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-sm font-bold text-primary uppercase tracking-widest mb-12">
-            Trusted by professionals who value their time
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-card shadow-sm border border-border rounded-xl p-8 text-left">
-              <p className="text-base text-primary font-serif italic mb-6 leading-relaxed">
-                &ldquo;I used to spend an hour every morning scanning headlines and newsletters. Now I get exactly what I need to know in a 3-minute read. It's completely changed my morning routine.&rdquo;
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-primary">
-                  AM
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-primary">Alex M.</p>
-                  <p className="text-xs text-muted-foreground">Product Director</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-card shadow-sm border border-border rounded-xl p-8 text-left">
-              <p className="text-base text-primary font-serif italic mb-6 leading-relaxed">
-                &ldquo;The signal-to-noise ratio is unmatched. Brain Brief manages to pull the most critical updates on my niche topics without the fluff of standard tech media.&rdquo;
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-primary">
-                  JR
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-primary">Jamie R.</p>
-                  <p className="text-xs text-muted-foreground">Founding Engineer</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-card shadow-sm border border-border rounded-xl p-8 text-left">
-              <p className="text-base text-primary font-serif italic mb-6 leading-relaxed">
-                &ldquo;Finally, an intelligence tool that respects my time. The 'Bottom Line' summaries are consistently insightful and give me exactly what I need for my executive meetings.&rdquo;
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold text-primary">
-                  SK
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-primary">Sam K.</p>
-                  <p className="text-xs text-muted-foreground">Startup Founder</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Pricing */}
       <section id="pricing" className="px-6 py-24 bg-card border-t border-border">
         <div className="max-w-4xl mx-auto">

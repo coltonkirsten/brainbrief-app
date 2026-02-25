@@ -44,8 +44,11 @@ export async function sendBriefingEmail({
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
 
-      const fromAddress =
-        process.env.RESEND_FROM_EMAIL || "Brain Brief <onboarding@resend.dev>";
+      const fromAddress = process.env.RESEND_FROM_EMAIL;
+      if (!fromAddress) {
+        console.error("[email] RESEND_FROM_EMAIL is not set — refusing to send from default address");
+        return { success: false };
+      }
 
       const emailHtml = structured
         ? buildStructuredEmailTemplate(structured, trialInfo)
@@ -103,8 +106,11 @@ export async function sendStandaloneEmail(params: {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const fromAddress =
-      process.env.RESEND_FROM_EMAIL || "Brain Brief <onboarding@resend.dev>";
+    const fromAddress = process.env.RESEND_FROM_EMAIL;
+    if (!fromAddress) {
+      console.error("[email] RESEND_FROM_EMAIL is not set — refusing to send from default address");
+      return { success: false };
+    }
 
     const { data, error } = await resend.emails.send({
       from: fromAddress,

@@ -3,6 +3,9 @@ import { createServerClient } from "@supabase/ssr";
 import { getStripe, getStripeWebhookSecret } from "@/lib/stripe";
 import type Stripe from "stripe";
 
+// Allow up to 30s for Stripe API calls (e.g. subscriptions.retrieve)
+export const maxDuration = 30;
+
 /**
  * Stripe webhook handler.
  *

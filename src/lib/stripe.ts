@@ -24,18 +24,13 @@ export function getStripe(): Stripe {
     // Validate key format
     if (!secretKey.startsWith("sk_test_") && !secretKey.startsWith("sk_live_")) {
       console.error(
-        "[stripe] Invalid STRIPE_SECRET_KEY format — expected sk_test_* or sk_live_*, got:",
-        secretKey.substring(0, 10) + "..."
+        "[stripe] Invalid STRIPE_SECRET_KEY format — expected sk_test_* or sk_live_*"
       );
       throw new Error("STRIPE_SECRET_KEY has invalid format");
     }
 
-    console.log(
-      "[stripe] Initializing Stripe client with key:",
-      secretKey.substring(0, 12) + "...",
-      "length:",
-      secretKey.length
-    );
+    const mode = secretKey.startsWith("sk_live_") ? "live" : "test";
+    console.log(`[stripe] Initializing Stripe client in ${mode} mode`);
 
     stripeClient = new Stripe(secretKey, {
       maxNetworkRetries: 3,

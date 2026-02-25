@@ -163,7 +163,7 @@ export async function POST(request: Request) {
 function getBaseUrl(): string {
   const url = (
     process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://brainbrief-app.vercel.app"
+    "https://www.brainbrief.app"
   ).trim().replace(/\/+$/, "");
   return url;
 }

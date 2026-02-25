@@ -133,6 +133,7 @@ async function handleCheckoutCompleted(
   const { error } = await supabase
     .from("profiles")
     .update({
+      tier: "pro",
       subscription_status: "active",
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
@@ -208,6 +209,7 @@ async function handleSubscriptionDeleted(
   const { error } = await supabase
     .from("profiles")
     .update({
+      tier: "free",
       subscription_status: "canceled",
       current_period_end: getPeriodEnd(subscription),
     })
@@ -283,9 +285,12 @@ async function updateSubscriptionInDb(
       ? "annual"
       : "monthly");
 
+  const tier = status === "active" ? "pro" : "free";
+
   const { error } = await supabase
     .from("profiles")
     .update({
+      tier,
       subscription_status: status,
       stripe_subscription_id: subscription.id,
       current_period_end: getPeriodEnd(subscription),

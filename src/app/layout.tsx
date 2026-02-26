@@ -33,21 +33,33 @@ export const metadata: Metadata = {
   },
   description:
     "The antidote to information overload. Get smarter about the topics you care about, delivered directly to your inbox.",
-  metadataBase: new URL("https://brainbrief.app"),
+  metadataBase: new URL("https://www.brainbrief.app"),
+  alternates: {
+    canonical: "https://www.brainbrief.app",
+  },
   openGraph: {
     title: "Brain Brief — Your intelligent daily briefing",
     description:
       "The antidote to information overload. Get smarter about the topics you care about, delivered directly to your inbox.",
-    url: "https://brainbrief.app",
+    url: "https://www.brainbrief.app",
     siteName: "Brain Brief",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "https://www.brainbrief.app/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Brain Brief — Your intelligent daily briefing",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Brain Brief — Your intelligent daily briefing",
     description:
       "The antidote to information overload. Get smarter about the topics you care about.",
+    images: ["https://www.brainbrief.app/og-image.png"],
   },
   robots: {
     index: true,

@@ -46,12 +46,32 @@ export interface BriefingResult {
  *
  * Returns structured data (for email templating) + HTML/text fallbacks.
  */
+/** Return a time-appropriate greeting based on the user's timezone. */
+function getTimeGreeting(timezone?: string | null): string {
+  try {
+    const hour = new Date().toLocaleString("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: timezone || "America/New_York",
+    });
+    const h = parseInt(hour, 10);
+    if (h >= 5 && h < 12) return "Good morning";
+    if (h >= 12 && h < 17) return "Good afternoon";
+    return "Good evening";
+  } catch {
+    // Invalid timezone string — fall back to neutral
+    return "Good morning";
+  }
+}
+
 export async function generateBriefing(
   topics: string[],
-  displayName?: string | null
+  displayName?: string | null,
+  timezone?: string | null
 ): Promise<BriefingResult> {
   const name = displayName?.trim() || null;
-  const greeting = name ? `Good morning, ${name}!` : `Good morning!`;
+  const timeGreeting = getTimeGreeting(timezone);
+  const greeting = name ? `${timeGreeting}, ${name}!` : `${timeGreeting}!`;
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -68,7 +88,7 @@ export async function generateBriefing(
   const prompt = `You are Brain Brief — a smart, well-read friend who stays on top of the news so your reader doesn't have to. Your job: give a concise, grounded briefing on the topics below using REAL, CURRENT information from the web.
 
 Date: ${today}
-${name ? `Reader's name: ${name}` : 'Reader: (no name provided — just say "Good morning!")'}
+${name ? `Reader's name: ${name}` : `Reader: (no name provided — just say "${timeGreeting}!")`}
 Topics to cover:
 ${topicList}
 

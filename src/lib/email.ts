@@ -158,7 +158,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
             <tr>
               <td style="padding: 20px;">
                 <p style="margin: 0 0 12px 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
-                  Good morning — your first Brain Brief is below.
+                  Welcome — your first Brain Brief is below.
                 </p>
                 <p style="margin: 0 0 12px 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #475569;">
                   You'll get one like this every day for the next 7 days, covering the topics you selected. No filler, no noise. Just what's worth knowing.

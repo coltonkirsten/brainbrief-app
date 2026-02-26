@@ -86,7 +86,7 @@ export async function GET(request: Request) {
   const userIds = Array.from(userTopics.keys());
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("user_id, display_name, email, trial_ends_at, subscription_status")
+    .select("user_id, display_name, email, timezone, trial_ends_at, subscription_status")
     .in("user_id", userIds);
 
   if (profilesError) {
@@ -138,7 +138,8 @@ export async function GET(request: Request) {
       // Generate briefing with Gemini + grounding
       const briefing = await generateBriefing(
         topicNames,
-        profile.display_name
+        profile.display_name,
+        profile.timezone
       );
 
       // Store in database

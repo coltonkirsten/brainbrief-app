@@ -9,9 +9,11 @@ export const maxDuration = 30;
  *
  * POST /api/twitter/post
  * Headers: { Authorization: "Bearer <INTERNAL_API_SECRET>" }
- * Body:    { "text": string }
+ * Body:    { "text": string, "reply_to_tweet_id"?: string }
  *
  * Returns: { success: true, tweetId: string, tweetUrl: string }
+ *
+ * To post a thread, pass reply_to_tweet_id from the previous tweet's response.
  *
  * Protected by INTERNAL_API_SECRET — only internal agents (Em) can call this.
  */
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
   // -----------------------------------------------------------------------
   // 2. Validate request body
   // -----------------------------------------------------------------------
-  let body: { text?: string };
+  let body: { text?: string; reply_to_tweet_id?: string };
   try {
     body = await request.json();
   } catch {
@@ -52,6 +54,7 @@ export async function POST(request: Request) {
   }
 
   const text = body.text?.trim();
+  const replyToTweetId = body.reply_to_tweet_id?.trim() || undefined;
   if (!text) {
     return NextResponse.json(
       { error: "Missing required field: text" },
@@ -93,12 +96,17 @@ export async function POST(request: Request) {
       accessSecret: accessTokenSecret,
     });
 
-    const { data } = await client.v2.tweet(text);
+    const tweetPayload: Parameters<typeof client.v2.tweet>[0] = { text };
+    if (replyToTweetId) {
+      tweetPayload.reply = { in_reply_to_tweet_id: replyToTweetId };
+    }
+
+    const { data } = await client.v2.tweet(tweetPayload);
 
     const tweetId = data.id;
     const tweetUrl = `https://x.com/i/status/${tweetId}`;
 
-    console.log(`[twitter] Tweet posted: ${tweetId}`);
+    console.log(`[twitter] Tweet posted: ${tweetId}${replyToTweetId ? ` (reply to ${replyToTweetId})` : ""}`);
 
     return NextResponse.json({
       success: true,

@@ -28,7 +28,7 @@ export default function ContactPage() {
             Email Support
           </a>
           <p className="mt-6 text-sm text-muted-foreground">
-            brief@brief.brainbrief.app
+            <a href="mailto:brief@brief.brainbrief.app" className="hover:text-primary transition-colors">brief@brief.brainbrief.app</a>
           </p>
         </div>
       </div>

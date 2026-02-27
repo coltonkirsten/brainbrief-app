@@ -76,7 +76,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
       `${greeting(ctx)} Your 7-day trial is over.\n\n` +
       "Today's briefing wasn't delivered — but your topics are saved and waiting.\n\n" +
       "If Brain Brief earned a place in your morning, we'd love to keep it there.\n\n" +
-      "Resume your briefings: https://brainbrief.app/subscribe\n\n" +
+      "Resume your briefings: https://www.brainbrief.app/subscribe\n\n" +
       "$6/month · $50/year · Cancel anytime\n",
   },
   {
@@ -114,7 +114,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
       `"${ctx.teaser || "Developments continue in your selected topics."}"\n\n` +
       "Your other topics have been moving too.\n\n" +
       "This is our last note. We won't follow up again — but your account and topics will always be here if you change your mind.\n\n" +
-      "Get your briefings back: https://brainbrief.app/subscribe\n",
+      "Get your briefings back: https://www.brainbrief.app/subscribe\n",
   },
 ];
 
@@ -359,7 +359,7 @@ function buildStandaloneHtml(params: {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 28px 0 8px;">
                 <tr>
                   <td align="center">
-                    <a href="https://brainbrief.app/subscribe" style="display: inline-block; padding: 14px 32px; background-color: ${ctaBg}; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 8px; text-align: center;">
+                    <a href="https://www.brainbrief.app/subscribe" style="display: inline-block; padding: 14px 32px; background-color: ${ctaBg}; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 8px; text-align: center;">
                       <!--[if mso]><i style="letter-spacing: 32px; mso-font-width: -100%; mso-text-raise: 30pt;">&nbsp;</i><![endif]-->
                       ${params.ctaText}
                       <!--[if mso]><i style="letter-spacing: 32px; mso-font-width: -100%;">&nbsp;</i><![endif]-->
@@ -388,7 +388,7 @@ function buildStandaloneHtml(params: {
               <p class="text-muted" style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #94A3B8; line-height: 1.6;">
                 You're receiving this because you signed up for Brain Brief.
                 <br>
-                <a href="https://brainbrief.app/dashboard" style="color: #64748B; text-decoration: underline;">Manage your account</a>
+                <a href="https://www.brainbrief.app/dashboard" style="color: #64748B; text-decoration: underline;">Manage your account</a>
               </p>
             </td>
           </tr>

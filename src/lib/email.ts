@@ -61,7 +61,7 @@ export async function sendBriefingEmail({
         html: emailHtml,
         text,
         headers: {
-          "List-Unsubscribe": "<https://brainbrief.app/dashboard>",
+          "List-Unsubscribe": "<https://www.brainbrief.app/unsubscribe>",
         },
       });
 
@@ -119,7 +119,7 @@ export async function sendStandaloneEmail(params: {
       html: params.html,
       text: params.text,
       headers: {
-        "List-Unsubscribe": "<https://brainbrief.app/dashboard>",
+        "List-Unsubscribe": "<https://www.brainbrief.app/unsubscribe>",
       },
     });
 
@@ -181,13 +181,13 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
     if (day === 1) {
       footerCountdown = `
               <p style="margin: 0 0 20px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
-                Day 1 of 7 — your free trial is active &middot; <a href="https://brainbrief.app/dashboard" style="color: #64748B; text-decoration: underline;">Manage Topics</a> &middot; <a href="https://brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to keep your briefings &rarr;</a>
+                Day 1 of 7 — your free trial is active &middot; <a href="https://www.brainbrief.app/dashboard" style="color: #64748B; text-decoration: underline;">Manage Topics</a> &middot; <a href="https://www.brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to keep your briefings &rarr;</a>
               </p>`;
     } else if (day >= 2 && day <= 5) {
       const daysLeft = 7 - day + 1;
       footerCountdown = `
               <p style="margin: 0 0 20px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
-                Day ${day} of 7 &middot; ${daysLeft} days left in your free trial &middot; <a href="https://brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to keep your briefings &rarr;</a>
+                Day ${day} of 7 &middot; ${daysLeft} days left in your free trial &middot; <a href="https://www.brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to keep your briefings &rarr;</a>
               </p>`;
     } else if (day === 6) {
       footerCountdown = `
@@ -195,7 +195,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
                 <tr>
                   <td style="padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; background-color: #F8FAFC; text-align: center;">
                     <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 500; color: #334155;">
-                      Day 6 of 7 &middot; Your last free briefing is tomorrow. &middot; <a href="https://brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Keep your briefings going — $6/month &rarr;</a>
+                      Day 6 of 7 &middot; Your last free briefing is tomorrow. &middot; <a href="https://www.brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Keep your briefings going — $6/month &rarr;</a>
                     </p>
                   </td>
                 </tr>
@@ -206,7 +206,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
                 <tr>
                   <td style="padding: 16px; border: 1px solid #CBD5E1; border-radius: 8px; background-color: #F1F5F9; text-align: center;">
                     <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
-                      Day 7 of 7 &middot; This is your last free briefing. Your briefings will pause after today. &middot; <a href="https://brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to Brain Brief Pro — $6/month &rarr;</a>
+                      Day 7 of 7 &middot; This is your last free briefing. Your briefings will pause after today. &middot; <a href="https://www.brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to Brain Brief Pro — $6/month &rarr;</a>
                     </p>
                   </td>
                 </tr>
@@ -396,15 +396,15 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
               <p style="margin: 20px 0 0;">
-                <a href="https://brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
+                <a href="https://www.brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
               </p>
               <p style="margin: 20px 0 0;">
-                <a href="https://brainbrief.app/dashboard" class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
+                <a href="https://www.brainbrief.app/unsubscribe" class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
               </p>
               <p style="margin: 16px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #94A3B8;">
-                <a href="https://brainbrief.app/terms" style="color: #94A3B8; text-decoration: underline;">Terms</a>
+                <a href="https://www.brainbrief.app/terms" style="color: #94A3B8; text-decoration: underline;">Terms</a>
                 &nbsp;&middot;&nbsp;
-                <a href="https://brainbrief.app/privacy" style="color: #94A3B8; text-decoration: underline;">Privacy</a>
+                <a href="https://www.brainbrief.app/privacy" style="color: #94A3B8; text-decoration: underline;">Privacy</a>
               </p>
             </td>
           </tr>
@@ -491,15 +491,15 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
               <p style="margin: 20px 0 0;">
-                <a href="https://brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
+                <a href="https://www.brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
               </p>
               <p style="margin: 20px 0 0;">
-                <a href="https://brainbrief.app/dashboard" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
+                <a href="https://www.brainbrief.app/dashboard" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
               </p>
               <p style="margin: 16px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #94A3B8;">
-                <a href="https://brainbrief.app/terms" style="color: #94A3B8; text-decoration: underline;">Terms</a>
+                <a href="https://www.brainbrief.app/terms" style="color: #94A3B8; text-decoration: underline;">Terms</a>
                 &nbsp;&middot;&nbsp;
-                <a href="https://brainbrief.app/privacy" style="color: #94A3B8; text-decoration: underline;">Privacy</a>
+                <a href="https://www.brainbrief.app/privacy" style="color: #94A3B8; text-decoration: underline;">Privacy</a>
               </p>
               <p style="margin: 24px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8;">
                 &copy; ${year} Brain Brief. All rights reserved.

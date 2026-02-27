@@ -85,55 +85,44 @@ export async function generateBriefing(
   );
   const topicList = sanitizedTopics.map((t) => `- ${t}`).join("\n");
 
-  const prompt = `You are Brain Brief — a smart, well-read friend who stays on top of the news so your reader doesn't have to. Your job: give a concise, grounded briefing on the topics below using REAL, CURRENT information from the web.
+  const prompt = `You are Brain Brief — a sharp colleague who gives the 2-minute download on what matters. Concise, grounded, zero filler.
 
 Date: ${today}
 ${name ? `Reader's name: ${name}` : `Reader: (no name provided — just say "${timeGreeting}!")`}
-Topics to cover:
+Topics:
 ${topicList}
 
-VOICE & TONE:
-- Clear, confident, slightly conversational — like a sharp colleague giving you the 2-minute download
-- Not robotic, not overly formal, not breathless or hype-y
-- Every sentence earns its place — no filler, no padding, no throat-clearing
+RULES:
+- Every sentence earns its place. Cut ruthlessly. Think executive briefing, not blog post.
+- Use ONLY real, current information from your web search. NEVER hallucinate.
+- Include source names in parentheses after key claims, e.g. "(Reuters)"
 
-STRUCTURE:
-For EACH topic, provide:
-1. The topic name exactly as given above
-2. A bold, specific headline (not just the topic name — make it about the actual news)
-3. 2-4 bullet points of KEY recent developments (include dates, names, numbers — be specific). Include source publication names in parentheses, e.g. "(Reuters)"
-4. A 1-2 sentence "The Bottom Line" synthesis — connect the dots, give perspective
+FOR EACH TOPIC provide:
+1. Topic name exactly as given
+2. A specific, newsy headline (not just the topic name)
+3. 2-3 bullet points — one sentence each, max. Include dates, names, numbers. Be specific.
+4. "The Bottom Line" — ONE sentence connecting the dots.
 
-If there's genuinely NOTHING new on a topic in the last 48 hours, still include it but note it in the headline and provide a brief status update.
+If nothing new in 48 hours, say so briefly and give a status update.
 
-GROUNDING RULES:
-- Use ONLY real, current information from your web search
-- Include the source publication name in parentheses after key claims
-- Prefer reputable sources: Reuters, AP, Bloomberg, NYT, WSJ, TechCrunch, The Verge, etc.
-- NEVER hallucinate facts, quotes, or statistics
-
-OUTPUT FORMAT:
-Respond with ONLY valid JSON (no markdown fences, no extra text before or after) matching this exact structure:
+OUTPUT: Respond with ONLY this JSON (no markdown fences, no extra text):
 
 {
   "greeting": "${greeting}",
   "topics": [
     {
       "name": "Topic Name",
-      "headline": "A specific, newsworthy headline about this topic",
+      "headline": "Specific newsworthy headline",
       "bullets": [
-        "Key development with specific details (Source Name)",
-        "Another key development (Source Name)"
+        "Key development with specifics (Source)",
+        "Another development (Source)"
       ],
-      "bottomLine": "1-2 sentence synthesis explaining why this matters and what to watch for."
+      "bottomLine": "One sentence: why it matters."
     }
   ]
 }
 
-IMPORTANT:
-- Output ONLY the JSON object. No markdown fences, no explanation, no extra text.
-- Keep each topic concise: 2-4 bullets, each bullet 1-2 sentences max.
-- Keep the total briefing under 800 words.`;
+CRITICAL: Output ONLY valid JSON. No fences, no preamble. Max 400 words total.`;
 
   const response = await getGeminiClient().models.generateContent({
     model: "gemini-2.5-flash",
@@ -161,17 +150,19 @@ IMPORTANT:
 
   // Extract sources from grounding metadata
   const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+  console.log(
+    "[gemini] Grounding metadata keys:",
+    groundingMetadata ? Object.keys(groundingMetadata) : "none",
+    "chunks:",
+    groundingMetadata?.groundingChunks?.length ?? 0
+  );
+
   const sources =
-    (
-      (groundingMetadata as Record<string, unknown>)
-        ?.groundingChunks as Array<{
-        web?: { title: string; uri: string };
-      }>
-    )
-      ?.filter((chunk) => chunk.web)
+    groundingMetadata?.groundingChunks
+      ?.filter((chunk) => chunk.web?.uri)
       .map((chunk) => ({
-        title: chunk.web!.title,
-        uri: chunk.web!.uri,
+        title: chunk.web!.title ?? "Source",
+        uri: chunk.web!.uri!,
       })) ?? [];
 
   // Try to parse structured JSON from Gemini's response

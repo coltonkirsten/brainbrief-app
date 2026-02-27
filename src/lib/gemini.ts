@@ -93,9 +93,10 @@ Topics:
 ${topicList}
 
 RULES:
+- ALWAYS use your Google Search tool to find current information. Every claim must come from a search result.
 - Every sentence earns its place. Cut ruthlessly. Think executive briefing, not blog post.
-- Use ONLY real, current information from your web search. NEVER hallucinate.
-- Include source names in parentheses after key claims, e.g. "(Reuters)"
+- Use ONLY real, current information from your search results. NEVER hallucinate.
+- Always cite your sources by name in parentheses after key claims, e.g. "(Reuters)"
 
 FOR EACH TOPIC provide:
 1. Topic name exactly as given

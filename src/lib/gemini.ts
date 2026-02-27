@@ -22,6 +22,9 @@ export interface TopicBriefing {
   headline: string;
   bullets: string[];
   bottomLine: string;
+  /** Per-bullet source links: bulletSources[i] = sources for bullets[i] */
+  bulletSources?: SourceLink[][];
+  /** Legacy: flat per-topic sources (used when groundingSupports unavailable) */
   sources?: SourceLink[];
 }
 
@@ -44,8 +47,11 @@ export interface BriefingResult {
  * Generate a personalized news briefing for a user's topics using
  * Gemini with Google Search grounding for real-time web data.
  *
- * Returns structured data (for email templating) + HTML/text fallbacks.
+ * Uses plain text output (not JSON) to maximize grounding metadata
+ * quality — Gemini's groundingSupports maps character ranges to
+ * specific source chunks, enabling per-bullet citations.
  */
+
 /** Return a time-appropriate greeting based on the user's timezone. */
 function getTimeGreeting(timezone?: string | null): string {
   try {
@@ -85,6 +91,8 @@ export async function generateBriefing(
   );
   const topicList = sanitizedTopics.map((t) => `- ${t}`).join("\n");
 
+  // Plain text output — NOT JSON — so grounding metadata maps correctly
+  // to individual sentences/bullets in the response.
   const prompt = `You are Brain Brief — a sharp colleague who gives the 2-minute download on what matters. Concise, grounded, zero filler.
 
 Date: ${today}
@@ -96,34 +104,15 @@ RULES:
 - ALWAYS use your Google Search tool to find current information. Every claim must come from a search result.
 - Every sentence earns its place. Cut ruthlessly. Think executive briefing, not blog post.
 - Use ONLY real, current information from your search results. NEVER hallucinate.
-- Always cite your sources by name in parentheses after key claims, e.g. "(Reuters)"
 
-FOR EACH TOPIC provide:
-1. Topic name exactly as given
-2. A specific, newsy headline (not just the topic name)
-3. 2-3 bullet points — one sentence each, max. Include dates, names, numbers. Be specific.
-4. "The Bottom Line" — ONE sentence connecting the dots.
+FOR EACH TOPIC write exactly this format:
+## [Topic Name]: [Specific newsworthy headline]
+- First key development with dates, names, numbers. One sentence.
+- Second key development with specifics. One sentence.
+- Optional third bullet if warranted. One sentence.
+**The Bottom Line:** One sentence connecting the dots — why it matters.
 
-If nothing new in 48 hours, say so briefly and give a status update.
-
-OUTPUT: Respond with ONLY this JSON (no markdown fences, no extra text):
-
-{
-  "greeting": "${greeting}",
-  "topics": [
-    {
-      "name": "Topic Name",
-      "headline": "Specific newsworthy headline",
-      "bullets": [
-        "Key development with specifics (Source)",
-        "Another development (Source)"
-      ],
-      "bottomLine": "One sentence: why it matters."
-    }
-  ]
-}
-
-CRITICAL: Output ONLY valid JSON. No fences, no preamble. Max 400 words total.`;
+Keep it under 400 words total. Be specific — dates, names, numbers. No filler.`;
 
   const response = await getGeminiClient().models.generateContent({
     model: "gemini-2.5-flash",
@@ -149,16 +138,9 @@ CRITICAL: Output ONLY valid JSON. No fences, no preamble. Max 400 words total.`;
     );
   }
 
-  // Extract sources from grounding metadata
+  // Extract grounding metadata
   const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
-  console.log(
-    "[gemini] Grounding metadata keys:",
-    groundingMetadata ? Object.keys(groundingMetadata) : "none",
-    "chunks:",
-    groundingMetadata?.groundingChunks?.length ?? 0
-  );
-
-  const sources =
+  const chunks =
     groundingMetadata?.groundingChunks
       ?.filter((chunk) => chunk.web?.uri)
       .map((chunk) => ({
@@ -166,64 +148,37 @@ CRITICAL: Output ONLY valid JSON. No fences, no preamble. Max 400 words total.`;
         uri: chunk.web!.uri!,
       })) ?? [];
 
-  // Try to parse structured JSON from Gemini's response
-  let structured: BriefingData | undefined;
-  try {
-    let jsonText = responseText.trim();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supports: GroundingSupport[] = (groundingMetadata as any)?.groundingSupports ?? [];
 
-    // Strip markdown code fences if present
-    if (jsonText.startsWith("```json")) {
-      jsonText = jsonText.slice(7);
-    } else if (jsonText.startsWith("```")) {
-      jsonText = jsonText.slice(3);
-    }
-    if (jsonText.endsWith("```")) {
-      jsonText = jsonText.slice(0, -3);
-    }
-    jsonText = jsonText.trim();
+  console.log(
+    `[gemini] Grounding: ${chunks.length} chunks, ${supports.length} supports`
+  );
 
-    const parsed = JSON.parse(jsonText);
-    if (parsed.topics && Array.isArray(parsed.topics)) {
-      structured = {
-        greeting: parsed.greeting || greeting,
-        topics: parsed.topics.map(
-          (t: {
-            name?: string;
-            headline?: string;
-            bullets?: string[];
-            bottomLine?: string;
-            bottom_line?: string;
-          }) => ({
-            name: t.name || "Latest Updates",
-            headline: t.headline || t.name || "Latest Updates",
-            bullets: Array.isArray(t.bullets) ? t.bullets : [],
-            bottomLine: t.bottomLine || t.bottom_line || "",
-          })
-        ),
-      };
-    }
-  } catch {
-    console.warn(
-      "[gemini] Failed to parse JSON response, trying to extract structured data from markdown"
-    );
+  // Parse plain text response into structured data
+  let structured = tryParseStructuredFromMarkdown(responseText, greeting);
 
-    // Secondary fallback: try to extract structured data from markdown response
-    // Gemini sometimes returns markdown with our expected structure (headlines, bullets, bottom line)
-    structured = tryParseStructuredFromMarkdown(responseText, greeting);
-    if (structured) {
-      console.log("[gemini] Successfully extracted structured data from markdown");
-    } else {
-      console.warn("[gemini] Could not extract structured data, converting markdown to HTML");
-    }
+  // Fallback: try parsing as JSON in case Gemini ignored the plain text instruction
+  if (!structured) {
+    structured = tryParseJson(responseText, greeting);
   }
 
-  // Match grounding sources to specific topics
-  if (structured && sources.length > 0) {
-    matchSourcesToTopics(sources, structured);
+  if (!structured) {
+    console.warn("[gemini] Could not parse structured data from response");
+  }
+
+  // Map grounding supports to per-bullet sources
+  if (structured && chunks.length > 0 && supports.length > 0) {
+    mapSupportsToStructured(responseText, structured, chunks, supports);
+    const bulletSourceCounts = structured.topics.map(
+      (t) => `${t.name}: ${(t.bulletSources ?? []).map((bs) => bs.length).join(",")}`
+    );
+    console.log(`[gemini] Per-bullet sources: ${bulletSourceCounts.join(" | ")}`);
+  } else if (structured && chunks.length > 0) {
+    // Fallback: use keyword matching when no groundingSupports available
+    matchSourcesToTopics(chunks, structured);
     console.log(
-      `[gemini] Matched ${sources.length} sources across ${structured.topics.length} topics:`,
-      structured.topics.map((t) => `${t.name}: ${t.sources?.length ?? 0} sources`).join(", "),
-      structured.sources?.length ? `+ ${structured.sources.length} unmatched` : ""
+      `[gemini] Keyword-matched ${chunks.length} sources (no groundingSupports)`
     );
   }
 
@@ -241,22 +196,265 @@ CRITICAL: Output ONLY valid JSON. No fences, no preamble. Max 400 words total.`;
     contentHtml,
     contentText,
     topicsCovered: topics,
-    sources,
+    sources: chunks,
     structured,
   };
 }
 
+// ---------- Grounding Support Types ----------
+
+interface GroundingSupport {
+  segment?: {
+    startIndex?: number;
+    endIndex?: number;
+    text?: string;
+  };
+  groundingChunkIndices?: number[];
+  confidenceScores?: number[];
+}
+
+// ---------- Grounding → Per-Bullet Mapping ----------
+
 /**
- * Match grounding sources to specific topics using keyword overlap.
- * Sources are assigned to the topic whose content (headline, bullets, bottomLine)
- * has the most keyword overlap with the source title.
- * Unmatched sources go to data.sources as a catch-all.
+ * Map groundingSupports to individual bullets in the structured data.
+ *
+ * Strategy: each groundingSupport covers a character range in the response.
+ * We find where each bullet's text appears in the response, then collect
+ * the source chunks whose support segments overlap with that bullet.
+ */
+function mapSupportsToStructured(
+  responseText: string,
+  data: BriefingData,
+  chunks: SourceLink[],
+  supports: GroundingSupport[]
+): void {
+  const textLower = responseText.toLowerCase();
+
+  for (const topic of data.topics) {
+    topic.bulletSources = [];
+
+    for (const bullet of topic.bullets) {
+      // Find this bullet's position in the response text
+      const bulletLower = bullet.toLowerCase().substring(0, 60); // Use prefix for matching
+      const bulletStart = textLower.indexOf(bulletLower);
+
+      if (bulletStart === -1) {
+        // Bullet not found verbatim — try fuzzy: match first 30 chars
+        const shortPrefix = bullet.toLowerCase().substring(0, 30);
+        const altStart = textLower.indexOf(shortPrefix);
+        if (altStart === -1) {
+          topic.bulletSources.push([]);
+          continue;
+        }
+        // Use the alt match position
+        const bulletEnd = altStart + bullet.length + 20; // allow some slack
+        const matched = collectSourcesForRange(altStart, bulletEnd, chunks, supports);
+        topic.bulletSources.push(dedup(matched));
+        continue;
+      }
+
+      const bulletEnd = bulletStart + bullet.length + 20; // allow some slack
+      const matched = collectSourcesForRange(bulletStart, bulletEnd, chunks, supports);
+      topic.bulletSources.push(dedup(matched));
+    }
+  }
+}
+
+/**
+ * Collect source links from groundingSupports whose segments overlap
+ * with the given character range [rangeStart, rangeEnd].
+ */
+function collectSourcesForRange(
+  rangeStart: number,
+  rangeEnd: number,
+  chunks: SourceLink[],
+  supports: GroundingSupport[]
+): SourceLink[] {
+  const sources: SourceLink[] = [];
+
+  for (const support of supports) {
+    const segStart = support.segment?.startIndex ?? 0;
+    const segEnd = support.segment?.endIndex ?? 0;
+
+    // Check if this support segment overlaps with our bullet range
+    if (segEnd > rangeStart && segStart < rangeEnd) {
+      // This support covers our bullet — collect its source chunks
+      for (const idx of support.groundingChunkIndices ?? []) {
+        if (idx >= 0 && idx < chunks.length) {
+          sources.push(chunks[idx]);
+        }
+      }
+    }
+  }
+
+  return sources;
+}
+
+/** Deduplicate source links by URI, limit to 3 per bullet */
+function dedup(sources: SourceLink[]): SourceLink[] {
+  const seen = new Set<string>();
+  const result: SourceLink[] = [];
+  for (const s of sources) {
+    const key = s.uri.toLowerCase().replace(/\/+$/, "");
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(s);
+    }
+    if (result.length >= 3) break;
+  }
+  return result;
+}
+
+// ---------- Parsing ----------
+
+/**
+ * Try to extract structured BriefingData from markdown-formatted text.
+ * Expected format:
+ *   ## Topic Name: Headline
+ *   - Bullet 1
+ *   - Bullet 2
+ *   **The Bottom Line:** Synthesis sentence.
+ */
+function tryParseStructuredFromMarkdown(
+  markdown: string,
+  defaultGreeting: string
+): BriefingData | undefined {
+  try {
+    const sections = markdown.split(/^##\s+/m).filter((s) => s.trim());
+    if (sections.length === 0) return undefined;
+
+    let greetingText = defaultGreeting;
+    let topicSections = sections;
+
+    // First section before any ## might contain greeting/intro
+    const firstSection = sections[0].trim();
+    if (
+      firstSection.length < 200 &&
+      !firstSection.includes("- ") &&
+      !firstSection.includes("* ")
+    ) {
+      const firstLine = firstSection.split("\n")[0].trim();
+      if (firstLine.length > 0 && firstLine.length < 100) {
+        greetingText = firstLine.replace(/^#+\s*/, "").replace(/\*\*/g, "");
+      }
+      topicSections = sections.slice(1);
+    }
+
+    if (topicSections.length === 0) return undefined;
+
+    const topics: TopicBriefing[] = topicSections
+      .map((section) => {
+        const lines = section.split("\n").filter((l) => l.trim());
+        if (lines.length === 0) return null;
+
+        // First line: "Topic Name: Headline" or just "Headline"
+        const rawHeadline = lines[0].trim().replace(/\*\*/g, "");
+
+        // Split "Topic Name: Headline" format
+        let topicName = rawHeadline;
+        let headline = rawHeadline;
+        const colonIdx = rawHeadline.indexOf(": ");
+        if (colonIdx > 0 && colonIdx < 60) {
+          topicName = rawHeadline.substring(0, colonIdx).trim();
+          headline = rawHeadline.substring(colonIdx + 2).trim() || rawHeadline;
+        }
+
+        const bullets: string[] = [];
+        let bottomLine = "";
+
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+
+          if (/\*?\*?the bottom line\*?\*?:?/i.test(line)) {
+            const blContent = line
+              .replace(/\*?\*?the bottom line\*?\*?:?\s*/i, "")
+              .trim();
+            if (blContent) {
+              bottomLine = blContent.replace(/\*\*/g, "").replace(/\*/g, "");
+            } else if (i + 1 < lines.length) {
+              bottomLine = lines[i + 1]
+                .trim()
+                .replace(/\*\*/g, "")
+                .replace(/\*/g, "");
+            }
+            break;
+          }
+
+          if (/^[-*•]\s+/.test(line) || /^\d+\.\s+/.test(line)) {
+            const bulletText = line
+              .replace(/^[-*•]\s+/, "")
+              .replace(/^\d+\.\s+/, "")
+              .replace(/\*\*/g, "")
+              .trim();
+            if (bulletText) bullets.push(bulletText);
+          }
+        }
+
+        if (bullets.length === 0) return null;
+
+        return { name: topicName, headline, bullets, bottomLine };
+      })
+      .filter((t): t is TopicBriefing => t !== null);
+
+    if (topics.length === 0) return undefined;
+
+    return { greeting: greetingText, topics };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Fallback: try to parse as JSON (in case Gemini returns JSON despite
+ * our plain text instruction).
+ */
+function tryParseJson(
+  responseText: string,
+  defaultGreeting: string
+): BriefingData | undefined {
+  try {
+    let jsonText = responseText.trim();
+    if (jsonText.startsWith("```json")) jsonText = jsonText.slice(7);
+    else if (jsonText.startsWith("```")) jsonText = jsonText.slice(3);
+    if (jsonText.endsWith("```")) jsonText = jsonText.slice(0, -3);
+    jsonText = jsonText.trim();
+
+    const parsed = JSON.parse(jsonText);
+    if (parsed.topics && Array.isArray(parsed.topics)) {
+      return {
+        greeting: parsed.greeting || defaultGreeting,
+        topics: parsed.topics.map(
+          (t: {
+            name?: string;
+            headline?: string;
+            bullets?: string[];
+            bottomLine?: string;
+            bottom_line?: string;
+          }) => ({
+            name: t.name || "Latest Updates",
+            headline: t.headline || t.name || "Latest Updates",
+            bullets: Array.isArray(t.bullets) ? t.bullets : [],
+            bottomLine: t.bottomLine || t.bottom_line || "",
+          })
+        ),
+      };
+    }
+  } catch {
+    // Not valid JSON — that's fine, we wanted plain text
+  }
+  return undefined;
+}
+
+// ---------- Legacy Keyword Matching (fallback) ----------
+
+/**
+ * Fallback: match sources to topics using keyword overlap.
+ * Used when groundingSupports is not available.
  */
 function matchSourcesToTopics(
   sources: SourceLink[],
   data: BriefingData
 ): void {
-  // Deduplicate sources by URI (Gemini sometimes returns duplicates)
   const seen = new Set<string>();
   const uniqueSources = sources.filter((s) => {
     const key = s.uri.toLowerCase().replace(/\/+$/, "");
@@ -265,28 +463,25 @@ function matchSourcesToTopics(
     return true;
   });
 
-  // Build searchable text blobs per topic
   const topicTexts = data.topics.map((topic) =>
     [topic.name, topic.headline, ...topic.bullets, topic.bottomLine]
       .join(" ")
       .toLowerCase()
   );
 
-  // Extract meaningful words (3+ chars) from each topic
+  const stopwords = new Set([
+    "the", "and", "for", "that", "this", "with", "from", "are", "was",
+    "has", "have", "had", "been", "will", "but", "not", "its", "may",
+    "more", "also", "than", "into", "about", "could", "would", "after",
+    "new", "said", "while", "which", "their", "they", "these", "other",
+    "over", "most", "some",
+  ]);
+
   const topicKeywords = topicTexts.map((text) => {
     const words = text.match(/[a-z]{3,}/g) || [];
-    // Remove very common words
-    const stopwords = new Set([
-      "the", "and", "for", "that", "this", "with", "from", "are", "was",
-      "has", "have", "had", "been", "will", "but", "not", "its", "may",
-      "more", "also", "than", "into", "about", "could", "would", "after",
-      "new", "said", "while", "which", "their", "they", "these", "other",
-      "over", "most", "some",
-    ]);
     return words.filter((w) => !stopwords.has(w));
   });
 
-  // Initialize per-topic source arrays
   for (const topic of data.topics) {
     topic.sources = [];
   }
@@ -297,26 +492,22 @@ function matchSourcesToTopics(
     const sourceText = `${source.title} ${source.uri}`.toLowerCase();
     const sourceWords = new Set(
       (sourceText.match(/[a-z]{3,}/g) || []).filter(
-        (w) => !["com", "www", "https", "html", "htm", "php", "org", "net", "news"].includes(w)
+        (w) =>
+          !["com", "www", "https", "html", "htm", "php", "org", "net", "news"].includes(w)
       )
     );
 
-    // Score each topic by how many of its keywords appear in the source
     let bestTopicIdx = -1;
     let bestScore = 0;
 
     topicKeywords.forEach((keywords, idx) => {
       let score = 0;
       for (const word of keywords) {
-        if (sourceWords.has(word)) {
-          score += word.length; // Longer matching words = stronger signal
-        }
+        if (sourceWords.has(word)) score += word.length;
       }
-      // Also check if source words appear in topic text
       for (const word of sourceWords) {
-        if (topicTexts[idx].includes(word) && word.length >= 4) {
+        if (topicTexts[idx].includes(word) && word.length >= 4)
           score += word.length * 0.5;
-        }
       }
       if (score > bestScore) {
         bestScore = score;
@@ -324,7 +515,6 @@ function matchSourcesToTopics(
       }
     });
 
-    // Require a minimum relevance score to match
     if (bestTopicIdx >= 0 && bestScore >= 6) {
       data.topics[bestTopicIdx].sources!.push(source);
     } else {
@@ -332,7 +522,6 @@ function matchSourcesToTopics(
     }
   }
 
-  // Cap sources per topic to 3 (keep most relevant, move extras to unmatched)
   for (const topic of data.topics) {
     if (topic.sources && topic.sources.length > 3) {
       const extras = topic.sources.splice(3);
@@ -340,15 +529,17 @@ function matchSourcesToTopics(
     }
   }
 
-  // Store unmatched sources at the data level
   if (unmatchedSources.length > 0) {
     data.sources = unmatchedSources;
   }
 }
 
+// ---------- HTML Generation ----------
+
 /**
- * Generate simple inner HTML from structured data.
+ * Generate inner HTML from structured data.
  * Used for DB storage and dashboard display.
+ * Includes per-bullet source citations when available.
  */
 function generateHtmlFromStructured(data: BriefingData): string {
   let html = `<p>${escapeHtml(data.greeting)} Here's what's happening in the topics you care about.</p>\n`;
@@ -359,18 +550,33 @@ function generateHtmlFromStructured(data: BriefingData): string {
     }
     html += `<h2>${escapeHtml(topic.headline)}</h2>\n`;
     html += `<ul>\n`;
-    topic.bullets.forEach((bullet) => {
-      html += `  <li>${escapeHtml(bullet)}</li>\n`;
+    topic.bullets.forEach((bullet, bi) => {
+      const bulletSourceList = topic.bulletSources?.[bi] ?? [];
+      if (bulletSourceList.length > 0) {
+        // Inline citations after the bullet text
+        const citations = bulletSourceList
+          .map(
+            (s) =>
+              `<a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener" style="color: #10b981; text-decoration: none; font-size: 0.85em;">${escapeHtml(cleanDomain(s.title))}</a>`
+          )
+          .join(", ");
+        html += `  <li>${escapeHtml(bullet)} <span style="color: #94a3b8;">[${citations}]</span></li>\n`;
+      } else {
+        html += `  <li>${escapeHtml(bullet)}</li>\n`;
+      }
     });
     html += `</ul>\n`;
     if (topic.bottomLine) {
       html += `<p><em><strong>The Bottom Line:</strong> ${escapeHtml(topic.bottomLine)}</em></p>\n`;
     }
-    // Source links per topic
-    if (topic.sources && topic.sources.length > 0) {
+    // Legacy per-topic sources (when bulletSources unavailable)
+    if (!topic.bulletSources && topic.sources && topic.sources.length > 0) {
       html += `<p style="font-size: 0.85em; color: #64748b; margin-top: 8px;"><strong>Read more:</strong> `;
       html += topic.sources
-        .map((s) => `<a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener" style="color: #10b981; text-decoration: underline;">${escapeHtml(s.title)}</a>`)
+        .map(
+          (s) =>
+            `<a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener" style="color: #10b981; text-decoration: underline;">${escapeHtml(s.title)}</a>`
+        )
         .join(" · ");
       html += `</p>\n`;
     }
@@ -389,14 +595,20 @@ function generateTextFromStructured(data: BriefingData): string {
   data.topics.forEach((topic, i) => {
     if (i > 0) text += `\n---\n\n`;
     text += `${topic.headline}\n\n`;
-    topic.bullets.forEach((bullet) => {
-      text += `  • ${bullet}\n`;
+    topic.bullets.forEach((bullet, bi) => {
+      const bulletSourceList = topic.bulletSources?.[bi] ?? [];
+      if (bulletSourceList.length > 0) {
+        const citations = bulletSourceList.map((s) => cleanDomain(s.title)).join(", ");
+        text += `  • ${bullet} [${citations}]\n`;
+      } else {
+        text += `  • ${bullet}\n`;
+      }
     });
     if (topic.bottomLine) {
       text += `\nThe Bottom Line: ${topic.bottomLine}\n`;
     }
-    // Source links per topic
-    if (topic.sources && topic.sources.length > 0) {
+    // Legacy per-topic sources
+    if (!topic.bulletSources && topic.sources && topic.sources.length > 0) {
       text += `\nRead more:\n`;
       topic.sources.forEach((s) => {
         text += `  → ${s.title}: ${s.uri}\n`;
@@ -408,28 +620,20 @@ function generateTextFromStructured(data: BriefingData): string {
   return text;
 }
 
+// ---------- Utilities ----------
 
 /**
  * Convert markdown to clean HTML using the `marked` parser.
- * This handles the case where Gemini returns markdown instead of JSON.
+ * Fallback when structured parsing fails.
  */
 function convertMarkdownToHtml(markdown: string): string {
   try {
-    // Configure marked for clean output
-    marked.setOptions({
-      gfm: true,
-      breaks: true,
-    });
-
+    marked.setOptions({ gfm: true, breaks: true });
     const html = marked.parse(markdown);
-    if (typeof html === "string") {
-      return html;
-    }
-    // marked.parse can return a Promise if async is enabled — shouldn't happen with our config
+    if (typeof html === "string") return html;
     return markdown;
   } catch (err) {
     console.error("[gemini] Markdown conversion failed:", err);
-    // Ultimate fallback: wrap in basic HTML paragraphs
     return markdown
       .split("\n\n")
       .map((para) => `<p>${para.replace(/\n/g, "<br>")}</p>`)
@@ -438,118 +642,33 @@ function convertMarkdownToHtml(markdown: string): string {
 }
 
 /**
- * Try to extract structured BriefingData from markdown-formatted text.
- * Gemini sometimes returns the right structure in markdown form instead of JSON:
- * - ## Topic headlines
- * - Bullet lists
- * - **The Bottom Line:** paragraphs
- */
-function tryParseStructuredFromMarkdown(
-  markdown: string,
-  defaultGreeting: string
-): BriefingData | undefined {
-  try {
-    // Split by h2/## headers to find topic sections
-    const sections = markdown.split(/^##\s+/m).filter((s) => s.trim());
-
-    if (sections.length === 0) return undefined;
-
-    // First section before any ## might contain greeting
-    let greetingText = defaultGreeting;
-    let topicSections = sections;
-
-    // Check if first section looks like a greeting (no bullets, short)
-    const firstSection = sections[0].trim();
-    if (
-      firstSection.length < 200 &&
-      !firstSection.includes("- ") &&
-      !firstSection.includes("* ")
-    ) {
-      // This might be a greeting/intro paragraph
-      const firstLine = firstSection.split("\n")[0].trim();
-      if (firstLine.length > 0 && firstLine.length < 100) {
-        greetingText = firstLine.replace(/^#+\s*/, "").replace(/\*\*/g, "");
-      }
-      topicSections = sections.slice(1);
-    }
-
-    if (topicSections.length === 0) return undefined;
-
-    const topics: TopicBriefing[] = topicSections
-      .map((section) => {
-        const lines = section.split("\n").filter((l) => l.trim());
-        if (lines.length === 0) return null;
-
-        // First line is the headline (was after ##)
-        const headline = lines[0].trim().replace(/\*\*/g, "");
-
-        // Extract bullets (lines starting with - or * or numbered)
-        const bullets: string[] = [];
-        let bottomLine = "";
-
-        for (let i = 1; i < lines.length; i++) {
-          const line = lines[i].trim();
-
-          // Check for "The Bottom Line" or "Bottom Line"
-          if (/\*?\*?the bottom line\*?\*?:?/i.test(line)) {
-            // The bottom line content might be on this line or the next
-            const blContent = line
-              .replace(/\*?\*?the bottom line\*?\*?:?\s*/i, "")
-              .trim();
-            if (blContent) {
-              bottomLine = blContent.replace(/\*\*/g, "").replace(/\*/g, "");
-            } else if (i + 1 < lines.length) {
-              bottomLine = lines[i + 1]
-                .trim()
-                .replace(/\*\*/g, "")
-                .replace(/\*/g, "");
-            }
-            break;
-          }
-
-          // Bullet points
-          if (/^[-*•]\s+/.test(line) || /^\d+\.\s+/.test(line)) {
-            const bulletText = line
-              .replace(/^[-*•]\s+/, "")
-              .replace(/^\d+\.\s+/, "")
-              .replace(/\*\*/g, "")
-              .trim();
-            if (bulletText) bullets.push(bulletText);
-          }
-        }
-
-        if (bullets.length === 0) return null;
-
-        // Derive topic name from headline (strip specifics)
-        const name = headline;
-
-        return { name, headline, bullets, bottomLine };
-      })
-      .filter((t): t is TopicBriefing => t !== null);
-
-    if (topics.length === 0) return undefined;
-
-    return { greeting: greetingText, topics };
-  } catch {
-    return undefined;
-  }
-}
-
-/**
  * Strip markdown formatting to produce plain text (for text email version).
  */
 function stripMarkdownToText(markdown: string): string {
   return markdown
-    .replace(/^#{1,6}\s+/gm, "") // Remove heading markers
-    .replace(/\*\*([^*]+)\*\*/g, "$1") // Bold
-    .replace(/\*([^*]+)\*/g, "$1") // Italic
-    .replace(/`([^`]+)`/g, "$1") // Inline code
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Links
-    .replace(/^[-*]\s+/gm, "  • ") // Bullet points
-    .replace(/^\d+\.\s+/gm, "  • ") // Numbered lists
-    .replace(/---+/g, "---") // Horizontal rules
-    .replace(/\n{3,}/g, "\n\n") // Collapse extra newlines
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^[-*]\s+/gm, "  • ")
+    .replace(/^\d+\.\s+/gm, "  • ")
+    .replace(/---+/g, "---")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+/** Clean a domain-style title for display (e.g., "reuters.com" → "Reuters") */
+function cleanDomain(title: string): string {
+  // Remove common TLDs and capitalize
+  let clean = title
+    .replace(/^www\./, "")
+    .replace(/\.(com|org|net|co\.uk|io)$/i, "");
+  // Capitalize first letter
+  if (clean.length > 0) {
+    clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+  }
+  return clean || title;
 }
 
 /**

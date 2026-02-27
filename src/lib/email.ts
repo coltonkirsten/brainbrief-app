@@ -219,17 +219,28 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
       const isLast = i === data.topics.length - 1;
 
       const bulletItems = topic.bullets
-        .map(
-          (bullet) => `
+        .map((bullet, bi) => {
+          const bulletSourceList = topic.bulletSources?.[bi] ?? [];
+          // Render inline source citations after the bullet text
+          const citationHtml =
+            bulletSourceList.length > 0
+              ? ` <span style="font-size: 12px; color: #94A3B8;">[${bulletSourceList
+                  .map(
+                    (s) =>
+                      `<a href="${escapeHtml(s.uri)}" style="color: #10B981; text-decoration: none; border-bottom: 1px solid #D1FAE5; font-size: 12px;" target="_blank">${escapeHtml(cleanSourceTitle(s.title))}</a>`
+                  )
+                  .join(", ")}]</span>`
+              : "";
+          return `
               <tr>
                 <td style="padding: 0 0 8px 0; vertical-align: top; width: 20px;">
                   <span style="color: #10B981; font-size: 18px; line-height: 1;">&#8226;</span>
                 </td>
                 <td style="padding: 0 0 8px 8px; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #334155;">
-                  ${escapeHtml(bullet)}
+                  ${escapeHtml(bullet)}${citationHtml}
                 </td>
-              </tr>`
-        )
+              </tr>`;
+        })
         .join("");
 
       const bottomLineBlock = topic.bottomLine
@@ -250,9 +261,10 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
             </tr>`
         : "";
 
-      // Source links — "Read More" section per topic
+      // Legacy source links — only show "Read More" block when no per-bullet sources
+      const hasBulletSources = topic.bulletSources?.some((bs) => bs.length > 0);
       const sourceLinks =
-        topic.sources && topic.sources.length > 0
+        !hasBulletSources && topic.sources && topic.sources.length > 0
           ? `
             <tr>
               <td style="padding: 16px 0 0 0;">

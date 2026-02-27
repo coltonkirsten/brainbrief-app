@@ -41,6 +41,8 @@ export interface BriefingResult {
   topicsCovered: string[];
   sources: SourceLink[];
   structured?: BriefingData;
+  /** Whether Gemini invoked Google Search grounding for this response */
+  grounded: boolean;
 }
 
 /**
@@ -116,12 +118,13 @@ FOR EACH TOPIC write exactly this format:
 
 Keep it under 400 words total. No filler, no background — only real-time news.`;
 
-  // Call Gemini with retry — if grounding returns 0 chunks on first try,
-  // retry once. Gemini intermittently skips Google Search grounding.
-  const MAX_ATTEMPTS = 2;
+  // Call Gemini with retry — if grounding returns 0 chunks, retry up to
+  // MAX_ATTEMPTS times. Gemini intermittently skips Google Search grounding.
+  const MAX_ATTEMPTS = 3;
   let responseText = "";
   let chunks: SourceLink[] = [];
   let supports: GroundingSupport[] = [];
+  let grounded = false;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const response = await getGeminiClient().models.generateContent({
@@ -169,14 +172,23 @@ Keep it under 400 words total. No filler, no background — only real-time news.
     );
 
     // If we got grounding data, use this response
-    if (chunks.length > 0) break;
+    if (chunks.length > 0) {
+      grounded = true;
+      break;
+    }
 
-    // If no grounding on first attempt, retry
+    // If no grounding, retry with a delay
     if (attempt < MAX_ATTEMPTS) {
       console.warn(
         `[gemini] Attempt ${attempt}: 0 grounding chunks — retrying for better grounding...`
       );
     }
+  }
+
+  if (!grounded) {
+    console.error(
+      `[gemini] WARNING: ${MAX_ATTEMPTS} attempts all returned 0 grounding chunks. Content may be unverified.`
+    );
   }
 
   // Parse plain text response into structured data
@@ -207,14 +219,21 @@ Keep it under 400 words total. No filler, no background — only real-time news.
   }
 
   // Generate HTML from structured data, or convert markdown to HTML
-  const contentHtml = structured
+  let contentHtml = structured
     ? generateHtmlFromStructured(structured)
     : convertMarkdownToHtml(responseText);
 
   // Generate plain text
-  const contentText = structured
+  let contentText = structured
     ? generateTextFromStructured(structured)
     : stripMarkdownToText(responseText);
+
+  // Add disclaimer if grounding failed — content may be hallucinated
+  if (!grounded) {
+    const disclaimer = `<p style="font-size: 0.85em; color: #94a3b8; margin-top: 16px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background-color: #f8fafc;"><em>Note: This briefing could not be verified with live sources. Information may not reflect the latest developments. <a href="https://www.brainbrief.app/dashboard" style="color: #10b981;">Generate a new briefing</a> to try again.</em></p>`;
+    contentHtml += disclaimer;
+    contentText += `\n\nNote: This briefing could not be verified with live sources. Information may not reflect the latest developments.`;
+  }
 
   return {
     contentHtml,
@@ -222,6 +241,7 @@ Keep it under 400 words total. No filler, no background — only real-time news.
     topicsCovered: topics,
     sources: chunks,
     structured,
+    grounded,
   };
 }
 

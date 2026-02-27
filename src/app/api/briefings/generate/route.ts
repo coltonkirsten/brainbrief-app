@@ -166,6 +166,7 @@ export async function POST() {
         text: briefing.contentText,
         structured: briefing.structured,
         trialInfo,
+        grounded: briefing.grounded,
       });
 
       if (emailResult.success) {

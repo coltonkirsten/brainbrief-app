@@ -179,6 +179,7 @@ export async function GET(request: Request) {
         text: briefing.contentText,
         structured: briefing.structured,
         trialInfo,
+        grounded: briefing.grounded,
       });
 
       if (emailResult.success) {

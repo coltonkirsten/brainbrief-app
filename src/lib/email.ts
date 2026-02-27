@@ -25,6 +25,8 @@ interface SendBriefingEmailParams {
   text: string;
   structured?: BriefingData;
   trialInfo?: TrialInfo;
+  /** Whether the briefing was grounded with live sources */
+  grounded?: boolean;
 }
 
 export async function sendBriefingEmail({
@@ -34,6 +36,7 @@ export async function sendBriefingEmail({
   text,
   structured,
   trialInfo,
+  grounded,
 }: SendBriefingEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -51,7 +54,7 @@ export async function sendBriefingEmail({
       }
 
       const emailHtml = structured
-        ? buildStructuredEmailTemplate(structured, trialInfo)
+        ? buildStructuredEmailTemplate(structured, trialInfo, grounded)
         : buildLegacyEmailTemplate(html);
 
       const { data, error } = await resend.emails.send({
@@ -140,7 +143,7 @@ export async function sendStandaloneEmail(params: {
 // Structured email template — Chelsea's "Premium Editorial" design
 // ---------------------------------------------------------------------------
 
-function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo): string {
+function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo, grounded?: boolean): string {
   const year = new Date().getFullYear();
   const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -405,6 +408,23 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
 
           <!-- ============ TOPICS ============ -->
           ${topicBlocks}
+
+          ${grounded === false ? `
+          <!-- ============ UNGROUNDED DISCLAIMER ============ -->
+          <tr>
+            <td style="padding: 12px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding: 12px 16px; background-color: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px;">
+                    <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #92400E; line-height: 1.5;">
+                      <strong>Note:</strong> This briefing could not be verified with live news sources. Some details may not reflect the very latest developments.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          ` : ""}
 
           <!-- ============ FOOTER ============ -->
           <tr>

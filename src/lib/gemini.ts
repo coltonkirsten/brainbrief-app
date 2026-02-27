@@ -599,7 +599,7 @@ function generateHtmlFromStructured(data: BriefingData): string {
       html += topic.sources
         .map(
           (s) =>
-            `<a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener" style="color: #10b981; text-decoration: underline;">${escapeHtml(s.title)}</a>`
+            `<a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener" style="color: #10b981; text-decoration: underline;">${escapeHtml(cleanDomain(s.title))}</a>`
         )
         .join(" · ");
       html += `</p>\n`;
@@ -635,7 +635,7 @@ function generateTextFromStructured(data: BriefingData): string {
     if (!topic.bulletSources && topic.sources && topic.sources.length > 0) {
       text += `\nRead more:\n`;
       topic.sources.forEach((s) => {
-        text += `  → ${s.title}: ${s.uri}\n`;
+        text += `  → ${cleanDomain(s.title)}: ${s.uri}\n`;
       });
     }
   });

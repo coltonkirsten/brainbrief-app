@@ -95,18 +95,17 @@ export async function generateBriefing(
 
   // Plain text output — NOT JSON — so grounding metadata maps correctly
   // to individual sentences/bullets in the response.
-  const prompt = `You are Brain Brief — a sharp colleague who gives the 2-minute download on what matters today, ${today}. Concise, grounded in today's news, zero filler.
+  const prompt = `You are Brain Brief — a sharp colleague who gives the 2-minute download on what matters.
 
-Search the web for the latest news on each topic below. What happened in the last 24-48 hours?
+Today is ${today}. Search the web for what happened TODAY and YESTERDAY in each topic below. I need current news from ${today}, not background information.
 
 ${name ? `Reader's name: ${name}` : `Reader: (no name provided — just say "${timeGreeting}!")`}
 Topics:
 ${topicList}
 
 RULES:
-- Search the web for EACH topic to find the latest developments.
-- Every bullet must cite a real, current news event from the last 48 hours.
-- Include specific dates, names, numbers, and sources. No vague generalities.
+- Search the web for EACH topic to find the latest developments from TODAY or YESTERDAY.
+- Every bullet must cite a real, current news event. Include specific dates, names, and numbers.
 - Every sentence earns its place. Cut ruthlessly. Think executive briefing, not blog post.
 
 FOR EACH TOPIC write exactly this format:
@@ -185,10 +184,53 @@ Keep it under 400 words total. No filler, no background — only real-time news.
     }
   }
 
+  // If grounding failed after all retries, generate a fallback "overview" briefing.
+  // This is an honest, evergreen summary — no fake dates, no breaking news framing.
   if (!grounded) {
-    console.error(
-      `[gemini] WARNING: ${MAX_ATTEMPTS} attempts all returned 0 grounding chunks. Content may be unverified.`
+    console.warn(
+      `[gemini] ${MAX_ATTEMPTS} attempts returned 0 grounding chunks. Generating overview fallback...`
     );
+
+    const overviewPrompt = `You are Brain Brief. We couldn't find breaking news for these topics today. Instead, provide a brief, honest overview of where things currently stand.
+
+${name ? `Reader's name: ${name}` : `Reader: (no name provided — just say "${timeGreeting}!")`}
+Topics:
+${topicList}
+
+RULES:
+- Do NOT claim any specific dates, breaking events, or "just happened" developments.
+- Summarize the current landscape: key players, recent trends, and what to watch.
+- Be concise and useful. Think "state of play" briefing, not news report.
+- Every sentence earns its place. No filler.
+
+FOR EACH TOPIC write exactly this format:
+## [Topic Name]: [Concise summary of where things stand]
+- First key insight about the current landscape. One sentence.
+- Second key trend or development to watch. One sentence.
+- Optional third point if warranted. One sentence.
+**The Bottom Line:** One sentence on what matters most right now.
+
+Keep it under 400 words total.`;
+
+    try {
+      const overviewResponse = await getGeminiClient().models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: overviewPrompt,
+      });
+
+      try {
+        responseText = overviewResponse.text ?? "";
+      } catch {
+        const parts = overviewResponse.candidates?.[0]?.content?.parts;
+        responseText =
+          parts?.map((p) => ("text" in p ? p.text : "")).join("") ?? "";
+      }
+
+      console.log(`[gemini] Overview fallback generated: ${responseText.length} chars`);
+    } catch (err) {
+      console.error("[gemini] Overview fallback failed:", err);
+      // Keep the original ungrounded response as a last resort
+    }
   }
 
   // Parse plain text response into structured data
@@ -203,14 +245,14 @@ Keep it under 400 words total. No filler, no background — only real-time news.
     console.warn("[gemini] Could not parse structured data from response");
   }
 
-  // Map grounding supports to per-bullet sources
-  if (structured && chunks.length > 0 && supports.length > 0) {
+  // Map grounding supports to per-bullet sources (only when grounded)
+  if (grounded && structured && chunks.length > 0 && supports.length > 0) {
     mapSupportsToStructured(responseText, structured, chunks, supports);
     const bulletSourceCounts = structured.topics.map(
       (t) => `${t.name}: ${(t.bulletSources ?? []).map((bs) => bs.length).join(",")}`
     );
     console.log(`[gemini] Per-bullet sources: ${bulletSourceCounts.join(" | ")}`);
-  } else if (structured && chunks.length > 0) {
+  } else if (grounded && structured && chunks.length > 0) {
     // Fallback: use keyword matching when no groundingSupports available
     matchSourcesToTopics(chunks, structured);
     console.log(
@@ -219,21 +261,14 @@ Keep it under 400 words total. No filler, no background — only real-time news.
   }
 
   // Generate HTML from structured data, or convert markdown to HTML
-  let contentHtml = structured
+  const contentHtml = structured
     ? generateHtmlFromStructured(structured)
     : convertMarkdownToHtml(responseText);
 
   // Generate plain text
-  let contentText = structured
+  const contentText = structured
     ? generateTextFromStructured(structured)
     : stripMarkdownToText(responseText);
-
-  // Add disclaimer if grounding failed — content may be hallucinated
-  if (!grounded) {
-    const disclaimer = `<p style="font-size: 0.85em; color: #94a3b8; margin-top: 16px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background-color: #f8fafc;"><em>Note: This briefing could not be verified with live sources. Information may not reflect the latest developments. <a href="https://www.brainbrief.app/dashboard" style="color: #10b981;">Generate a new briefing</a> to try again.</em></p>`;
-    contentHtml += disclaimer;
-    contentText += `\n\nNote: This briefing could not be verified with live sources. Information may not reflect the latest developments.`;
-  }
 
   return {
     contentHtml,

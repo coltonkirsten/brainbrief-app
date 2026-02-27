@@ -151,42 +151,37 @@ export async function POST() {
       );
     }
 
-    // Only send email if the briefing is grounded (verified with live sources).
-    // Ungrounded briefings are saved to DB (visible on dashboard with disclaimer)
-    // but NOT emailed — we don't send unverified content to users' inboxes.
+    // Always send email — grounded briefings get citations, ungrounded get
+    // an honest "overview" (no fake dates). Users signed up for daily briefings.
     let emailSent = false;
-    if (briefing.grounded) {
-      const emailAddress = profile?.email || user.email;
-      if (emailAddress) {
-        const today = new Date().toLocaleDateString("en-US", {
-          weekday: "long",
-          month: "long",
-          day: "numeric",
-        });
+    const emailAddress = profile?.email || user.email;
+    if (emailAddress) {
+      const today = new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
 
-        const emailResult = await sendBriefingEmail({
-          to: emailAddress,
-          subject: `Your Brain Brief — ${today}`,
-          html: briefing.contentHtml,
-          text: briefing.contentText,
-          structured: briefing.structured,
-          trialInfo,
-          grounded: briefing.grounded,
-        });
+      const emailResult = await sendBriefingEmail({
+        to: emailAddress,
+        subject: `Your Brain Brief — ${today}`,
+        html: briefing.contentHtml,
+        text: briefing.contentText,
+        structured: briefing.structured,
+        trialInfo,
+        grounded: briefing.grounded,
+      });
 
-        if (emailResult.success) {
-          emailSent = true;
-          await adminDb
-            .from("briefings")
-            .update({ sent_at: new Date().toISOString() })
-            .eq("user_id", user.id)
-            .is("sent_at", null)
-            .order("created_at", { ascending: false })
-            .limit(1);
-        }
+      if (emailResult.success) {
+        emailSent = true;
+        await adminDb
+          .from("briefings")
+          .update({ sent_at: new Date().toISOString() })
+          .eq("user_id", user.id)
+          .is("sent_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
       }
-    } else {
-      console.warn(`[generate] Skipping email for user ${user.id} — briefing not grounded`);
     }
 
     const elapsed = Date.now() - startTime;

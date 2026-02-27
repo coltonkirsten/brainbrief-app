@@ -115,8 +115,8 @@ export default function GenerateButton({
       )}
 
       {ungrounded && (
-        <p className="text-sm text-amber-600">
-          We couldn&apos;t verify this briefing with live sources. No email was sent. Your next scheduled briefing will try again.
+        <p className="text-sm text-blue-600 dark:text-blue-400">
+          Overview briefing generated and sent to your email. Live source citations will return in your next edition.
         </p>
       )}
 

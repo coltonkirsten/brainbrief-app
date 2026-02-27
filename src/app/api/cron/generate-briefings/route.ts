@@ -166,42 +166,35 @@ export async function GET(request: Request) {
         continue;
       }
 
-      // Only send email if the briefing is grounded (verified with live sources).
-      // Ungrounded briefings are saved to DB but NOT emailed — we don't send
-      // unverified content to users' inboxes.
+      // Always send email — grounded briefings get citations, ungrounded get
+      // an honest "overview" (no fake dates). Users signed up for daily briefings.
       let emailSent = false;
-      if (briefing.grounded) {
-        const today = new Date().toLocaleDateString("en-US", {
-          weekday: "long",
-          month: "long",
-          day: "numeric",
-        });
+      const today = new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      });
 
-        const emailResult = await sendBriefingEmail({
-          to: profile.email,
-          subject: `Your Brain Brief — ${today}`,
-          html: briefing.contentHtml,
-          text: briefing.contentText,
-          structured: briefing.structured,
-          trialInfo,
-          grounded: briefing.grounded,
-        });
+      const emailResult = await sendBriefingEmail({
+        to: profile.email,
+        subject: `Your Brain Brief — ${today}`,
+        html: briefing.contentHtml,
+        text: briefing.contentText,
+        structured: briefing.structured,
+        trialInfo,
+        grounded: briefing.grounded,
+      });
 
-        if (emailResult.success) {
-          emailSent = true;
-          // Update sent_at timestamp
-          await supabase
-            .from("briefings")
-            .update({ sent_at: new Date().toISOString() })
-            .eq("user_id", userId)
-            .is("sent_at", null)
-            .order("created_at", { ascending: false })
-            .limit(1);
-        }
-      } else {
-        console.warn(
-          `[cron] Skipping email for ${profile.email} — briefing not grounded after 3 attempts`
-        );
+      if (emailResult.success) {
+        emailSent = true;
+        // Update sent_at timestamp
+        await supabase
+          .from("briefings")
+          .update({ sent_at: new Date().toISOString() })
+          .eq("user_id", userId)
+          .is("sent_at", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
       }
 
       console.log(

@@ -401,7 +401,9 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
           <tr>
             <td class="email-intro" style="padding: 20px 24px; background-color: #FAFAFA;">
               <p class="text-body" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #475569;">
-                ${escapeHtml(data.greeting)} Here's your personalized intelligence briefing on the topics that matter most today.
+                ${escapeHtml(data.greeting)} ${grounded === false
+                  ? "No breaking news found today \u2014 here\u2019s a quick overview of where things stand with your topics."
+                  : "Here\u2019s your personalized intelligence briefing on the topics that matter most today."}
               </p>
             </td>
           </tr>
@@ -410,18 +412,12 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
           ${topicBlocks}
 
           ${grounded === false ? `
-          <!-- ============ UNGROUNDED DISCLAIMER ============ -->
+          <!-- ============ OVERVIEW NOTE ============ -->
           <tr>
-            <td style="padding: 12px 24px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding: 12px 16px; background-color: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px;">
-                    <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #92400E; line-height: 1.5;">
-                      <strong>Note:</strong> This briefing could not be verified with live news sources. Some details may not reflect the very latest developments.
-                    </p>
-                  </td>
-                </tr>
-              </table>
+            <td style="padding: 4px 24px 12px 24px;">
+              <p style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8; line-height: 1.5; font-style: italic;">
+                This is an overview briefing. Live source citations will return in your next edition.
+              </p>
             </td>
           </tr>
           ` : ""}

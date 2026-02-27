@@ -263,15 +263,21 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo)
                         Read More
                       </p>
                       ${topic.sources
-                        .map(
-                          (source) => `
+                        .map((source) => {
+                          const displayTitle = cleanSourceTitle(source.title);
+                          const domain = extractDomain(source.uri, source.title);
+                          // Skip domain suffix if title IS the domain (avoids "formula1.com · formula1.com")
+                          const domainSuffix = domain && displayTitle.toLowerCase() !== domain.toLowerCase()
+                            ? `<span style="color: #94A3B8; font-size: 11px;"> · ${escapeHtml(domain)}</span>`
+                            : "";
+                          return `
                       <p style="margin: 0 0 4px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5;">
                         <a href="${escapeHtml(source.uri)}" style="color: #10B981; text-decoration: none; border-bottom: 1px solid #D1FAE5;" target="_blank">
-                          ${escapeHtml(cleanSourceTitle(source.title))}
+                          ${escapeHtml(displayTitle)}
                         </a>
-                        <span style="color: #94A3B8; font-size: 11px;"> · ${escapeHtml(extractDomain(source.uri))}</span>
-                      </p>`
-                        )
+                        ${domainSuffix}
+                      </p>`;
+                        })
                         .join("")}
                     </td>
                   </tr>
@@ -600,11 +606,16 @@ function cleanSourceTitle(title: string): string {
 }
 
 /** Extract a clean domain name from a URL (e.g., "reuters.com") */
-function extractDomain(uri: string): string {
+function extractDomain(uri: string, title?: string): string {
   try {
     const url = new URL(uri);
-    return url.hostname.replace(/^www\./, "");
+    const hostname = url.hostname.replace(/^www\./, "");
+    // Google grounding redirect URLs — use the title (which IS the domain) instead
+    if (hostname.includes("vertexaisearch.cloud.google.com") && title) {
+      return title.replace(/^www\./, "");
+    }
+    return hostname;
   } catch {
-    return "";
+    return title?.replace(/^www\./, "") || "";
   }
 }

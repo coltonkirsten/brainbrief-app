@@ -626,8 +626,46 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** Map of known domains to proper display names (shared with gemini.ts) */
+const DOMAIN_DISPLAY_NAMES: Record<string, string> = {
+  "theguardian.com": "The Guardian",
+  "nytimes.com": "NY Times",
+  "washingtonpost.com": "Washington Post",
+  "bbc.com": "BBC",
+  "bbc.co.uk": "BBC",
+  "cnn.com": "CNN",
+  "reuters.com": "Reuters",
+  "apnews.com": "AP News",
+  "techcrunch.com": "TechCrunch",
+  "theverge.com": "The Verge",
+  "arstechnica.com": "Ars Technica",
+  "wired.com": "Wired",
+  "bloomberg.com": "Bloomberg",
+  "ft.com": "Financial Times",
+  "wsj.com": "Wall Street Journal",
+  "cnbc.com": "CNBC",
+  "cio.com": "CIO",
+  "zdnet.com": "ZDNet",
+  "infoworld.com": "InfoWorld",
+  "networkworld.com": "Network World",
+  "eff.org": "EFF",
+  "nature.com": "Nature",
+  "science.org": "Science",
+  "formula1.com": "Formula 1",
+  "espn.com": "ESPN",
+  "aljazeera.com": "Al Jazeera",
+  "npr.org": "NPR",
+  "politico.com": "Politico",
+  "axios.com": "Axios",
+  "technologyreview.com": "MIT Tech Review",
+};
+
 /** Clean up a source title — remove trailing site names, truncate if too long */
 function cleanSourceTitle(title: string): string {
+  // Check if the title is a known domain name → return proper name
+  const stripped = title.replace(/^www\./, "").toLowerCase();
+  if (DOMAIN_DISPLAY_NAMES[stripped]) return DOMAIN_DISPLAY_NAMES[stripped];
+
   // Remove trailing " - Site Name" or " | Site Name" patterns
   let cleaned = title.replace(/\s*[-|]\s*[^-|]{1,30}$/, "").trim();
   // Truncate very long titles
@@ -637,17 +675,20 @@ function cleanSourceTitle(title: string): string {
   return cleaned || title;
 }
 
-/** Extract a clean domain name from a URL (e.g., "reuters.com") */
+/** Extract a clean domain name from a URL (e.g., "reuters.com" → "Reuters") */
 function extractDomain(uri: string, title?: string): string {
   try {
     const url = new URL(uri);
-    const hostname = url.hostname.replace(/^www\./, "");
+    let hostname = url.hostname.replace(/^www\./, "");
     // Google grounding redirect URLs — use the title (which IS the domain) instead
     if (hostname.includes("vertexaisearch.cloud.google.com") && title) {
-      return title.replace(/^www\./, "");
+      hostname = title.replace(/^www\./, "");
     }
-    return hostname;
+    // Check known domain mapping
+    const mapped = DOMAIN_DISPLAY_NAMES[hostname.toLowerCase()];
+    return mapped || hostname;
   } catch {
-    return title?.replace(/^www\./, "") || "";
+    const fallback = title?.replace(/^www\./, "") || "";
+    return DOMAIN_DISPLAY_NAMES[fallback.toLowerCase()] || fallback;
   }
 }

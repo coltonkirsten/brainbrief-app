@@ -20,6 +20,7 @@ export default function GenerateButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [ungrounded, setUngrounded] = useState(false);
 
   // Check if rate-limited on the client side for instant feedback
   const isRateLimited = lastBriefingAt
@@ -36,6 +37,7 @@ export default function GenerateButton({
   async function handleGenerate() {
     setError(null);
     setSuccess(false);
+    setUngrounded(false);
     setLoading(true);
 
     try {
@@ -51,8 +53,15 @@ export default function GenerateButton({
         return;
       }
 
-      setSuccess(true);
       setLoading(false);
+
+      if (data.grounded === false) {
+        // Briefing was saved but couldn't be verified with live sources
+        setUngrounded(true);
+      } else {
+        setSuccess(true);
+      }
+
       // Refresh the page to show the new briefing
       router.refresh();
     } catch {
@@ -105,7 +114,13 @@ export default function GenerateButton({
         </p>
       )}
 
-      {!loading && !error && !success && !isRateLimited && (
+      {ungrounded && (
+        <p className="text-sm text-amber-600">
+          We couldn&apos;t verify this briefing with live sources. No email was sent. Your next scheduled briefing will try again.
+        </p>
+      )}
+
+      {!loading && !error && !success && !ungrounded && !isRateLimited && (
         <p className="text-xs text-muted-foreground">
           Generate an on-demand briefing (once per hour)
         </p>

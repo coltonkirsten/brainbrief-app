@@ -702,8 +702,55 @@ function stripMarkdownToText(markdown: string): string {
     .trim();
 }
 
-/** Clean a domain-style title for display (e.g., "reuters.com" → "Reuters") */
+/** Map of known domains to proper display names */
+const DOMAIN_NAMES: Record<string, string> = {
+  "theguardian.com": "The Guardian",
+  "nytimes.com": "NY Times",
+  "washingtonpost.com": "Washington Post",
+  "bbc.com": "BBC",
+  "bbc.co.uk": "BBC",
+  "cnn.com": "CNN",
+  "reuters.com": "Reuters",
+  "apnews.com": "AP News",
+  "techcrunch.com": "TechCrunch",
+  "theverge.com": "The Verge",
+  "arstechnica.com": "Ars Technica",
+  "wired.com": "Wired",
+  "bloomberg.com": "Bloomberg",
+  "ft.com": "Financial Times",
+  "wsj.com": "Wall Street Journal",
+  "cnbc.com": "CNBC",
+  "cio.com": "CIO",
+  "zdnet.com": "ZDNet",
+  "infoworld.com": "InfoWorld",
+  "networkworld.com": "Network World",
+  "eff.org": "EFF",
+  "nature.com": "Nature",
+  "science.org": "Science",
+  "sciencedaily.com": "ScienceDaily",
+  "space.com": "Space.com",
+  "formula1.com": "Formula 1",
+  "motorsport.com": "Motorsport",
+  "autosport.com": "Autosport",
+  "racingnews365.com": "RacingNews365",
+  "espn.com": "ESPN",
+  "aljazeera.com": "Al Jazeera",
+  "npr.org": "NPR",
+  "politico.com": "Politico",
+  "thehill.com": "The Hill",
+  "axios.com": "Axios",
+  "engadget.com": "Engadget",
+  "technologyreview.com": "MIT Tech Review",
+  "venturebeat.com": "VentureBeat",
+};
+
+/** Clean a domain-style title for display (e.g., "theguardian.com" → "The Guardian") */
 function cleanDomain(title: string): string {
+  const stripped = title.replace(/^www\./, "").toLowerCase();
+
+  // Check known domain mapping first
+  if (DOMAIN_NAMES[stripped]) return DOMAIN_NAMES[stripped];
+
   // Remove common TLDs and capitalize
   let clean = title
     .replace(/^www\./, "")

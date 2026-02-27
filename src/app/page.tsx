@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CheckCircle2, Clock, Inbox, Zap, ArrowRight, BrainCircuit } from "lucide-react";
+import { CheckCircle2, Clock, Inbox, ArrowRight, BrainCircuit } from "lucide-react";
+import BriefingCarousel from "./briefing-carousel";
 
 export default function LandingPage() {
   return (
@@ -61,56 +62,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Editorial Preview Card */}
-        <div className="mt-24 relative mx-auto w-full max-w-4xl text-left hidden sm:block">
-          <div className="absolute -inset-1 bg-gradient-to-r from-border via-accent/20 to-border rounded-2xl blur opacity-30"></div>
-          <div className="relative bg-card shadow-xl border border-border rounded-xl p-10 overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border pb-6 mb-8">
-              <div className="text-xl font-bold tracking-tight font-serif text-primary">
-                Brain<span className="text-accent">Brief</span>
-              </div>
-              <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Your Daily Intelligence
-              </div>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-12">
-              <div className="md:col-span-2 space-y-8">
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="inline-block px-2.5 py-1 rounded-md bg-muted text-primary text-[10px] font-bold uppercase tracking-wider">Artificial Intelligence</span>
-                    <span className="text-xs text-muted-foreground">4 min read</span>
-                  </div>
-                  <h2 className="text-2xl font-serif font-bold text-primary mb-4 leading-snug">The shift from chatbots to autonomous agents accelerates</h2>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                    Major AI labs have signaled a pivot toward autonomous agents capable of long-horizon planning and execution. This represents a fundamental shift from zero-shot chat interfaces to persistent, goal-oriented systems.
-                  </p>
-                  <ul className="space-y-3 text-primary text-sm">
-                    <li className="flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0"></div>
-                      <span>New architectures prioritize system-2 thinking, allowing models to verify their own steps before output.</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shrink-0"></div>
-                      <span>Enterprise integration focuses on tools that map complex internal workflows rather than simple text generation.</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div className="md:col-span-1 border-l border-border pl-8">
-                <div className="p-5 bg-muted/50 rounded-lg border border-border h-full">
-                  <div className="flex items-center gap-2 mb-3 text-accent">
-                    <Zap className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">The Bottom Line</span>
-                  </div>
-                  <p className="text-sm font-serif italic text-primary leading-relaxed">
-                    The era of prompt engineering is giving way to system engineering. Companies investing solely in chat-based interfaces risk falling behind competitors deploying multi-agent architectures that execute complex operational tasks autonomously.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Briefing Carousel */}
+        <BriefingCarousel />
       </main>
 
       {/* How it works */}

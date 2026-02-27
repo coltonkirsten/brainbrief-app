@@ -93,67 +93,91 @@ export async function generateBriefing(
 
   // Plain text output — NOT JSON — so grounding metadata maps correctly
   // to individual sentences/bullets in the response.
-  const prompt = `You are Brain Brief — a sharp colleague who gives the 2-minute download on what matters. Concise, grounded, zero filler.
+  const prompt = `You are Brain Brief — a sharp colleague who gives the 2-minute download on what matters today, ${today}. Concise, grounded in today's news, zero filler.
 
-Date: ${today}
+Search the web for the latest news on each topic below. What happened in the last 24-48 hours?
+
 ${name ? `Reader's name: ${name}` : `Reader: (no name provided — just say "${timeGreeting}!")`}
 Topics:
 ${topicList}
 
 RULES:
-- ALWAYS use your Google Search tool to find current information. Every claim must come from a search result.
+- Search the web for EACH topic to find the latest developments.
+- Every bullet must cite a real, current news event from the last 48 hours.
+- Include specific dates, names, numbers, and sources. No vague generalities.
 - Every sentence earns its place. Cut ruthlessly. Think executive briefing, not blog post.
-- Use ONLY real, current information from your search results. NEVER hallucinate.
 
 FOR EACH TOPIC write exactly this format:
-## [Topic Name]: [Specific newsworthy headline]
-- First key development with dates, names, numbers. One sentence.
+## [Topic Name]: [Specific newsworthy headline from the last 48 hours]
+- First key development with exact date, specific names, and numbers. One sentence.
 - Second key development with specifics. One sentence.
 - Optional third bullet if warranted. One sentence.
 **The Bottom Line:** One sentence connecting the dots — why it matters.
 
-Keep it under 400 words total. Be specific — dates, names, numbers. No filler.`;
+Keep it under 400 words total. No filler, no background — only real-time news.`;
 
-  const response = await getGeminiClient().models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config: {
-      tools: [{ googleSearch: {} }],
-    },
-  });
+  // Call Gemini with retry — if grounding returns 0 chunks on first try,
+  // retry once. Gemini intermittently skips Google Search grounding.
+  const MAX_ATTEMPTS = 2;
+  let responseText = "";
+  let chunks: SourceLink[] = [];
+  let supports: GroundingSupport[] = [];
 
-  // Extract text from response (response.text can throw on filtered content)
-  let responseText: string;
-  try {
-    responseText = response.text ?? "";
-  } catch {
-    const parts = response.candidates?.[0]?.content?.parts;
-    responseText =
-      parts?.map((p) => ("text" in p ? p.text : "")).join("") ?? "";
-  }
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const response = await getGeminiClient().models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
 
-  if (!responseText) {
-    throw new Error(
-      "Gemini returned no content — response may have been filtered"
+    // Extract text from response (response.text can throw on filtered content)
+    try {
+      responseText = response.text ?? "";
+    } catch {
+      const parts = response.candidates?.[0]?.content?.parts;
+      responseText =
+        parts?.map((p) => ("text" in p ? p.text : "")).join("") ?? "";
+    }
+
+    if (!responseText) {
+      if (attempt < MAX_ATTEMPTS) {
+        console.warn(`[gemini] Attempt ${attempt}: empty response, retrying...`);
+        continue;
+      }
+      throw new Error(
+        "Gemini returned no content — response may have been filtered"
+      );
+    }
+
+    // Extract grounding metadata
+    const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+    chunks =
+      groundingMetadata?.groundingChunks
+        ?.filter((chunk) => chunk.web?.uri)
+        .map((chunk) => ({
+          title: chunk.web!.title ?? "Source",
+          uri: chunk.web!.uri!,
+        })) ?? [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    supports = (groundingMetadata as any)?.groundingSupports ?? [];
+
+    console.log(
+      `[gemini] Attempt ${attempt}: ${chunks.length} chunks, ${supports.length} supports`
     );
+
+    // If we got grounding data, use this response
+    if (chunks.length > 0) break;
+
+    // If no grounding on first attempt, retry
+    if (attempt < MAX_ATTEMPTS) {
+      console.warn(
+        `[gemini] Attempt ${attempt}: 0 grounding chunks — retrying for better grounding...`
+      );
+    }
   }
-
-  // Extract grounding metadata
-  const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
-  const chunks =
-    groundingMetadata?.groundingChunks
-      ?.filter((chunk) => chunk.web?.uri)
-      .map((chunk) => ({
-        title: chunk.web!.title ?? "Source",
-        uri: chunk.web!.uri!,
-      })) ?? [];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supports: GroundingSupport[] = (groundingMetadata as any)?.groundingSupports ?? [];
-
-  console.log(
-    `[gemini] Grounding: ${chunks.length} chunks, ${supports.length} supports`
-  );
 
   // Parse plain text response into structured data
   let structured = tryParseStructuredFromMarkdown(responseText, greeting);

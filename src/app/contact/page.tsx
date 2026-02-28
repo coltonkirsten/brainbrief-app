@@ -22,13 +22,13 @@ export default function ContactPage() {
             Have questions, feedback, or need support? We're here to help. Reach out to us via email and we'll get back to you as soon as possible.
           </p>
           <a
-            href="mailto:brief@brief.brainbrief.app"
+            href="mailto:support@brainbrief.app"
             className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-sm font-bold text-primary-foreground uppercase tracking-wider hover:bg-primary-hover transition-all shadow-sm"
           >
             Email Support
           </a>
           <p className="mt-6 text-sm text-muted-foreground">
-            <a href="mailto:brief@brief.brainbrief.app" className="hover:text-primary transition-colors">brief@brief.brainbrief.app</a>
+            <a href="mailto:support@brainbrief.app" className="hover:text-primary transition-colors">support@brainbrief.app</a>
           </p>
         </div>
       </div>

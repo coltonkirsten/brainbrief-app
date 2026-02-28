@@ -133,8 +133,8 @@ export default function UnsubscribePage() {
             <h1 className="text-2xl font-bold font-serif text-primary mb-4">Something went wrong</h1>
             <p className="text-muted-foreground mb-6">
               We couldn&apos;t process your request. Please try again or contact us at{" "}
-              <a href="mailto:brief@brief.brainbrief.app" className="text-accent hover:underline">
-                brief@brief.brainbrief.app
+              <a href="mailto:support@brainbrief.app" className="text-accent hover:underline">
+                support@brainbrief.app
               </a>.
             </p>
             <button

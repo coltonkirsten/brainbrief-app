@@ -6,6 +6,7 @@ import TopicManager from "./topic-manager";
 import GenerateButton from "./generate-button";
 import CheckoutSuccessBanner from "./checkout-success-banner";
 import ManageBillingButton from "./manage-billing-button";
+import DeliveryTimePicker from "./delivery-time-picker";
 import { getTrialInfo } from "@/lib/trial";
 
 export const metadata = {
@@ -27,7 +28,7 @@ export default async function DashboardPage() {
   const [profileResult, topicsResult, briefingResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("trial_ends_at, subscription_status")
+      .select("trial_ends_at, subscription_status, preferred_time, timezone")
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
@@ -160,6 +161,18 @@ export default async function DashboardPage() {
             maxTopics={trialInfo.maxTopics}
             canAddTopics={trialInfo.canAddTopics}
           />
+
+          {/* Delivery Schedule */}
+          <div className="pt-6 border-t border-border">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4">
+              Delivery Schedule
+            </h3>
+            <DeliveryTimePicker
+              userId={user.id}
+              initialTime={profileResult.data?.preferred_time ?? "06:00"}
+              timezone={profileResult.data?.timezone ?? "America/New_York"}
+            />
+          </div>
 
           <div className="pt-6 border-t border-border">
             <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4">On-Demand Briefing</h3>

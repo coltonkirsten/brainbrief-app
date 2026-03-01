@@ -9,16 +9,37 @@ import { processLifecycleEmails } from "@/lib/lifecycle-emails";
 export const maxDuration = 300;
 
 /**
- * Cron endpoint: generates and sends briefings for all users.
- * Called by Vercel Cron daily at 9am UTC.
+ * Cron endpoint: generates and sends briefings for users.
+ * Called by Vercel Cron hourly. Each run filters users by preferred
+ * delivery time in their timezone — only users whose preferred hour
+ * matches the current local hour get briefings.
  *
  * Pipeline:
  * 1. Fetch all users who have active topics
- * 2. For each user, call Gemini with grounding to research their topics
- * 3. Store the briefing in Supabase
- * 4. Send the briefing via email (Resend, or stub if not configured)
- * 5. Process post-trial emails (Day 8 + Day 10 standalone emails)
+ * 2. Filter to users whose preferred delivery hour matches now (in their tz)
+ * 3. For each matched user, call Gemini with grounding to research their topics
+ * 4. Store the briefing in Supabase
+ * 5. Send the briefing via email (Resend, or stub if not configured)
+ * 6. Process post-trial emails (Day 8 + Day 10 standalone emails)
  */
+
+/**
+ * Get the current hour (0-23) in a given IANA timezone.
+ * Uses the Intl API which handles DST automatically.
+ */
+function getCurrentHourInTimezone(timezone: string): number {
+  try {
+    const hourStr = new Date().toLocaleString("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: timezone,
+    });
+    return parseInt(hourStr, 10);
+  } catch {
+    // Invalid timezone — fall back to UTC
+    return new Date().getUTCHours();
+  }
+}
 export async function GET(request: Request) {
   const startTime = Date.now();
 
@@ -86,7 +107,7 @@ export async function GET(request: Request) {
   const userIds = Array.from(userTopics.keys());
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("user_id, display_name, email, timezone, trial_ends_at, subscription_status")
+    .select("user_id, display_name, email, timezone, preferred_time, trial_ends_at, subscription_status")
     .in("user_id", userIds);
 
   if (profilesError) {
@@ -101,14 +122,66 @@ export async function GET(request: Request) {
     (profiles ?? []).map((p) => [p.user_id, p])
   );
 
-  // Step 3: Generate and send briefings for each user
+  // Step 3: Filter users whose preferred delivery hour matches the current
+  // hour in their timezone. Each hourly cron run only processes matching users.
+  const usersToProcess: [string, string[]][] = [];
+
+  for (const [userId, topicNames] of userTopics) {
+    const profile = profileMap.get(userId);
+    if (!profile) continue;
+
+    // Parse preferred hour from "HH:MM" string (e.g., "06:00" → 6)
+    const preferredHour = parseInt(
+      (profile.preferred_time ?? "06:00").split(":")[0],
+      10
+    );
+
+    // Get the current hour in the user's timezone
+    const currentHour = getCurrentHourInTimezone(
+      profile.timezone ?? "America/New_York"
+    );
+
+    if (currentHour !== preferredHour) {
+      continue; // Not this user's delivery hour
+    }
+
+    usersToProcess.push([userId, topicNames]);
+  }
+
+  console.log(
+    `[cron] ${usersToProcess.length} of ${userTopics.size} users matched for this hour`
+  );
+
+  if (usersToProcess.length === 0) {
+    // Still process lifecycle emails even when no briefings are due
+    console.log("[cron] Processing post-trial lifecycle emails...");
+    let lifecycleResult = { sent: 0, errors: 0, details: [] as string[] };
+    try {
+      lifecycleResult = await processLifecycleEmails(supabase);
+      if (lifecycleResult.sent > 0) {
+        console.log(`[cron] Lifecycle emails: ${lifecycleResult.sent} sent`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error("[cron] Lifecycle email processing failed:", msg);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "No users matched for this hour",
+      usersProcessed: 0,
+      lifecycleSent: lifecycleResult.sent,
+    });
+  }
+
+  // Step 4: Generate and send briefings for matched users
   const results: {
     userId: string;
     success: boolean;
     error?: string;
   }[] = [];
 
-  for (const [userId, topicNames] of userTopics) {
+  for (const [userId, topicNames] of usersToProcess) {
     const profile = profileMap.get(userId);
     if (!profile) {
       console.warn(`[cron] No profile found for user ${userId}, skipping`);
@@ -127,6 +200,24 @@ export async function GET(request: Request) {
         success: false,
         error: "Trial expired, no active subscription",
       });
+      continue;
+    }
+
+    // Guard: skip if user already received a briefing today (prevents
+    // double-sends from DST transitions or mid-day preference changes)
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+    const { data: existingBriefing } = await supabase
+      .from("briefings")
+      .select("id")
+      .eq("user_id", userId)
+      .gte("created_at", todayStart.toISOString())
+      .limit(1)
+      .maybeSingle();
+
+    if (existingBriefing) {
+      console.log(`[cron] Skipping ${profile.email} — already briefed today`);
+      results.push({ userId, success: true });
       continue;
     }
 
@@ -212,7 +303,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Step 5: Process post-trial lifecycle emails (Day 8 + Day 10 standalone emails)
+  // Step 6: Process post-trial lifecycle emails (Day 8 + Day 10 standalone emails)
   console.log("[cron] Processing post-trial lifecycle emails...");
   let lifecycleResult = { sent: 0, errors: 0, details: [] as string[] };
   try {

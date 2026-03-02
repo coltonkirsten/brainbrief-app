@@ -61,9 +61,17 @@ export async function POST(request: Request) {
 
     const { data: profile } = await adminDb
       .from("profiles")
-      .select("trial_ends_at, subscription_status, stripe_customer_id, email")
+      .select("trial_ends_at, subscription_status, stripe_customer_id, stripe_subscription_id, email")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    // Guard: reject if user already has an active subscription
+    if (profile?.subscription_status === "active" && profile?.stripe_subscription_id) {
+      return NextResponse.json(
+        { error: "You already have an active subscription." },
+        { status: 409 }
+      );
+    }
 
     const stripe = getStripe();
     const email = profile?.email || user.email || "";

@@ -79,7 +79,7 @@ export async function GET(request: Request) {
   if (topicsError) {
     console.error("[cron] Failed to fetch topics:", topicsError);
     return NextResponse.json(
-      { error: "Failed to fetch topics", details: topicsError.message },
+      { error: "Internal error" },
       { status: 500 }
     );
   }
@@ -113,7 +113,7 @@ export async function GET(request: Request) {
   if (profilesError) {
     console.error("[cron] Failed to fetch profiles:", profilesError);
     return NextResponse.json(
-      { error: "Failed to fetch profiles", details: profilesError.message },
+      { error: "Internal error" },
       { status: 500 }
     );
   }
@@ -329,15 +329,10 @@ export async function GET(request: Request) {
   // Log full details server-side but redact PII from response
   console.log("[cron] Per-user results:", JSON.stringify(results));
 
+  // Response body is minimal — detailed logs are server-side only
   return NextResponse.json({
     success: true,
-    timestamp: new Date().toISOString(),
-    elapsed: `${elapsed}ms`,
-    usersProcessed: results.length,
-    succeeded: successCount,
+    processed: successCount,
     failed: failCount,
-    failedErrors: results.filter((r) => !r.success).map((r) => r.error),
-    lifecycleSent: lifecycleResult.sent,
-    lifecycleErrors: lifecycleResult.errors,
   });
 }

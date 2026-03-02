@@ -92,11 +92,11 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
         headline: `${greeting(ctx)} It's been a few days since your last Brain Brief.`,
         body: `
           <p style="${bodyStyle}">
-            The world didn't stop. Here's a taste of what you missed${ctx.topicNames.length > 0 ? ` on <strong>${ctx.topicNames[0]}</strong>` : ""}:
+            The world didn't stop. Here's a taste of what you missed${ctx.topicNames.length > 0 ? ` on <strong>${escapeHtml(ctx.topicNames[0])}</strong>` : ""}:
           </p>
           <div style="margin: 0 0 16px 0; padding: 16px; border-left: 3px solid #10B981; background-color: #F8FAFC; border-radius: 0 6px 6px 0;">
             <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-style: italic; color: #334155; line-height: 1.6;">
-              ${ctx.teaser || "Developments continue in your selected topics."}
+              ${escapeHtml(ctx.teaser || "Developments continue in your selected topics.")}
             </p>
           </div>
           <p style="${bodyStyle}">

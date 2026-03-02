@@ -95,7 +95,7 @@ export async function generateBriefing(
 
   // Plain text output — NOT JSON — so grounding metadata maps correctly
   // to individual sentences/bullets in the response.
-  const prompt = `You are Brain Brief — a sharp colleague who gives the 2-minute download on what matters.
+  const prompt = `You are Brain Brief — a sharp, well-read colleague who gives the 5-minute intelligence download on what matters.
 
 Today is ${today}. Search the web for what happened TODAY and YESTERDAY in each topic below. I need current news from ${today}, not background information.
 
@@ -106,16 +106,17 @@ ${topicList}
 RULES:
 - Search the web for EACH topic to find the latest developments from TODAY or YESTERDAY.
 - Every bullet must cite a real, current news event. Include specific dates, names, and numbers.
-- Every sentence earns its place. Cut ruthlessly. Think executive briefing, not blog post.
+- Each bullet should be 2-3 sentences: what happened, why it matters, and what to watch for. Give the reader enough context to understand the significance — not just a headline.
+- Write in a confident, editorial voice. Think morning intelligence briefing for a busy professional, not a news ticker.
 
 FOR EACH TOPIC write exactly this format:
 ## [Topic Name]: [Specific newsworthy headline from the last 48 hours]
-- First key development with exact date, specific names, and numbers. One sentence.
-- Second key development with specifics. One sentence.
-- Optional third bullet if warranted. One sentence.
-**The Bottom Line:** One sentence connecting the dots — why it matters.
+- First key development. What happened (with dates, names, numbers), why it matters, and what comes next. 2-3 sentences.
+- Second key development. Same depth — give context, not just the headline. 2-3 sentences.
+- Third key development if warranted. 2-3 sentences.
+**The Bottom Line:** 1-2 sentences connecting the dots — the bigger picture and why the reader should care.
 
-Keep it under 400 words total. No filler, no background — only real-time news.`;
+Aim for 600-800 words total. Be substantive, not terse. The reader should feel genuinely informed after reading, not like they just scanned a list of headlines.`;
 
   // Call Gemini with retry — if grounding returns 0 chunks, retry up to
   // MAX_ATTEMPTS times. Gemini intermittently skips Google Search grounding.
@@ -191,7 +192,7 @@ Keep it under 400 words total. No filler, no background — only real-time news.
       `[gemini] ${MAX_ATTEMPTS} attempts returned 0 grounding chunks. Generating overview fallback...`
     );
 
-    const overviewPrompt = `You are Brain Brief. We couldn't find breaking news for these topics today. Instead, provide a brief, honest overview of where things currently stand.
+    const overviewPrompt = `You are Brain Brief. We couldn't find breaking news for these topics today. Instead, provide a substantive overview of where things currently stand — the kind of briefing a busy professional would appreciate reading with their morning coffee.
 
 ${name ? `Reader's name: ${name}` : `Reader: (no name provided — just say "${timeGreeting}!")`}
 Topics:
@@ -200,17 +201,17 @@ ${topicList}
 RULES:
 - Do NOT claim any specific dates, breaking events, or "just happened" developments.
 - Summarize the current landscape: key players, recent trends, and what to watch.
-- Be concise and useful. Think "state of play" briefing, not news report.
-- Every sentence earns its place. No filler.
+- Each bullet should be 2-3 sentences with real depth. Give context, not just surface-level observations.
+- Write in a confident, editorial voice. The reader should feel genuinely informed.
 
 FOR EACH TOPIC write exactly this format:
 ## [Topic Name]: [Concise summary of where things stand]
-- First key insight about the current landscape. One sentence.
-- Second key trend or development to watch. One sentence.
-- Optional third point if warranted. One sentence.
-**The Bottom Line:** One sentence on what matters most right now.
+- First key insight about the current landscape. What's happening, why it matters, and what to watch for. 2-3 sentences.
+- Second key trend or development to watch. Same depth. 2-3 sentences.
+- Third point if warranted. 2-3 sentences.
+**The Bottom Line:** 1-2 sentences on what matters most right now and why.
 
-Keep it under 400 words total.`;
+Aim for 600-800 words total. Be substantive — the reader should feel like they learned something, not like they scanned a list.`;
 
     try {
       const overviewResponse = await getGeminiClient().models.generateContent({

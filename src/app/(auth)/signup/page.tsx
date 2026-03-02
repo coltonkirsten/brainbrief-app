@@ -46,6 +46,7 @@ function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userRole, setUserRole] = useState("");
+  const [otherRole, setOtherRole] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -84,7 +85,11 @@ function SignupForm() {
     if (utmParams.utm_source) metadata.utm_source = utmParams.utm_source;
     if (utmParams.utm_medium) metadata.utm_medium = utmParams.utm_medium;
     if (utmParams.utm_campaign) metadata.utm_campaign = utmParams.utm_campaign;
-    if (userRole) metadata.user_role = userRole;
+    if (userRole === "other" && otherRole.trim()) {
+      metadata.user_role = `other: ${otherRole.trim().substring(0, 100)}`;
+    } else if (userRole) {
+      metadata.user_role = userRole;
+    }
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -220,7 +225,10 @@ function SignupForm() {
             <select
               id="user-role"
               value={userRole}
-              onChange={(e) => setUserRole(e.target.value)}
+              onChange={(e) => {
+                setUserRole(e.target.value);
+                if (e.target.value !== "other") setOtherRole("");
+              }}
               className={`w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors ${
                 !userRole ? "text-muted-foreground" : ""
               }`}
@@ -234,6 +242,16 @@ function SignupForm() {
                 </option>
               ))}
             </select>
+            {userRole === "other" && (
+              <input
+                type="text"
+                value={otherRole}
+                onChange={(e) => setOtherRole(e.target.value)}
+                placeholder="Tell us a bit more..."
+                maxLength={100}
+                className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              />
+            )}
           </div>
 
           <button

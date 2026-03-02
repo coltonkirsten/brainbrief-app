@@ -98,7 +98,7 @@ export default function BriefingCarousel() {
 
   return (
     <div
-      className="mt-24 relative mx-auto w-full max-w-4xl text-left hidden sm:block"
+      className="mt-16 sm:mt-24 relative mx-auto w-full max-w-4xl text-left"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onTouchStart={(e) => {
@@ -121,7 +121,7 @@ export default function BriefingCarousel() {
       <div className="absolute -inset-1 bg-gradient-to-r from-border via-accent/20 to-border rounded-2xl blur opacity-30" />
 
       {/* Card */}
-      <div className="relative bg-card shadow-xl border border-border rounded-xl p-10 overflow-hidden">
+      <div className="relative bg-card shadow-xl border border-border rounded-xl p-6 sm:p-10 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border pb-6 mb-8">
           <div className="text-xl font-bold tracking-tight font-serif text-primary">
@@ -141,7 +141,7 @@ export default function BriefingCarousel() {
             transitionDuration: `${FADE_MS / 2}ms`,
           }}
         >
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid md:grid-cols-3 gap-8 sm:gap-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-3">
                 <span className="inline-block px-2.5 py-1 rounded-md bg-muted text-primary text-[10px] font-bold uppercase tracking-wider">
@@ -155,7 +155,7 @@ export default function BriefingCarousel() {
                 {briefing.synthesis}
               </p>
             </div>
-            <div className="md:col-span-1 border-l border-border pl-8">
+            <div className="md:col-span-1 border-t md:border-t-0 md:border-l border-border pt-6 md:pt-0 pl-0 md:pl-8 mt-6 md:mt-0">
               <div className="p-5 bg-muted/50 rounded-lg border border-border h-full flex flex-col justify-center">
                 <div className="flex items-center gap-2 mb-3 text-accent">
                   <Zap className="w-4 h-4" />

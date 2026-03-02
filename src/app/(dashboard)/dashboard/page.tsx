@@ -8,6 +8,7 @@ import CheckoutSuccessBanner from "./checkout-success-banner";
 import ManageBillingButton from "./manage-billing-button";
 import DeliveryTimePicker from "./delivery-time-picker";
 import { getTrialInfo } from "@/lib/trial";
+import OnboardingView from "./onboarding-view";
 
 export const metadata = {
   title: "Dashboard | Brain Brief",
@@ -94,7 +95,7 @@ export default async function DashboardPage() {
 
       {/* Mobile trial/upgrade banner (hidden on desktop where header badge is visible) */}
       {!trialInfo.isSubscriber && (
-        <div className="sm:hidden px-6 pt-4">
+        <div className="sm:hidden px-4 pt-4">
           {trialInfo.isTrialActive ? (
             <Link
               href="/subscribe"
@@ -122,9 +123,12 @@ export default async function DashboardPage() {
         <CheckoutSuccessBanner />
       </Suspense>
 
-      {/* Main */}
-      <main className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <div className="lg:col-span-5 space-y-10">
+      {/* Main Content or Onboarding */}
+      {topics.length === 0 ? (
+        <OnboardingView userId={user.id} />
+      ) : (
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
+        <div className="lg:col-span-5 space-y-8 sm:space-y-10">
           
           {/* Trial status banner */}
           {trialInfo.isTrialExpired && !trialInfo.isSubscriber && (
@@ -270,6 +274,7 @@ export default async function DashboardPage() {
           </div>
         </div>
       </main>
+      )}
     </div>
   );
 }

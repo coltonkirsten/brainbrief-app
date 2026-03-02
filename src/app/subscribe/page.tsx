@@ -166,22 +166,23 @@ function SubscribeContent() {
             <h2 className="text-lg font-bold font-serif text-primary mb-4">
               Brain Brief Pro
             </h2>
-            <div className="flex items-end justify-center gap-1">
-              <span className="text-5xl font-bold text-primary tracking-tight">
-                {price}
-              </span>
-              <span className="text-muted-foreground font-medium pb-1">
-                {period}
-              </span>
+            <div className="flex flex-col items-center justify-center mt-2">
+              <div className="flex items-baseline justify-center gap-3 mb-2">
+                <span className="text-3xl font-bold text-muted-foreground line-through decoration-muted-foreground/50">{price}</span>
+                <span className="text-5xl font-bold text-accent tracking-tight">$0</span>
+              </div>
+              <p className="text-base font-bold text-primary mb-1">
+                for your first 7 days
+              </p>
+              <p className="text-sm text-muted-foreground font-medium">
+                then {price}{period}
+              </p>
             </div>
             {savings && (
               <p className="mt-3 text-sm text-accent font-semibold">
                 {savings}
               </p>
             )}
-            <p className="mt-2 text-xs text-muted-foreground">
-              Try free for 7 days — cancel anytime, no charge until trial ends
-            </p>
           </div>
 
           {/* Benefits */}

@@ -130,13 +130,18 @@ export default function LandingPage() {
               
               <div className="text-center mb-8">
                 <h3 className="text-xl font-bold font-serif text-primary mb-2">Brain Brief Premium</h3>
-                <div className="flex items-end justify-center gap-1 mt-4">
-                  <span className="text-5xl font-bold text-primary tracking-tight">$6</span>
-                  <span className="text-muted-foreground font-medium pb-1">/month</span>
+                <div className="flex flex-col items-center justify-center mt-4">
+                  <div className="flex items-baseline justify-center gap-3 mb-2">
+                    <span className="text-3xl font-bold text-muted-foreground line-through decoration-muted-foreground/50">$6</span>
+                    <span className="text-5xl font-bold text-accent tracking-tight">$0</span>
+                  </div>
+                  <p className="text-base font-bold text-primary mb-1">
+                    for your first 7 days
+                  </p>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    then $6/month (or $50/year)
+                  </p>
                 </div>
-                <p className="mt-3 text-sm text-accent font-medium">
-                  or $50/year (Save 30%)
-                </p>
               </div>
               
               <ul className="space-y-4 text-sm text-primary mb-10">

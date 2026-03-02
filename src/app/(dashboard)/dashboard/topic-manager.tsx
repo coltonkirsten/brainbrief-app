@@ -153,12 +153,13 @@ export default function TopicManager({
 
       {/* Topic list */}
       <div className="space-y-2">
-        {topics.length === 0 ? (
-          <div className="bg-card shadow-sm border border-border rounded-xl p-8 text-center mb-6">
-            <h3 className="text-lg font-serif font-bold text-primary mb-2">Welcome to Brain Brief</h3>
-            <p className="text-muted-foreground mb-6 text-sm">You have no active topics. Add your own below, or start with a suggestion:</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {["Generative AI", "SpaceX & NASA", "Venture Capital", "Climate Tech", "Formula 1", "Longevity Research"].map(suggestion => (
+                {canAddTopics && topics.length > 0 && topics.length < maxTopics && (
+          <div className="mb-6">
+            <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wider">Suggested Topics</p>
+            <div className="flex flex-wrap gap-2">
+              {["Generative AI", "SpaceX & NASA", "Venture Capital", "Climate Tech", "Formula 1", "Longevity Research"]
+                .filter(s => !topics.some(t => t.name.toLowerCase() === s.toLowerCase()))
+                .map(suggestion => (
                 <button
                   key={suggestion}
                   onClick={(e) => { e.preventDefault(); handleAddSuggestion(suggestion); }}
@@ -170,26 +171,6 @@ export default function TopicManager({
               ))}
             </div>
           </div>
-        ) : (
-          canAddTopics && (
-            <div className="mb-6">
-              <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wider">Suggested Topics</p>
-              <div className="flex flex-wrap gap-2">
-                {["Generative AI", "SpaceX & NASA", "Venture Capital", "Climate Tech", "Formula 1", "Longevity Research"]
-                  .filter(s => !topics.some(t => t.name.toLowerCase() === s.toLowerCase()))
-                  .map(suggestion => (
-                  <button
-                    key={suggestion}
-                    onClick={(e) => { e.preventDefault(); handleAddSuggestion(suggestion); }}
-                    disabled={loading}
-                    className="px-3 py-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-primary border border-border rounded-full text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    + {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )
         )}
 
         {topics.map((topic) => (
@@ -270,19 +251,19 @@ export default function TopicManager({
 
       {/* Add topic form */}
       {canAddTopics ? (
-        <form onSubmit={addTopic} className="flex gap-2">
+        <form onSubmit={addTopic} className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
             value={newTopic}
             onChange={(e) => setNewTopic(e.target.value)}
             aria-label="New topic name"
             placeholder="e.g., Artificial Intelligence, Climate Change, NBA..."
-            className="flex-1 rounded-md border border-border bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            className="flex-1 rounded-md border border-border bg-background px-4 py-3 sm:py-2 text-base sm:text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
           />
           <button
             type="submit"
             disabled={loading || !newTopic.trim()}
-            className="rounded-md bg-primary px-5 py-2 text-sm font-bold text-primary-foreground uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md bg-primary px-5 py-3 sm:py-2 text-sm font-bold text-primary-foreground uppercase tracking-wider hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Adding..." : "Add topic"}
           </button>

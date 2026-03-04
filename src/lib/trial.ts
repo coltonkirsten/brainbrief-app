@@ -2,14 +2,14 @@
  * Trial and subscription status helpers.
  *
  * Business model:
- * - 7-day free trial (full access, up to 5 topics)
+ * - 7-day free trial (up to 3 topics, daily briefings)
  * - After trial: briefings stop, account persists
- * - Brain Brief Pro ($6/mo or $50/yr): unlocks everything
+ * - Brain Brief Pro ($6/mo or $50/yr): up to 10 topics, daily briefings
  */
 
 export const TRIAL_DURATION_DAYS = 7;
-export const TRIAL_TOPIC_LIMIT = 5;
-export const PRO_TOPIC_LIMIT = 5; // Same for now, can increase later
+export const TRIAL_TOPIC_LIMIT = 3;
+export const PRO_TOPIC_LIMIT = 10;
 
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "canceled";
 
@@ -70,7 +70,8 @@ export function getTrialInfo(profile: {
   const isPastDue = subscriptionStatus === "past_due";
   const canGenerateBriefings = isSubscriber || isTrialActive || isPastDue;
   const canAddTopics = isSubscriber || isTrialActive || isPastDue;
-  const maxTopics = isSubscriber ? PRO_TOPIC_LIMIT : TRIAL_TOPIC_LIMIT;
+  // past_due subscribers keep Pro limits during Stripe retry window
+  const maxTopics = (isSubscriber || isPastDue) ? PRO_TOPIC_LIMIT : TRIAL_TOPIC_LIMIT;
 
   return {
     canGenerateBriefings,

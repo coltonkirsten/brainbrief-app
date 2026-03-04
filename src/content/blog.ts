@@ -214,7 +214,7 @@ Over time, the habit builds genuine knowledge. Not the ambient, anxious awarenes
 
 ## What This Looks Like in Practice
 
-[Brain Brief](https://brainbrief.app) lets you choose up to five topics — anything from geopolitics to Formula 1 to machine learning to modern history. Each morning, you receive a briefing that covers what's new and significant in each of them.
+[Brain Brief](https://brainbrief.app) lets you choose up to ten topics — anything from geopolitics to Formula 1 to machine learning to modern history. Each morning, you receive a briefing that covers what's new and significant in each of them.
 
 No filler. No topics you didn't choose. No algorithm with its own agenda.
 

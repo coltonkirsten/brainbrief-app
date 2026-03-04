@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 interface OnboardingViewProps {
   userId: string;
+  maxTopics: number;
 }
 
 const SUGGESTIONS = [
@@ -23,8 +24,6 @@ const SUGGESTIONS = [
   "Enterprise SaaS",
 ];
 
-const MAX_TOPICS = 5;
-
 const PROGRESS_STEPS = [
   "Saving your topics\u2026",
   "Searching the web for the latest news\u2026",
@@ -33,7 +32,7 @@ const PROGRESS_STEPS = [
   "Your briefing is ready!",
 ];
 
-export default function OnboardingView({ userId }: OnboardingViewProps) {
+export default function OnboardingView({ userId, maxTopics }: OnboardingViewProps) {
   const router = useRouter();
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
@@ -45,7 +44,7 @@ export default function OnboardingView({ userId }: OnboardingViewProps) {
   const toggleSuggestion = useCallback((topic: string) => {
     setSelectedTopics((prev) => {
       if (prev.includes(topic)) return prev.filter((t) => t !== topic);
-      if (prev.length >= MAX_TOPICS) return prev;
+      if (prev.length >= maxTopics) return prev;
       return [...prev, topic];
     });
   }, []);
@@ -57,7 +56,7 @@ export default function OnboardingView({ userId }: OnboardingViewProps) {
       setCustomTopic("");
       return;
     }
-    if (selectedTopics.length >= MAX_TOPICS) return;
+    if (selectedTopics.length >= maxTopics) return;
     setSelectedTopics((prev) => [...prev, trimmed]);
     setCustomTopic("");
   }
@@ -186,7 +185,7 @@ export default function OnboardingView({ userId }: OnboardingViewProps) {
                 Your Topics
               </h3>
               <span className="text-xs text-muted-foreground">
-                {selectedTopics.length}/{MAX_TOPICS}
+                {selectedTopics.length}/{maxTopics}
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -219,7 +218,7 @@ export default function OnboardingView({ userId }: OnboardingViewProps) {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {SUGGESTIONS.map((suggestion) => {
               const isSelected = selectedTopics.includes(suggestion);
-              const isDisabled = !isSelected && selectedTopics.length >= MAX_TOPICS;
+              const isDisabled = !isSelected && selectedTopics.length >= maxTopics;
               return (
                 <button
                   key={suggestion}
@@ -269,12 +268,12 @@ export default function OnboardingView({ userId }: OnboardingViewProps) {
             onChange={(e) => setCustomTopic(e.target.value)}
             placeholder="e.g., Synthetic Biology, NFL, Enterprise SaaS\u2026"
             maxLength={100}
-            disabled={selectedTopics.length >= MAX_TOPICS}
+            disabled={selectedTopics.length >= maxTopics}
             className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={!customTopic.trim() || selectedTopics.length >= MAX_TOPICS}
+            disabled={!customTopic.trim() || selectedTopics.length >= maxTopics}
             className="rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-primary border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Add

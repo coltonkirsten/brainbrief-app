@@ -191,7 +191,7 @@ function SubscribeContent() {
               <li className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
                 <div>
-                  <strong>Up to 5 curated topics</strong>
+                  <strong>Up to 10 curated topics</strong>
                   <p className="text-muted-foreground mt-0.5">Track the industries, technologies, and trends that matter to you</p>
                 </div>
               </li>

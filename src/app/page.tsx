@@ -147,7 +147,7 @@ export default function LandingPage() {
               <ul className="space-y-4 text-sm text-primary mb-10">
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />
-                  <span><strong>Unlimited topics</strong> and keywords</span>
+                  <span><strong>Up to 10 topics</strong> and keywords</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />

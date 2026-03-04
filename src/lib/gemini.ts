@@ -215,6 +215,7 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
       config: {
         tools: [{ googleSearch: {} }],
         temperature: 0.2, // Fix C: low temperature for factual accuracy
+        maxOutputTokens: 2048, // Prevent truncation on longer topics
       },
     });
 
@@ -309,7 +310,39 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
     console.log(`[gemini] Topic "${topicName}": keyword-matched sources (no supports available)`);
   }
 
+  // Fix truncated bullets (Gemini sometimes cuts off mid-sentence)
+  topic.bullets = topic.bullets.map(trimToLastSentence);
+
+  // Ensure Bottom Line exists — generate a simple fallback if missing
+  if (!topic.bottomLine || topic.bottomLine.trim().length < 10) {
+    topic.bottomLine = `Developments in ${topicName} continue to evolve — stay tuned for updates.`;
+  }
+
   return { topic, sources: chunks, grounded: true };
+}
+
+/**
+ * Trim a bullet to the last complete sentence if it appears truncated.
+ * Detects truncation by checking if text ends without sentence-ending punctuation.
+ */
+function trimToLastSentence(text: string): string {
+  const trimmed = text.trim();
+  // If it ends with sentence-ending punctuation, it's fine
+  if (/[.!?][\])"']*$/.test(trimmed)) return trimmed;
+
+  // Find the last sentence boundary
+  const lastPeriod = trimmed.lastIndexOf(". ");
+  const lastExcl = trimmed.lastIndexOf("! ");
+  const lastQ = trimmed.lastIndexOf("? ");
+  const lastBound = Math.max(lastPeriod, lastExcl, lastQ);
+
+  if (lastBound > trimmed.length * 0.4) {
+    // Trim to last complete sentence (keep the punctuation)
+    return trimmed.substring(0, lastBound + 1);
+  }
+
+  // No good sentence boundary found — append ellipsis
+  return trimmed + "...";
 }
 
 // ---------- Grounding Validation (Fix D) ----------

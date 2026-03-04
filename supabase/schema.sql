@@ -96,17 +96,19 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (
-    user_id, email, trial_ends_at,
-    utm_source, utm_medium, utm_campaign, user_role
+    user_id, email, trial_ends_at, subscription_status,
+    utm_source, utm_medium, utm_campaign, user_role, timezone
   )
   VALUES (
     NEW.id,
     NEW.email,
     NOW() + INTERVAL '7 days',
+    'trialing',
     NEW.raw_user_meta_data->>'utm_source',
     NEW.raw_user_meta_data->>'utm_medium',
     NEW.raw_user_meta_data->>'utm_campaign',
-    NEW.raw_user_meta_data->>'user_role'
+    NEW.raw_user_meta_data->>'user_role',
+    COALESCE(NULLIF(NEW.raw_user_meta_data->>'timezone', ''), 'America/New_York')
   );
   RETURN NEW;
 END;

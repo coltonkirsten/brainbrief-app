@@ -79,12 +79,19 @@ function SignupForm() {
 
     const supabase = createClient();
 
-    // Build metadata — UTM params + optional role
+    // Build metadata — UTM params + optional role + timezone
     // These are stored in auth.users.raw_user_meta_data and read by the profile trigger
     const metadata: Record<string, string> = {};
     if (utmParams.utm_source) metadata.utm_source = utmParams.utm_source;
     if (utmParams.utm_medium) metadata.utm_medium = utmParams.utm_medium;
     if (utmParams.utm_campaign) metadata.utm_campaign = utmParams.utm_campaign;
+
+    // Detect browser timezone (e.g. "America/Los_Angeles", "Europe/London")
+    try {
+      metadata.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      // Fallback — trigger default will use America/New_York
+    }
     if (userRole === "other" && otherRole.trim()) {
       metadata.user_role = `other: ${otherRole.trim().substring(0, 100)}`;
     } else if (userRole) {

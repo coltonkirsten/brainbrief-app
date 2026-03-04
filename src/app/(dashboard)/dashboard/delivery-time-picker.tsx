@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -27,10 +27,38 @@ export default function DeliveryTimePicker({
 }: DeliveryTimePickerProps) {
   const router = useRouter();
   const [selectedTime, setSelectedTime] = useState(initialTime);
+  const [currentTimezone, setCurrentTimezone] = useState(timezone);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const hasSynced = useRef(false);
 
-  const tzAbbr = getTimezoneAbbreviation(timezone);
+  // Auto-detect browser timezone and sync to profile if different
+  useEffect(() => {
+    if (hasSynced.current) return;
+    hasSynced.current = true;
+
+    try {
+      const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (browserTz && browserTz !== timezone) {
+        // Update profile with correct timezone
+        const supabase = createClient();
+        supabase
+          .from("profiles")
+          .update({ timezone: browserTz })
+          .eq("user_id", userId)
+          .then(({ error }) => {
+            if (!error) {
+              setCurrentTimezone(browserTz);
+              router.refresh();
+            }
+          });
+      }
+    } catch {
+      // Browser doesn't support Intl — keep server default
+    }
+  }, [timezone, userId, router]);
+
+  const tzAbbr = getTimezoneAbbreviation(currentTimezone);
 
   async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const newTime = e.target.value;

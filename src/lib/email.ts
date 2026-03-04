@@ -450,6 +450,9 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
           &copy; ${year} Brain Brief. All rights reserved.<br>
           <span style="font-size: 10px; opacity: 0.7;">Powered by AI &bull; Grounded in Truth</span>
         </p>
+        <p class="text-muted" style="margin: 8px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #CBD5E1; text-align: center;">
+          Brain Brief &middot; PO Box 254752 &middot; Sacramento, CA 95825
+        </p>
       </td>
     </tr>
   </table>
@@ -537,6 +540,9 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
               </p>
               <p style="margin: 24px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8;">
                 &copy; ${year} Brain Brief. All rights reserved.
+              </p>
+              <p style="margin: 8px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #CBD5E1;">
+                Brain Brief &middot; PO Box 254752 &middot; Sacramento, CA 95825
               </p>
             </td>
           </tr>

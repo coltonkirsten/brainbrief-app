@@ -389,6 +389,8 @@ function buildStandaloneHtml(params: {
                 You're receiving this because you signed up for Brain Brief.
                 <br>
                 <a href="https://www.brainbrief.app/dashboard" style="color: #64748B; text-decoration: underline;">Manage your account</a>
+                &nbsp;&middot;&nbsp;
+                <a href="https://www.brainbrief.app/unsubscribe" style="color: #64748B; text-decoration: underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -397,6 +399,9 @@ function buildStandaloneHtml(params: {
 
         <p style="margin: 24px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #CBD5E1; text-align: center;">
           &copy; ${year} Brain Brief
+        </p>
+        <p style="margin: 8px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 10px; color: #CBD5E1; text-align: center;">
+          Brain Brief &middot; PO Box 254752 &middot; Sacramento, CA 95825
         </p>
       </td>
     </tr>

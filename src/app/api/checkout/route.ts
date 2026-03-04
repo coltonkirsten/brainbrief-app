@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { getStripe, getStripePrices } from "@/lib/stripe";
-import { getTrialInfo } from "@/lib/trial";
 import Stripe from "stripe";
 
 // Allow up to 60s for Stripe API calls + retries
@@ -14,9 +13,8 @@ export const maxDuration = 60;
  * POST /api/checkout
  * Body: { plan: "monthly" | "annual" }
  *
- * If user is still in trial (Day 1-7), sets trial_end on the Stripe
- * subscription so billing starts after trial expires.
- * If user is past trial (Day 8+), billing starts immediately.
+ * Billing starts immediately on subscription — no Stripe-level trial.
+ * Our app trial is managed independently via profiles.trial_ends_at.
  */
 export async function POST(request: Request) {
   try {
@@ -79,37 +77,17 @@ export async function POST(request: Request) {
     // Reuse existing Stripe customer or create reference for new one
     const customerId = profile?.stripe_customer_id || undefined;
 
-    // Build checkout session params
-    const trialInfo = getTrialInfo(
-      profile ?? { trial_ends_at: null, subscription_status: "trialing" }
-    );
-
     // Subscription data with metadata
+    // NOTE: We never set trial_end on Stripe. Our app trial is managed
+    // independently via the profiles.trial_ends_at column. When a user
+    // subscribes (during or after trial), Stripe billing starts immediately.
+    // This prevents Stripe Checkout from showing confusing "$0 today" UI.
     const subscriptionData: Stripe.Checkout.SessionCreateParams["subscription_data"] = {
       metadata: {
         supabase_user_id: user.id,
         plan_type: plan,
       },
     };
-
-    // If user is still in trial, set trial_end so billing starts after trial expires.
-    // Stripe requires trial_end to be at least 48 hours in the future.
-    if (trialInfo.isTrialActive && profile?.trial_ends_at) {
-      const trialEndTimestamp = Math.floor(
-        new Date(profile.trial_ends_at).getTime() / 1000
-      );
-      const minTrialEnd = Math.floor(Date.now() / 1000) + (48 * 60 * 60); // 48h from now
-
-      if (trialEndTimestamp > minTrialEnd) {
-        // Trial ends more than 48h from now — sync with our trial
-        subscriptionData.trial_end = trialEndTimestamp;
-      } else if (trialEndTimestamp > Math.floor(Date.now() / 1000)) {
-        // Trial ends within 48h — use Stripe's minimum (48h)
-        subscriptionData.trial_end = minTrialEnd;
-      }
-      // If trial already ended (shouldn't happen since isTrialActive is true),
-      // don't set trial_end — billing starts immediately
-    }
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: "subscription",
@@ -136,7 +114,7 @@ export async function POST(request: Request) {
     }
 
     const baseUrl = getBaseUrl();
-    console.log("[checkout] Creating session for user:", user.id, "plan:", plan, "trial_active:", trialInfo.isTrialActive, "base_url:", baseUrl);
+    console.log("[checkout] Creating session for user:", user.id, "plan:", plan, "base_url:", baseUrl);
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 

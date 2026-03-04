@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, ArrowLeft, Loader2, Sparkles, Crown } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
 export default function SubscribePage() {
@@ -14,11 +14,13 @@ export default function SubscribePage() {
   );
 }
 
+type Flow = "loading" | "trial-promo" | "upgrade" | "already-pro";
+
 function SubscribeContent() {
   const [billing, setBilling] = useState<"monthly" | "annual">("annual");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [flow, setFlow] = useState<Flow>("loading");
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -27,8 +29,29 @@ function SubscribeContent() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
+      if (!session) {
+        // Not logged in — show trial promo (Flow A)
+        setFlow("trial-promo");
+        return;
+      }
+
+      // Logged in — check subscription status
+      supabase
+        .from("profiles")
+        .select("subscription_status")
+        .eq("user_id", session.user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          const status = data?.subscription_status;
+          if (status === "active") {
+            setFlow("already-pro");
+          } else {
+            // trialing, past_due, canceled, or null — show upgrade flow (Flow B)
+            setFlow("upgrade");
+          }
+        });
     });
   }, []);
 
@@ -77,34 +100,57 @@ function SubscribeContent() {
     }
   }
 
+  // Loading state while we determine the flow
+  if (flow === "loading") {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Already a Pro subscriber — show info card
+  if (flow === "already-pro") {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <NavBar isLoggedIn={true} />
+        <main className="max-w-2xl mx-auto px-6 pt-12 pb-32">
+          <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden p-8 text-center">
+            <Crown className="w-12 h-12 text-accent mx-auto mb-4" />
+            <h1 className="text-2xl font-bold font-serif text-primary mb-3">
+              You&apos;re already a Pro subscriber
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              You have full access to Brain Brief Pro. Your briefings are active and your subscription is current.
+            </p>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-bold text-primary-foreground hover:bg-primary-hover transition-all shadow-sm"
+            >
+              Back to dashboard
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const isTrialPromo = flow === "trial-promo";
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Nav */}
-      <nav className="flex flex-col sm:flex-row items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full gap-4 sm:gap-0">
-        <Link
-          href="/"
-          className="text-2xl font-bold tracking-tight font-serif text-primary hover:opacity-90 transition-opacity"
-        >
-          Brain<span className="text-accent">Brief</span>
-        </Link>
-        <Link
-          href={isLoggedIn ? "/dashboard" : "/"}
-          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {isLoggedIn ? "Back to dashboard" : "Back to home"}
-        </Link>
-      </nav>
+      <NavBar isLoggedIn={!isTrialPromo} />
 
       <main className="max-w-2xl mx-auto px-6 pt-12 pb-32">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold font-serif text-primary tracking-tight">
-            Upgrade to Brain Brief Pro
+            {isTrialPromo ? "Start Your Free Trial" : "Upgrade to Brain Brief Pro"}
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Keep your daily intelligence briefings flowing.
-            One plan, everything included, cancel anytime.
+            {isTrialPromo
+              ? "Try Brain Brief Pro free for 7 days. One plan, everything included, cancel anytime."
+              : "Keep your daily intelligence briefings flowing. One plan, everything included, cancel anytime."}
           </p>
         </div>
 
@@ -153,31 +199,46 @@ function SubscribeContent() {
 
         {/* Plan card */}
         <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden relative">
-          {/* Trial badge */}
-          <div className="absolute top-4 right-4">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 px-3 py-1.5 text-xs font-bold text-accent uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              7-day free trial
-            </span>
-          </div>
+          {/* Trial badge — only for Flow A (new users) */}
+          {isTrialPromo && (
+            <div className="absolute top-4 right-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 px-3 py-1.5 text-xs font-bold text-accent uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5" />
+                7-day free trial
+              </span>
+            </div>
+          )}
 
           {/* Price */}
           <div className="bg-muted border-b border-border px-8 py-10 text-center">
             <h2 className="text-lg font-bold font-serif text-primary mb-4">
               Brain Brief Pro
             </h2>
-            <div className="flex flex-col items-center justify-center mt-2">
-              <div className="flex items-baseline justify-center gap-3 mb-2">
-                <span className="text-3xl font-bold text-muted-foreground line-through decoration-muted-foreground/50">{price}</span>
-                <span className="text-5xl font-bold text-accent tracking-tight">$0</span>
+
+            {isTrialPromo ? (
+              /* Flow A: Trial pricing — $0 with strikethrough */
+              <div className="flex flex-col items-center justify-center mt-2">
+                <div className="flex items-baseline justify-center gap-3 mb-2">
+                  <span className="text-3xl font-bold text-muted-foreground line-through decoration-muted-foreground/50">{price}</span>
+                  <span className="text-5xl font-bold text-accent tracking-tight">$0</span>
+                </div>
+                <p className="text-base font-bold text-primary mb-1">
+                  for your first 7 days
+                </p>
+                <p className="text-sm text-muted-foreground font-medium">
+                  then {price}{period}
+                </p>
               </div>
-              <p className="text-base font-bold text-primary mb-1">
-                for your first 7 days
-              </p>
-              <p className="text-sm text-muted-foreground font-medium">
-                then {price}{period}
-              </p>
-            </div>
+            ) : (
+              /* Flow B: Real pricing — no strikethrough, no $0 */
+              <div className="flex flex-col items-center justify-center mt-2">
+                <div className="flex items-baseline justify-center gap-1 mb-2">
+                  <span className="text-5xl font-bold text-primary tracking-tight">{price}</span>
+                  <span className="text-lg text-muted-foreground font-medium">{period}</span>
+                </div>
+              </div>
+            )}
+
             {savings && (
               <p className="mt-3 text-sm text-accent font-semibold">
                 {savings}
@@ -242,10 +303,14 @@ function SubscribeContent() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Redirecting to checkout...
                 </>
-              ) : billing === "annual" ? (
-                "Start free trial — $50/year after trial"
+              ) : isTrialPromo ? (
+                billing === "annual"
+                  ? "Start free trial — $50/year after trial"
+                  : "Start free trial — $6/month after trial"
               ) : (
-                "Start free trial — $6/month after trial"
+                billing === "annual"
+                  ? "Subscribe — $50/year"
+                  : "Subscribe — $6/month"
               )}
             </button>
 
@@ -288,16 +353,17 @@ function SubscribeContent() {
                 If you cancel, you&apos;ll keep access until the end of your billing period.
               </p>
             </details>
-            <details className="group bg-card border border-border rounded-xl px-6 py-4">
-              <summary className="text-sm font-semibold text-primary cursor-pointer list-none flex items-center justify-between">
-                Will I be charged during my free trial?
-                <span className="text-muted-foreground group-open:rotate-45 transition-transform text-lg">+</span>
-              </summary>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
-                No. If you subscribe during your trial, billing won&apos;t start until after your trial ends.
-                You get the full 7 days free regardless of when you subscribe.
-              </p>
-            </details>
+            {isTrialPromo && (
+              <details className="group bg-card border border-border rounded-xl px-6 py-4">
+                <summary className="text-sm font-semibold text-primary cursor-pointer list-none flex items-center justify-between">
+                  Will I be charged during my free trial?
+                  <span className="text-muted-foreground group-open:rotate-45 transition-transform text-lg">+</span>
+                </summary>
+                <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+                  No. You get the full 7 days free. Your card is only charged when the trial ends.
+                </p>
+              </details>
+            )}
             <details className="group bg-card border border-border rounded-xl px-6 py-4">
               <summary className="text-sm font-semibold text-primary cursor-pointer list-none flex items-center justify-between">
                 Is my payment information secure?
@@ -312,5 +378,25 @@ function SubscribeContent() {
         </div>
       </main>
     </div>
+  );
+}
+
+function NavBar({ isLoggedIn }: { isLoggedIn: boolean }) {
+  return (
+    <nav className="flex flex-col sm:flex-row items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full gap-4 sm:gap-0">
+      <Link
+        href="/"
+        className="text-2xl font-bold tracking-tight font-serif text-primary hover:opacity-90 transition-opacity"
+      >
+        Brain<span className="text-accent">Brief</span>
+      </Link>
+      <Link
+        href={isLoggedIn ? "/dashboard" : "/"}
+        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        {isLoggedIn ? "Back to dashboard" : "Back to home"}
+      </Link>
+    </nav>
   );
 }

@@ -49,9 +49,12 @@ export interface BriefingResult {
  * Generate a personalized news briefing for a user's topics using
  * Gemini with Google Search grounding for real-time web data.
  *
- * Uses plain text output (not JSON) to maximize grounding metadata
- * quality — Gemini's groundingSupports maps character ranges to
- * specific source chunks, enabling per-bullet citations.
+ * Architecture (v2 — per-topic parallel generation):
+ * - Each topic gets its own Gemini API call with focused Google Search
+ * - Calls run in parallel via Promise.allSettled() for speed
+ * - Per-topic grounding prevents source recycling across unrelated topics
+ * - Ungrounded bullets are stripped post-generation (Fix D)
+ * - Anti-hallucination prompt rules + low temperature (0.2) for accuracy
  */
 
 /** Return a time-appropriate greeting based on the user's timezone. */
@@ -80,47 +83,126 @@ export async function generateBriefing(
   const name = displayName?.trim() || null;
   const timeGreeting = getTimeGreeting(timezone);
   const greeting = name ? `${timeGreeting}, ${name}!` : `${timeGreeting}!`;
+
+  // Use user's timezone for accurate date context (fixes wrong-day bug for PST users)
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: timezone || "America/New_York",
   });
 
   // Sanitize topic names: strip control chars, limit length, prevent prompt injection
   const sanitizedTopics = topics.map((t) =>
     t.replace(/[\x00-\x1f\x7f]/g, "").trim().substring(0, 100)
   );
-  const topicList = sanitizedTopics.map((t) => `- ${t}`).join("\n");
 
-  // Plain text output — NOT JSON — so grounding metadata maps correctly
-  // to individual sentences/bullets in the response.
-  const prompt = `You are Brain Brief — a sharp, well-read colleague who gives the 5-minute intelligence download on what matters.
+  // Fix A: Generate each topic in parallel with separate API calls.
+  // Each topic gets its own focused Google Search queries, preventing
+  // source recycling and improving coverage for niche topics.
+  console.log(`[gemini] Generating ${sanitizedTopics.length} topics in parallel...`);
+  const results = await Promise.allSettled(
+    sanitizedTopics.map((topic) => generateSingleTopic(topic, today, timezone))
+  );
 
-Today is ${today}. Search the web for what happened TODAY and YESTERDAY in each topic below. I need current news from ${today}, not background information.
+  // Collect results
+  const topicBriefings: TopicBriefing[] = [];
+  const allSources: SourceLink[] = [];
+  let anyGrounded = false;
 
-${name ? `Reader's name: ${name}` : `Reader: (no name provided — just say "${timeGreeting}!")`}
-Topics:
-${topicList}
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === "fulfilled") {
+      topicBriefings.push(result.value.topic);
+      allSources.push(...result.value.sources);
+      if (result.value.grounded) anyGrounded = true;
+    } else {
+      // Topic generation failed entirely — add graceful fallback
+      console.error(`[gemini] Topic "${sanitizedTopics[i]}" failed:`, result.reason);
+      topicBriefings.push({
+        name: sanitizedTopics[i],
+        headline: sanitizedTopics[i],
+        bullets: [
+          "We couldn\u2019t retrieve the latest developments for this topic. It will be covered in your next briefing.",
+        ],
+        bottomLine: "",
+        bulletSources: [[]],
+      });
+    }
+  }
 
-RULES:
-- Search the web for EACH topic to find the latest developments from TODAY or YESTERDAY.
-- Every bullet must cite a real, current news event. Include specific dates, names, and numbers.
-- Each bullet should be 2-3 sentences: what happened, why it matters, and what to watch for. Give the reader enough context to understand the significance — not just a headline.
-- Write in a confident, editorial voice. Think morning intelligence briefing for a busy professional, not a news ticker.
+  // If ALL topics had limited/no coverage, mark entire briefing as ungrounded
+  if (topicBriefings.every((t) => t.headline.includes("Limited Recent Coverage"))) {
+    anyGrounded = false;
+  }
 
-FOR EACH TOPIC write exactly this format:
-## [Topic Name]: [Specific newsworthy headline from the last 48 hours]
-- First key development. What happened (with dates, names, numbers), why it matters, and what comes next. 2-3 sentences.
-- Second key development. Same depth — give context, not just the headline. 2-3 sentences.
-- Third key development if warranted. 2-3 sentences.
-**The Bottom Line:** 1-2 sentences connecting the dots — the bigger picture and why the reader should care.
+  const structured: BriefingData = {
+    greeting,
+    topics: topicBriefings,
+  };
 
-Aim for 600-800 words total. Be substantive, not terse. The reader should feel genuinely informed after reading, not like they just scanned a list of headlines.`;
+  const contentHtml = generateHtmlFromStructured(structured);
+  const contentText = generateTextFromStructured(structured);
 
-  // Call Gemini with retry — if grounding returns 0 chunks, retry up to
-  // MAX_ATTEMPTS times. Gemini intermittently skips Google Search grounding.
-  const MAX_ATTEMPTS = 3;
+  return {
+    contentHtml,
+    contentText,
+    topicsCovered: topics,
+    sources: allSources,
+    structured,
+    grounded: anyGrounded,
+  };
+}
+
+// ---------- Per-Topic Generation (Fix A) ----------
+
+interface SingleTopicResult {
+  topic: TopicBriefing;
+  sources: SourceLink[];
+  grounded: boolean;
+}
+
+/**
+ * Generate a briefing for a single topic with its own Gemini API call.
+ * Each topic gets focused Google Search queries, preventing source
+ * recycling across unrelated topics.
+ */
+async function generateSingleTopic(
+  topicName: string,
+  today: string,
+  timezone?: string | null
+): Promise<SingleTopicResult> {
+  const MAX_ATTEMPTS = 2;
+
+  // Per-topic prompt with strong anti-hallucination rules (Fix B)
+  const prompt = `You are Brain Brief \u2014 a sharp, well-read intelligence analyst delivering a focused briefing on one topic.
+
+Today is ${today} (${timezone || "America/New_York"} timezone). Search the web for the latest news about this specific topic from the past 24-48 hours.
+
+Topic: ${topicName}
+
+CRITICAL RULES \u2014 YOU MUST FOLLOW THESE:
+- ONLY report on events, companies, people, and developments that appear in the Google Search results you receive
+- NEVER fabricate or invent company names, product names, people, organizations, or events
+- NEVER create fictional entities even if they sound plausible
+- Every specific claim (names, funding amounts, percentages, dates, statistics) MUST come directly from the search results
+- If the search results contain limited recent news for this topic, be honest: write "Recent coverage was limited" and provide only what the search actually returned
+- Do NOT fill gaps in coverage with invented information
+- Do NOT attribute information to sources that don\u2019t contain it
+- Every company, organization, and person you mention MUST appear in the search results
+
+FORMAT \u2014 write exactly this:
+## ${topicName}: [Specific newsworthy headline taken directly from search results]
+- First key development from the search results. What happened (with specific dates, names, numbers from the sources), why it matters, and what to watch. 2-3 sentences.
+- Second key development from the search results. Same depth. 2-3 sentences.
+- Third key development if the search results contain one. 2-3 sentences.
+**The Bottom Line:** 1-2 sentences connecting the dots \u2014 the bigger picture for a busy professional.
+
+If search results are thin, write fewer bullets rather than inventing content. One well-sourced bullet is better than three fabricated ones.
+
+Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but accurate \u2014 every fact must trace back to a search result.`;
+
   let responseText = "";
   let chunks: SourceLink[] = [];
   let supports: GroundingSupport[] = [];
@@ -132,10 +214,11 @@ Aim for 600-800 words total. Be substantive, not terse. The reader should feel g
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
+        temperature: 0.2, // Fix C: low temperature for factual accuracy
       },
     });
 
-    // Extract text from response (response.text can throw on filtered content)
+    // Extract text (response.text can throw on filtered content)
     try {
       responseText = response.text ?? "";
     } catch {
@@ -146,12 +229,14 @@ Aim for 600-800 words total. Be substantive, not terse. The reader should feel g
 
     if (!responseText) {
       if (attempt < MAX_ATTEMPTS) {
-        console.warn(`[gemini] Attempt ${attempt}: empty response, retrying...`);
+        console.warn(`[gemini] Topic "${topicName}" attempt ${attempt}: empty response, retrying...`);
         continue;
       }
-      throw new Error(
-        "Gemini returned no content — response may have been filtered"
-      );
+      return {
+        topic: buildLimitedCoverageTopic(topicName),
+        sources: [],
+        grounded: false,
+      };
     }
 
     // Extract grounding metadata
@@ -168,116 +253,136 @@ Aim for 600-800 words total. Be substantive, not terse. The reader should feel g
     supports = (groundingMetadata as any)?.groundingSupports ?? [];
 
     console.log(
-      `[gemini] Attempt ${attempt}: ${chunks.length} chunks, ${supports.length} supports`
+      `[gemini] Topic "${topicName}" attempt ${attempt}: ${chunks.length} chunks, ${supports.length} supports`
     );
 
-    // If we got grounding data, use this response
     if (chunks.length > 0) {
       grounded = true;
       break;
     }
 
-    // If no grounding, retry with a delay
     if (attempt < MAX_ATTEMPTS) {
       console.warn(
-        `[gemini] Attempt ${attempt}: 0 grounding chunks — retrying for better grounding...`
+        `[gemini] Topic "${topicName}" attempt ${attempt}: 0 chunks, retrying...`
       );
     }
   }
 
-  // If grounding failed after all retries, generate a fallback "overview" briefing.
-  // This is an honest, evergreen summary — no fake dates, no breaking news framing.
+  // No grounding after retries — return limited coverage
   if (!grounded) {
-    console.warn(
-      `[gemini] ${MAX_ATTEMPTS} attempts returned 0 grounding chunks. Generating overview fallback...`
-    );
+    console.warn(`[gemini] Topic "${topicName}": no grounding after ${MAX_ATTEMPTS} attempts`);
+    return {
+      topic: buildLimitedCoverageTopic(topicName),
+      sources: [],
+      grounded: false,
+    };
+  }
 
-    const overviewPrompt = `You are Brain Brief. We couldn't find breaking news for these topics today. Instead, provide a substantive overview of where things currently stand — the kind of briefing a busy professional would appreciate reading with their morning coffee.
+  // Parse response into TopicBriefing
+  const parsed = tryParseStructuredFromMarkdown(responseText, "");
+  let topic: TopicBriefing;
 
-${name ? `Reader's name: ${name}` : `Reader: (no name provided — just say "${timeGreeting}!")`}
-Topics:
-${topicList}
+  if (parsed && parsed.topics.length > 0) {
+    topic = parsed.topics[0];
+    topic.name = topicName; // Ensure consistent topic name
+  } else {
+    // Couldn't parse structured data — use raw text as fallback
+    const cleanText = responseText.replace(/^##.*\n?/m, "").trim();
+    topic = {
+      name: topicName,
+      headline: topicName,
+      bullets: cleanText ? [cleanText.substring(0, 500)] : ["No details available."],
+      bottomLine: "",
+    };
+  }
 
-RULES:
-- Do NOT claim any specific dates, breaking events, or "just happened" developments.
-- Summarize the current landscape: key players, recent trends, and what to watch.
-- Each bullet should be 2-3 sentences with real depth. Give context, not just surface-level observations.
-- Write in a confident, editorial voice. The reader should feel genuinely informed.
+  // Fix D: Validate grounding — strip bullets with zero grounding supports
+  if (supports.length > 0) {
+    topic = validateAndStripUngrounded(topic, responseText, chunks, supports);
+    const sourceCounts = (topic.bulletSources ?? []).map((bs) => bs.length);
+    console.log(`[gemini] Topic "${topicName}" after validation: ${topic.bullets.length} bullets, sources: [${sourceCounts.join(",")}]`);
+  } else if (chunks.length > 0) {
+    // Have chunks but no supports — use keyword matching as fallback
+    const tempData: BriefingData = { greeting: "", topics: [topic] };
+    matchSourcesToTopics(chunks, tempData);
+    topic = tempData.topics[0];
+    console.log(`[gemini] Topic "${topicName}": keyword-matched sources (no supports available)`);
+  }
 
-FOR EACH TOPIC write exactly this format:
-## [Topic Name]: [Concise summary of where things stand]
-- First key insight about the current landscape. What's happening, why it matters, and what to watch for. 2-3 sentences.
-- Second key trend or development to watch. Same depth. 2-3 sentences.
-- Third point if warranted. 2-3 sentences.
-**The Bottom Line:** 1-2 sentences on what matters most right now and why.
+  return { topic, sources: chunks, grounded: true };
+}
 
-Aim for 600-800 words total. Be substantive — the reader should feel like they learned something, not like they scanned a list.`;
+// ---------- Grounding Validation (Fix D) ----------
 
-    try {
-      const overviewResponse = await getGeminiClient().models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: overviewPrompt,
-      });
+/**
+ * Validate each bullet's grounding coverage and strip ungrounded bullets.
+ * If a bullet has zero overlapping groundingSupports, it's likely hallucinated
+ * and gets removed. Also maps per-bullet source citations.
+ */
+function validateAndStripUngrounded(
+  topic: TopicBriefing,
+  responseText: string,
+  chunks: SourceLink[],
+  supports: GroundingSupport[]
+): TopicBriefing {
+  const textLower = responseText.toLowerCase();
+  const validBullets: string[] = [];
+  const validBulletSources: SourceLink[][] = [];
 
-      try {
-        responseText = overviewResponse.text ?? "";
-      } catch {
-        const parts = overviewResponse.candidates?.[0]?.content?.parts;
-        responseText =
-          parts?.map((p) => ("text" in p ? p.text : "")).join("") ?? "";
-      }
+  for (const bullet of topic.bullets) {
+    // Find this bullet's position in the response text
+    const bulletLower = bullet.toLowerCase().substring(0, 60);
+    let bulletStart = textLower.indexOf(bulletLower);
 
-      console.log(`[gemini] Overview fallback generated: ${responseText.length} chars`);
-    } catch (err) {
-      console.error("[gemini] Overview fallback failed:", err);
-      // Keep the original ungrounded response as a last resort
+    if (bulletStart === -1) {
+      // Try shorter prefix
+      const shortPrefix = bullet.toLowerCase().substring(0, 30);
+      bulletStart = textLower.indexOf(shortPrefix);
     }
+
+    if (bulletStart === -1) {
+      // Bullet not found in response at all — likely a parsing artifact, skip
+      console.log(`[gemini] Stripping bullet (not found in response): "${bullet.substring(0, 60)}..."`);
+      continue;
+    }
+
+    const bulletEnd = bulletStart + bullet.length + 20; // slack for minor text differences
+    const matched = collectSourcesForRange(bulletStart, bulletEnd, chunks, supports);
+    const dedupedSources = dedup(matched);
+
+    if (dedupedSources.length === 0) {
+      // Zero grounding supports — likely hallucinated, strip it
+      console.log(`[gemini] Stripping ungrounded bullet for "${topic.name}": "${bullet.substring(0, 60)}..."`);
+      continue;
+    }
+
+    validBullets.push(bullet);
+    validBulletSources.push(dedupedSources);
   }
 
-  // Parse plain text response into structured data
-  let structured = tryParseStructuredFromMarkdown(responseText, greeting);
-
-  // Fallback: try parsing as JSON in case Gemini ignored the plain text instruction
-  if (!structured) {
-    structured = tryParseJson(responseText, greeting);
+  // If all bullets were stripped, return limited coverage fallback
+  if (validBullets.length === 0) {
+    console.warn(`[gemini] All bullets stripped for "${topic.name}" \u2014 using limited coverage fallback`);
+    return buildLimitedCoverageTopic(topic.name);
   }
-
-  if (!structured) {
-    console.warn("[gemini] Could not parse structured data from response");
-  }
-
-  // Map grounding supports to per-bullet sources (only when grounded)
-  if (grounded && structured && chunks.length > 0 && supports.length > 0) {
-    mapSupportsToStructured(responseText, structured, chunks, supports);
-    const bulletSourceCounts = structured.topics.map(
-      (t) => `${t.name}: ${(t.bulletSources ?? []).map((bs) => bs.length).join(",")}`
-    );
-    console.log(`[gemini] Per-bullet sources: ${bulletSourceCounts.join(" | ")}`);
-  } else if (grounded && structured && chunks.length > 0) {
-    // Fallback: use keyword matching when no groundingSupports available
-    matchSourcesToTopics(chunks, structured);
-    console.log(
-      `[gemini] Keyword-matched ${chunks.length} sources (no groundingSupports)`
-    );
-  }
-
-  // Generate HTML from structured data, or convert markdown to HTML
-  const contentHtml = structured
-    ? generateHtmlFromStructured(structured)
-    : convertMarkdownToHtml(responseText);
-
-  // Generate plain text
-  const contentText = structured
-    ? generateTextFromStructured(structured)
-    : stripMarkdownToText(responseText);
 
   return {
-    contentHtml,
-    contentText,
-    topicsCovered: topics,
-    sources: chunks,
-    structured,
-    grounded,
+    ...topic,
+    bullets: validBullets,
+    bulletSources: validBulletSources,
+  };
+}
+
+/** Build a "limited coverage" fallback for a topic with no verified news */
+function buildLimitedCoverageTopic(topicName: string): TopicBriefing {
+  return {
+    name: topicName,
+    headline: `${topicName}: Limited Recent Coverage`,
+    bullets: [
+      "No significant verified developments were found in search results for the past 24\u201348 hours. This topic will be covered in depth when breaking news emerges.",
+    ],
+    bottomLine: "",
+    bulletSources: [[]],
   };
 }
 
@@ -291,53 +396,6 @@ interface GroundingSupport {
   };
   groundingChunkIndices?: number[];
   confidenceScores?: number[];
-}
-
-// ---------- Grounding → Per-Bullet Mapping ----------
-
-/**
- * Map groundingSupports to individual bullets in the structured data.
- *
- * Strategy: each groundingSupport covers a character range in the response.
- * We find where each bullet's text appears in the response, then collect
- * the source chunks whose support segments overlap with that bullet.
- */
-function mapSupportsToStructured(
-  responseText: string,
-  data: BriefingData,
-  chunks: SourceLink[],
-  supports: GroundingSupport[]
-): void {
-  const textLower = responseText.toLowerCase();
-
-  for (const topic of data.topics) {
-    topic.bulletSources = [];
-
-    for (const bullet of topic.bullets) {
-      // Find this bullet's position in the response text
-      const bulletLower = bullet.toLowerCase().substring(0, 60); // Use prefix for matching
-      const bulletStart = textLower.indexOf(bulletLower);
-
-      if (bulletStart === -1) {
-        // Bullet not found verbatim — try fuzzy: match first 30 chars
-        const shortPrefix = bullet.toLowerCase().substring(0, 30);
-        const altStart = textLower.indexOf(shortPrefix);
-        if (altStart === -1) {
-          topic.bulletSources.push([]);
-          continue;
-        }
-        // Use the alt match position
-        const bulletEnd = altStart + bullet.length + 20; // allow some slack
-        const matched = collectSourcesForRange(altStart, bulletEnd, chunks, supports);
-        topic.bulletSources.push(dedup(matched));
-        continue;
-      }
-
-      const bulletEnd = bulletStart + bullet.length + 20; // allow some slack
-      const matched = collectSourcesForRange(bulletStart, bulletEnd, chunks, supports);
-      topic.bulletSources.push(dedup(matched));
-    }
-  }
 }
 
 /**
@@ -662,7 +720,7 @@ function generateHtmlFromStructured(data: BriefingData): string {
     }
   });
 
-  html += `<p>Stay informed. Stay sharp. — Brain Brief</p>`;
+  html += `<p>Stay informed. Stay sharp. \u2014 Brain Brief</p>`;
   return html;
 }
 
@@ -679,9 +737,9 @@ function generateTextFromStructured(data: BriefingData): string {
       const bulletSourceList = topic.bulletSources?.[bi] ?? [];
       if (bulletSourceList.length > 0) {
         const citations = bulletSourceList.map((s) => cleanDomain(s.title)).join(", ");
-        text += `  • ${bullet} [${citations}]\n`;
+        text += `  \u2022 ${bullet} [${citations}]\n`;
       } else {
-        text += `  • ${bullet}\n`;
+        text += `  \u2022 ${bullet}\n`;
       }
     });
     if (topic.bottomLine) {
@@ -691,12 +749,12 @@ function generateTextFromStructured(data: BriefingData): string {
     if (!topic.bulletSources && topic.sources && topic.sources.length > 0) {
       text += `\nRead more:\n`;
       topic.sources.forEach((s) => {
-        text += `  → ${cleanDomain(s.title)}: ${s.uri}\n`;
+        text += `  \u2192 ${cleanDomain(s.title)}: ${s.uri}\n`;
       });
     }
   });
 
-  text += `\nStay informed. Stay sharp. — Brain Brief`;
+  text += `\nStay informed. Stay sharp. \u2014 Brain Brief`;
   return text;
 }
 
@@ -731,8 +789,8 @@ function stripMarkdownToText(markdown: string): string {
     .replace(/\*([^*]+)\*/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/^[-*]\s+/gm, "  • ")
-    .replace(/^\d+\.\s+/gm, "  • ")
+    .replace(/^[-*]\s+/gm, "  \u2022 ")
+    .replace(/^\d+\.\s+/gm, "  \u2022 ")
     .replace(/---+/g, "---")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
@@ -818,6 +876,7 @@ Do NOT say "Here is a teaser" or include any markdown fences or quotes. JUST the
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
+        temperature: 0.2,
       },
     });
 

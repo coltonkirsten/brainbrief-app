@@ -61,6 +61,7 @@ export const metadata: Metadata = {
       "The antidote to information overload. Get smarter about the topics you care about.",
     images: ["https://www.brainbrief.app/og-image.png"],
   },
+  manifest: "/manifest.json",
   robots: {
     index: true,
     follow: true,

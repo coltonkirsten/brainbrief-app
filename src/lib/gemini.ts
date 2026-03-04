@@ -75,10 +75,116 @@ function getTimeGreeting(timezone?: string | null): string {
   }
 }
 
+/**
+ * Extract per-topic coverage summaries from previous briefing texts.
+ * Returns a map of topic name → condensed summary of what was covered.
+ * Used to prevent Gemini from repeating the same stories across days.
+ */
+export function extractPreviousCoverage(
+  briefings: { created_at: string; content_text: string; topics_covered?: string[] | null }[],
+  topicNames: string[]
+): Map<string, string[]> {
+  const coverageByTopic = new Map<string, string[]>();
+
+  for (const briefing of briefings) {
+    const dateStr = new Date(briefing.created_at).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+
+    const text = briefing.content_text || "";
+
+    // Split text into sections by "---" separator
+    const sections = text.split(/^---$/m);
+
+    // If we have topics_covered metadata, assign sections to topics by order
+    const orderedTopics = briefing.topics_covered ?? [];
+
+    for (let sIdx = 0; sIdx < sections.length; sIdx++) {
+      const section = sections[sIdx];
+      const lines = section.split("\n").filter((l) => l.trim());
+      if (lines.length === 0) continue;
+
+      // First try: match topic name in section text
+      const sectionText = section.toLowerCase();
+      let matchedTopic = topicNames.find((t) =>
+        sectionText.includes(t.toLowerCase())
+      );
+
+      // Fallback: use topics_covered order to assign unmatched sections
+      // (handles cases like "Geopolitics" where the headline doesn't
+      // contain the topic name, e.g. "Middle East Conflict Escalates...")
+      if (!matchedTopic && orderedTopics.length > 0) {
+        // Skip greeting/intro sections (no bullets)
+        const hasBullets = lines.some((l) => /^\s*[•\-*]/.test(l));
+        if (hasBullets) {
+          // Find the next unassigned topic from the order
+          for (const ot of orderedTopics) {
+            if (
+              topicNames.some((t) => t.toLowerCase() === ot.toLowerCase()) &&
+              !coverageByTopic.has(ot)
+            ) {
+              matchedTopic = ot;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!matchedTopic) continue;
+
+      // Extract headline (first non-empty, non-bullet line)
+      const headline = lines.find(
+        (l) =>
+          l.trim().length > 5 &&
+          !l.trim().startsWith("•") &&
+          !l.trim().startsWith("-") &&
+          !l.trim().startsWith("*") &&
+          !/the bottom line/i.test(l) &&
+          !/stay informed/i.test(l)
+      );
+
+      // Extract bullet summaries (first 100 chars each)
+      const bullets: string[] = [];
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (
+          (trimmed.startsWith("•") ||
+            trimmed.startsWith("-") ||
+            trimmed.startsWith("*")) &&
+          trimmed.length > 15
+        ) {
+          const cleaned = trimmed
+            .replace(/^[•\-*]\s*/, "")
+            .replace(/\[.*?\]/g, "")
+            .trim();
+          if (cleaned.length > 10) {
+            bullets.push(cleaned.substring(0, 120));
+          }
+        }
+      }
+
+      if (headline || bullets.length > 0) {
+        const parts: string[] = [];
+        if (headline) parts.push(headline.trim().substring(0, 120));
+        if (bullets.length > 0) parts.push(bullets.join(" | "));
+        const summary = `[${dateStr}]: ${parts.join(" — ")}`;
+
+        const existing = coverageByTopic.get(matchedTopic) || [];
+        existing.push(summary);
+        coverageByTopic.set(matchedTopic, existing);
+      }
+    }
+  }
+
+  return coverageByTopic;
+}
+
 export async function generateBriefing(
   topics: string[],
   displayName?: string | null,
-  timezone?: string | null
+  timezone?: string | null,
+  previousBriefings?: { created_at: string; content_text: string }[]
 ): Promise<BriefingResult> {
   const name = displayName?.trim() || null;
   const timeGreeting = getTimeGreeting(timezone);
@@ -98,12 +204,31 @@ export async function generateBriefing(
     t.replace(/[\x00-\x1f\x7f]/g, "").trim().substring(0, 100)
   );
 
+  // Extract per-topic previous coverage for dedup
+  const coverageMap = previousBriefings?.length
+    ? extractPreviousCoverage(previousBriefings, sanitizedTopics)
+    : new Map<string, string[]>();
+
+  if (coverageMap.size > 0) {
+    console.log(`[gemini] Previous coverage found for ${coverageMap.size} topics`);
+  }
+
   // Fix A: Generate each topic in parallel with separate API calls.
   // Each topic gets its own focused Google Search queries, preventing
   // source recycling and improving coverage for niche topics.
   console.log(`[gemini] Generating ${sanitizedTopics.length} topics in parallel...`);
   const results = await Promise.allSettled(
-    sanitizedTopics.map((topic) => generateSingleTopic(topic, today, timezone))
+    sanitizedTopics.map((topic) => {
+      const previousCoverage = coverageMap.get(topic);
+      // Cap previous coverage at ~1500 chars to avoid bloating the prompt
+      let coverageContext: string | undefined;
+      if (previousCoverage?.length) {
+        let text = previousCoverage.join("\n");
+        if (text.length > 1500) text = text.substring(0, 1500) + "\n...";
+        coverageContext = text;
+      }
+      return generateSingleTopic(topic, today, timezone, coverageContext);
+    })
   );
 
   // Collect results
@@ -171,9 +296,26 @@ interface SingleTopicResult {
 async function generateSingleTopic(
   topicName: string,
   today: string,
-  timezone?: string | null
+  timezone?: string | null,
+  previousCoverage?: string
 ): Promise<SingleTopicResult> {
   const MAX_ATTEMPTS = 2;
+
+  // Build dedup context block if we have previous coverage for this topic
+  const dedupBlock = previousCoverage
+    ? `
+PREVIOUS COVERAGE — These stories were already sent to this user in recent briefings:
+---
+${previousCoverage}
+---
+
+DEDUP RULES:
+- Do NOT repeat stories from previous briefings unless there are significant NEW developments since they were last covered
+- If a previously covered story has meaningful new developments, frame it as an UPDATE: mention what changed since the last coverage
+- Prioritize stories the user has NOT seen yet
+- If all recent news for this topic has already been covered with no new developments, write fewer bullets and note that no major new developments have occurred
+`
+    : "";
 
   // Per-topic prompt with strong anti-hallucination rules (Fix B)
   const prompt = `You are Brain Brief \u2014 a sharp, well-read intelligence analyst delivering a focused briefing on one topic.
@@ -181,7 +323,7 @@ async function generateSingleTopic(
 Today is ${today} (${timezone || "America/New_York"} timezone). Search the web for the latest news about this specific topic from the past 24-48 hours.
 
 Topic: ${topicName}
-
+${dedupBlock}
 CRITICAL RULES \u2014 YOU MUST FOLLOW THESE:
 - ONLY report on events, companies, people, and developments that appear in the Google Search results you receive
 - NEVER fabricate or invent company names, product names, people, organizations, or events

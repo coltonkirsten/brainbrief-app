@@ -116,12 +116,23 @@ export async function POST() {
       );
     }
 
-    // Generate briefing with Gemini + grounding
-    console.log(`[generate] Starting Gemini for user ${user.id}, topics: ${topicNames.join(", ")}`);
+    // Fetch previous 7 days of briefings for dedup context
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: previousBriefings } = await adminDb
+      .from("briefings")
+      .select("created_at, content_text, topics_covered")
+      .eq("user_id", user.id)
+      .gte("created_at", sevenDaysAgo)
+      .order("created_at", { ascending: false })
+      .limit(7);
+
+    // Generate briefing with Gemini + grounding + dedup context
+    console.log(`[generate] Starting Gemini for user ${user.id}, topics: ${topicNames.join(", ")}, previous: ${previousBriefings?.length ?? 0} briefings`);
     const briefing = await generateBriefing(
       topicNames,
       profile?.display_name,
-      profile?.timezone
+      profile?.timezone,
+      previousBriefings ?? undefined
     );
 
     if (!briefing.contentHtml) {

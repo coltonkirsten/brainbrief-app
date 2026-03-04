@@ -212,11 +212,22 @@ export async function GET(request: Request) {
         `[cron] Generating briefing for ${profile.email} (${topicNames.length} topics: ${topicNames.join(", ")})`
       );
 
-      // Generate briefing with Gemini + grounding
+      // Fetch previous 7 days of briefings for dedup context
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: previousBriefings } = await supabase
+        .from("briefings")
+        .select("created_at, content_text, topics_covered")
+        .eq("user_id", userId)
+        .gte("created_at", sevenDaysAgo)
+        .order("created_at", { ascending: false })
+        .limit(7);
+
+      // Generate briefing with Gemini + grounding + dedup context
       const briefing = await generateBriefing(
         topicNames,
         profile.display_name,
-        profile.timezone
+        profile.timezone,
+        previousBriefings ?? undefined
       );
 
       // Store in database

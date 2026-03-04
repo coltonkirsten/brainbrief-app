@@ -150,6 +150,9 @@ function SignupForm() {
             <span className="font-medium text-foreground">{email}</span>. Click
             it to activate your account.
           </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Can&apos;t find it? Check your spam or junk folder.
+          </p>
           <Link
             href="/login"
             className="mt-6 inline-block text-sm font-medium text-primary hover:text-primary-hover transition-colors"

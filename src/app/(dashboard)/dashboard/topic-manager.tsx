@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Pencil, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface Topic {
@@ -211,9 +212,11 @@ export default function TopicManager({
                 <span className="flex-1 font-medium truncate text-primary">{topic.name}</span>
                 <button
                   onClick={() => startEditing(topic)}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+                  aria-label={`Edit ${topic.name}`}
+                  title="Edit"
                 >
-                  Edit
+                  <Pencil className="w-4 h-4" />
                 </button>
                 {confirmDeleteId === topic.id ? (
                   <span className="flex items-center gap-1.5">
@@ -226,7 +229,7 @@ export default function TopicManager({
                       disabled={deletingId === topic.id}
                       className="text-sm font-bold text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
                     >
-                      {deletingId === topic.id ? "Deleting..." : "Yes"}
+                      {deletingId === topic.id ? "..." : "Yes"}
                     </button>
                     <button
                       onClick={() => setConfirmDeleteId(null)}
@@ -238,9 +241,11 @@ export default function TopicManager({
                 ) : (
                   <button
                     onClick={() => setConfirmDeleteId(topic.id)}
-                    className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    aria-label={`Delete ${topic.name}`}
+                    title="Delete"
                   >
-                    Delete
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </>

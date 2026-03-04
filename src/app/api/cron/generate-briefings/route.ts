@@ -203,34 +203,9 @@ export async function GET(request: Request) {
       continue;
     }
 
-    // Guard: skip if user already received a briefing today IN THEIR TIMEZONE
-    // (prevents double-sends from DST transitions or mid-day preference changes).
-    // Must use the user's local date — NOT UTC — because a briefing generated
-    // at 11 PM PST (March 3 local) is stored as March 4 UTC, and we don't
-    // want it to block the March 4 morning cron in that user's timezone.
-    const userTimezone = profile.timezone ?? "America/New_York";
-    const todayLocal = new Date().toLocaleDateString("en-CA", { timeZone: userTimezone });
-    // "en-CA" gives YYYY-MM-DD format, e.g. "2026-03-05"
-
-    const cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-    const { data: recentBriefings } = await supabase
-      .from("briefings")
-      .select("id, created_at")
-      .eq("user_id", userId)
-      .gte("created_at", cutoff48h);
-
-    const alreadyBriefedToday = recentBriefings?.some((b) => {
-      const briefingDate = new Date(b.created_at).toLocaleDateString("en-CA", {
-        timeZone: userTimezone,
-      });
-      return briefingDate === todayLocal;
-    }) ?? false;
-
-    if (alreadyBriefedToday) {
-      console.log(`[cron] Skipping ${profile.email} — already briefed today (${todayLocal} in ${userTimezone})`);
-      results.push({ userId, success: true });
-      continue;
-    }
+    // No duplicate guard — scheduled briefings always send, even if the user
+    // already generated an on-demand briefing earlier that day. The scheduled
+    // email is part of the daily cadence users signed up for.
 
     try {
       console.log(

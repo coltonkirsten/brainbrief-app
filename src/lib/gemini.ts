@@ -215,7 +215,7 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
       config: {
         tools: [{ googleSearch: {} }],
         temperature: 0.2, // Fix C: low temperature for factual accuracy
-        maxOutputTokens: 2048, // Prevent truncation on longer topics
+        maxOutputTokens: 8192, // Generous limit — never truncate
       },
     });
 

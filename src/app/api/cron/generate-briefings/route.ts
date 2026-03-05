@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
-import { sendBriefingEmail } from "@/lib/email";
+import { sendBriefingEmail, generateSubjectLine } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
 import { processLifecycleEmails } from "@/lib/lifecycle-emails";
 
@@ -231,6 +231,7 @@ export async function GET(request: Request) {
       );
 
       // Store in database
+      const subjectLine = generateSubjectLine(briefing.structured);
       const { error: insertError } = await supabase
         .from("briefings")
         .insert({
@@ -239,6 +240,7 @@ export async function GET(request: Request) {
           content_text: briefing.contentText,
           topics_covered: briefing.topicsCovered,
           grounded: briefing.grounded,
+          subject_line: subjectLine,
         });
 
       if (insertError) {
@@ -257,15 +259,10 @@ export async function GET(request: Request) {
       // Always send email — grounded briefings get citations, ungrounded get
       // an honest "overview" (no fake dates). Users signed up for daily briefings.
       let emailSent = false;
-      const today = new Date().toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-      });
 
       const emailResult = await sendBriefingEmail({
         to: profile.email,
-        subject: `Your Brain Brief — ${today}`,
+        subject: subjectLine,
         html: briefing.contentHtml,
         text: briefing.contentText,
         structured: briefing.structured,

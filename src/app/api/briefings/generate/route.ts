@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
-import { sendBriefingEmail } from "@/lib/email";
+import { sendBriefingEmail, generateSubjectLine } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
 
 // Allow up to 60s for Gemini generation + email delivery
@@ -144,6 +144,7 @@ export async function POST() {
     }
 
     // Store in database (using admin client to bypass RLS)
+    const subjectLine = generateSubjectLine(briefing.structured);
     const { error: insertError } = await adminDb
       .from("briefings")
       .insert({
@@ -152,6 +153,7 @@ export async function POST() {
         content_text: briefing.contentText,
         topics_covered: briefing.topicsCovered,
         grounded: briefing.grounded,
+        subject_line: subjectLine,
       });
 
     if (insertError) {
@@ -167,15 +169,9 @@ export async function POST() {
     let emailSent = false;
     const emailAddress = profile?.email || user.email;
     if (emailAddress) {
-      const today = new Date().toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-      });
-
       const emailResult = await sendBriefingEmail({
         to: emailAddress,
-        subject: `Your Brain Brief — ${today}`,
+        subject: subjectLine,
         html: briefing.contentHtml,
         text: briefing.contentText,
         structured: briefing.structured,

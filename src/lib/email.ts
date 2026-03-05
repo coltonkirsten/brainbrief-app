@@ -140,6 +140,51 @@ export async function sendStandaloneEmail(params: {
 }
 
 // ---------------------------------------------------------------------------
+// Dynamic subject line generation
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate a curiosity-inducing email subject line from the briefing content.
+ * Uses the first topic's headline + a count of remaining topics.
+ *
+ * Examples:
+ * - "SpaceX Just Broke a Launch Record + 2 more"
+ * - "The Study That Could Change Longevity Research"
+ * - "AI Funding Shifts as Major Players Restructure + 1 more"
+ */
+export function generateSubjectLine(structured?: BriefingData): string {
+  if (!structured?.topics?.length) {
+    const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric" });
+    return `Your Brain Brief — ${today}`;
+  }
+
+  const topics = structured.topics;
+  const firstHeadline = topics[0].headline;
+  const otherCount = topics.length - 1;
+
+  if (otherCount === 0) {
+    // Single topic — just the headline, truncated to 60 chars
+    if (firstHeadline.length <= 60) return firstHeadline;
+    const truncated = firstHeadline.substring(0, 57);
+    const lastSpace = truncated.lastIndexOf(" ");
+    return (lastSpace > 25 ? truncated.substring(0, lastSpace) : truncated) + "...";
+  }
+
+  // Multiple topics — headline + " + N more"
+  const suffix = ` + ${otherCount} more`;
+  const maxLen = 60 - suffix.length;
+
+  let headline = firstHeadline;
+  if (headline.length > maxLen) {
+    const truncated = headline.substring(0, maxLen - 3);
+    const lastSpace = truncated.lastIndexOf(" ");
+    headline = (lastSpace > 20 ? truncated.substring(0, lastSpace) : truncated) + "...";
+  }
+
+  return headline + suffix;
+}
+
+// ---------------------------------------------------------------------------
 // Structured email template — Chelsea's "Premium Editorial" design
 // ---------------------------------------------------------------------------
 

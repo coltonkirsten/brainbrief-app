@@ -342,12 +342,17 @@ CRITICAL RULES \u2014 YOU MUST FOLLOW THESE:
 - Do NOT attribute information to sources that don\u2019t contain it
 - Every company, organization, and person you mention MUST appear in the search results
 
-FORMAT \u2014 write exactly this:
+FORMAT \u2014 write exactly this structure:
 ## ${topicName}: [Specific newsworthy headline taken directly from search results]
 - First key development from the search results. What happened (with specific dates, names, numbers from the sources), why it matters, and what to watch. 2-3 sentences.
 - Second key development from the search results. Same depth. 2-3 sentences.
 - Third key development if the search results contain one. 2-3 sentences.
 **The Bottom Line:** 1-2 sentences connecting the dots \u2014 the bigger picture for a busy professional.
+
+FORMAT REQUIREMENT \u2014 CRITICAL:
+- Each bullet point MUST start with a dash and a space ("- ") on its own line.
+- Do NOT write plain paragraphs. Every piece of information must be a bullet point starting with "- ".
+- Do NOT use asterisks (*) for bullets. Use dashes (-) only.
 
 ENGAGEMENT RULE:
 - When possible, include one surprising, counterintuitive, or lesser-known detail in your coverage. This could be an unexpected statistic, a non-obvious implication, or a connection most readers would miss.
@@ -504,10 +509,17 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
   // Fix truncated bullets (Gemini sometimes cuts off mid-sentence)
   topic.bullets = topic.bullets.map(trimToLastSentence);
 
-  // Ensure Bottom Line exists — generate a simple fallback if missing
+  // If Bottom Line is missing but we have real content, leave it empty rather
+  // than inserting a generic "stay tuned" placeholder. The email/dashboard
+  // templates already handle missing bottomLine gracefully.
   if (!topic.bottomLine || topic.bottomLine.trim().length < 10) {
-    console.log(`[BRIEFING][${topicName}] Bottom line missing or too short — using generic fallback`);
-    topic.bottomLine = `Developments in ${topicName} continue to evolve — stay tuned for updates.`;
+    // Only use fallback when we literally have no real bullets (limited coverage)
+    if (topic.bullets.length <= 1 && topic.bullets[0]?.includes("No significant verified")) {
+      topic.bottomLine = "";
+    } else {
+      console.log(`[BRIEFING][${topicName}] Bottom line missing — leaving empty (real content exists)`);
+      topic.bottomLine = "";
+    }
   }
 
   console.log(`[BRIEFING][${topicName}] ✓ DONE — ${topic.bullets.length} final bullets, grounded=true`);
@@ -751,6 +763,38 @@ function tryParseStructuredFromMarkdown(
               .replace(/\*\*/g, "")
               .trim();
             if (bulletText) bullets.push(bulletText);
+          }
+        }
+
+        // Fallback: if no bullet markers found, try extracting paragraphs as bullets.
+        // Gemini sometimes writes plain paragraphs instead of "- " prefixed bullets.
+        if (bullets.length === 0) {
+          // Reconstruct the section text (excluding headline) and split by double-newlines
+          const bodyLines = lines.slice(1); // skip headline
+          const bodyText = bodyLines
+            .map((l) => l.trim())
+            .filter((l) => !/\*?\*?the bottom line\*?\*?:?/i.test(l))
+            .join("\n");
+
+          const paragraphs = bodyText.split(/\n{2,}/);
+          for (const para of paragraphs) {
+            const cleaned = para
+              .replace(/\n/g, " ")
+              .replace(/\*\*/g, "")
+              .replace(/\*/g, "")
+              .trim();
+            // Skip short fragments (<40 chars), headings, and bottom line text
+            if (
+              cleaned.length >= 40 &&
+              !cleaned.startsWith("##") &&
+              !/^the bottom line/i.test(cleaned) &&
+              cleaned !== bottomLine
+            ) {
+              bullets.push(cleaned);
+            }
+          }
+          if (bullets.length > 0) {
+            console.log(`[BRIEFING] Paragraph fallback: extracted ${bullets.length} paragraphs as bullets for "${topicName}"`);
           }
         }
 

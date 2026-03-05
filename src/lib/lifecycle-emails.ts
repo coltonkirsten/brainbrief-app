@@ -94,7 +94,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
           <p style="${bodyStyle}">
             The world didn't stop. Here's a taste of what you missed${ctx.topicNames.length > 0 ? ` on <strong>${escapeHtml(ctx.topicNames[0])}</strong>` : ""}:
           </p>
-          <div style="margin: 0 0 16px 0; padding: 16px; border-left: 3px solid #10B981; background-color: #F8FAFC; border-radius: 0 6px 6px 0;">
+          <div class="lc-teaser" style="margin: 0 0 16px 0; padding: 16px; border-left: 3px solid #10B981; background-color: #F8FAFC; border-radius: 0 6px 6px 0;">
             <p style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-style: italic; color: #334155; line-height: 1.6;">
               ${escapeHtml(ctx.teaser || "Developments continue in your selected topics.")}
             </p>
@@ -314,17 +314,28 @@ function buildStandaloneHtml(params: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
   <title>${escapeHtml(params.headline)}</title>
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
   <style>
+    :root { color-scheme: light dark; }
     @media (prefers-color-scheme: dark) {
       .email-bg { background-color: #0F172A !important; }
       .email-card { background-color: #1E293B !important; border-color: #334155 !important; }
-      .text-heading { color: #F1F5F9 !important; }
+      .lc-header { background-color: #1E293B !important; border-color: #334155 !important; }
+      .lc-body-cell { background-color: #1E293B !important; }
+      .lc-body-cell p { color: #CBD5E1 !important; }
+      .lc-body-cell strong { color: #F8FAFC !important; }
+      .lc-teaser { background-color: #0F172A !important; }
+      .lc-teaser p { color: #CBD5E1 !important; }
+      .lc-footer { background-color: #1A2332 !important; }
+      .text-heading { color: #F8FAFC !important; }
       .text-body { color: #CBD5E1 !important; }
       .text-muted { color: #94A3B8 !important; }
+      .lc-copyright { color: #64748B !important; }
     }
   </style>
 </head>
@@ -339,8 +350,8 @@ function buildStandaloneHtml(params: {
 
           <!-- Header -->
           <tr>
-            <td style="padding: 24px 32px; border-bottom: 1px solid #E2E8F0;">
-              <h1 style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #0F172A; letter-spacing: -0.3px;">
+            <td class="lc-header" style="padding: 24px 32px; background-color: #FFFFFF; border-bottom: 1px solid #E2E8F0;">
+              <h1 class="text-heading" style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #0F172A; letter-spacing: -0.3px;">
                 Brain<span style="color: #10B981;">Brief</span>
               </h1>
             </td>
@@ -348,7 +359,7 @@ function buildStandaloneHtml(params: {
 
           <!-- Body -->
           <tr>
-            <td style="padding: 32px;">
+            <td class="lc-body-cell" style="padding: 32px; background-color: #FFFFFF;">
               <h2 class="text-heading" style="margin: 0 0 20px; font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #0F172A; line-height: 1.4;">
                 ${params.headline}
               </h2>
@@ -384,7 +395,7 @@ function buildStandaloneHtml(params: {
 
           <!-- Footer -->
           <tr>
-            <td style="padding: 20px 32px; background-color: #F8FAFC; text-align: center;">
+            <td class="lc-footer" style="padding: 20px 32px; background-color: #F8FAFC; text-align: center;">
               <p class="text-muted" style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #94A3B8; line-height: 1.6;">
                 You're receiving this because you signed up for Brain Brief.
                 <br>
@@ -397,10 +408,10 @@ function buildStandaloneHtml(params: {
 
         </table>
 
-        <p style="margin: 24px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #CBD5E1; text-align: center;">
+        <p class="lc-copyright" style="margin: 24px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #CBD5E1; text-align: center;">
           &copy; ${year} Brain Brief
         </p>
-        <p style="margin: 8px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 10px; color: #CBD5E1; text-align: center;">
+        <p class="lc-copyright" style="margin: 8px 0 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 10px; color: #CBD5E1; text-align: center;">
           Brain Brief &middot; PO Box 254752 &middot; Sacramento, CA 95825
         </p>
       </td>

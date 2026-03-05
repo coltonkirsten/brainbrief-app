@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
-import { sendBriefingEmail, generateSubjectLine } from "@/lib/email";
+import { sendBriefingEmail, generateSubjectLine, type FeedbackContext } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
 
 // Allow up to 60s for Gemini generation + email delivery
@@ -72,7 +72,7 @@ export async function POST() {
     // Get user's active topics
     const { data: topics, error: topicsError } = await supabase
       .from("topics")
-      .select("name")
+      .select("id, name")
       .eq("user_id", user.id)
       .eq("is_active", true);
 
@@ -92,6 +92,8 @@ export async function POST() {
     }
 
     const topicNames = topics.map((t) => t.name);
+    const topicIdMap: Record<string, string> = {};
+    for (const t of topics) topicIdMap[t.name] = t.id;
 
     // Get user profile for display name and trial status
     const { data: profile } = await supabase
@@ -143,9 +145,9 @@ export async function POST() {
       );
     }
 
-    // Store in database (using admin client to bypass RLS)
+    // Store in database (using admin client to bypass RLS, select id for feedback links)
     const subjectLine = generateSubjectLine(briefing.structured);
-    const { error: insertError } = await adminDb
+    const { data: insertedBriefing, error: insertError } = await adminDb
       .from("briefings")
       .insert({
         user_id: user.id,
@@ -154,7 +156,9 @@ export async function POST() {
         topics_covered: briefing.topicsCovered,
         grounded: briefing.grounded,
         subject_line: subjectLine,
-      });
+      })
+      .select("id")
+      .single();
 
     if (insertError) {
       console.error("[generate] DB insert error:", JSON.stringify(insertError));
@@ -168,6 +172,12 @@ export async function POST() {
     // an honest "overview" (no fake dates). Users signed up for daily briefings.
     let emailSent = false;
     const emailAddress = profile?.email || user.email;
+
+    // Build feedback context for email links
+    const feedbackContext: FeedbackContext | undefined = insertedBriefing?.id
+      ? { userId: user.id, briefingId: insertedBriefing.id, topicIds: topicIdMap }
+      : undefined;
+
     if (emailAddress) {
       const emailResult = await sendBriefingEmail({
         to: emailAddress,
@@ -177,6 +187,7 @@ export async function POST() {
         structured: briefing.structured,
         trialInfo,
         grounded: briefing.grounded,
+        feedbackContext,
       });
 
       if (emailResult.success) {

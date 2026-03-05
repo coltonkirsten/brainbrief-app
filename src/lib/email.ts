@@ -18,6 +18,14 @@
 import type { BriefingData } from "./gemini";
 import type { TrialInfo } from "./trial";
 
+/** Context needed to generate per-topic feedback links in emails */
+export interface FeedbackContext {
+  userId: string;
+  briefingId: string;
+  /** Map of topic name → topic UUID */
+  topicIds: Record<string, string>;
+}
+
 interface SendBriefingEmailParams {
   to: string;
   subject: string;
@@ -27,6 +35,8 @@ interface SendBriefingEmailParams {
   trialInfo?: TrialInfo;
   /** Whether the briefing was grounded with live sources */
   grounded?: boolean;
+  /** Feedback link context — omit to skip feedback links */
+  feedbackContext?: FeedbackContext;
 }
 
 export async function sendBriefingEmail({
@@ -37,6 +47,7 @@ export async function sendBriefingEmail({
   structured,
   trialInfo,
   grounded,
+  feedbackContext,
 }: SendBriefingEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -54,7 +65,7 @@ export async function sendBriefingEmail({
       }
 
       const emailHtml = structured
-        ? buildStructuredEmailTemplate(structured, trialInfo, grounded)
+        ? buildStructuredEmailTemplate(structured, trialInfo, grounded, feedbackContext)
         : buildLegacyEmailTemplate(html);
 
       const { data, error } = await resend.emails.send({
@@ -188,7 +199,7 @@ export function generateSubjectLine(structured?: BriefingData): string {
 // Structured email template — Chelsea's "Premium Editorial" design
 // ---------------------------------------------------------------------------
 
-function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo, grounded?: boolean): string {
+function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo, grounded?: boolean, feedbackCtx?: FeedbackContext): string {
   const year = new Date().getFullYear();
   const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -309,6 +320,23 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
             </tr>`
         : "";
 
+      // Feedback links — "How was this section?" pill buttons
+      const topicIdForFeedback = feedbackCtx?.topicIds[topic.name];
+      const feedbackBlock = feedbackCtx && topicIdForFeedback
+        ? `
+            <tr>
+              <td style="padding: 14px 0 0 0; text-align: center;">
+                <span class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #94A3B8; vertical-align: middle;">How was this?</span>
+                &nbsp;
+                <a href="https://www.brainbrief.app/api/feedback?user=${feedbackCtx.userId}&topic=${topicIdForFeedback}&briefing=${feedbackCtx.briefingId}&rating=too_basic" style="display: inline-block; padding: 3px 10px; border-radius: 12px; border: 1px solid #E2E8F0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #64748B; text-decoration: none; background-color: #F8FAFC; vertical-align: middle;" target="_blank">Too Basic</a>
+                &nbsp;
+                <a href="https://www.brainbrief.app/api/feedback?user=${feedbackCtx.userId}&topic=${topicIdForFeedback}&briefing=${feedbackCtx.briefingId}&rating=spot_on" style="display: inline-block; padding: 3px 10px; border-radius: 12px; border: 1px solid #D1FAE5; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #059669; text-decoration: none; background-color: #F0FDF4; vertical-align: middle;" target="_blank">Spot On</a>
+                &nbsp;
+                <a href="https://www.brainbrief.app/api/feedback?user=${feedbackCtx.userId}&topic=${topicIdForFeedback}&briefing=${feedbackCtx.briefingId}&rating=go_deeper" style="display: inline-block; padding: 3px 10px; border-radius: 12px; border: 1px solid #E2E8F0; font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #64748B; text-decoration: none; background-color: #F8FAFC; vertical-align: middle;" target="_blank">Go Deeper</a>
+              </td>
+            </tr>`
+        : "";
+
       // Legacy source links — only show "Read More" block when no per-bullet sources
       const hasBulletSources = topic.bulletSources?.some((bs) => bs.length > 0);
       const sourceLinks =
@@ -377,6 +405,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
                 </tr>
                 ${bottomLineBlock}
                 ${sourceLinks}
+                ${feedbackBlock}
               </table>
             </td>
           </tr>`;

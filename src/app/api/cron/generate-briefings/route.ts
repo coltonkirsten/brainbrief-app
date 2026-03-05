@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
-import { sendBriefingEmail, generateSubjectLine } from "@/lib/email";
+import { sendBriefingEmail, generateSubjectLine, type FeedbackContext } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
 import { processLifecycleEmails } from "@/lib/lifecycle-emails";
 
@@ -73,7 +73,7 @@ export async function GET(request: Request) {
   // Step 1: Get all users with their active topics
   const { data: topics, error: topicsError } = await supabase
     .from("topics")
-    .select("user_id, name")
+    .select("id, user_id, name")
     .eq("is_active", true);
 
   if (topicsError) {
@@ -93,11 +93,11 @@ export async function GET(request: Request) {
     });
   }
 
-  // Group topics by user
-  const userTopics = new Map<string, string[]>();
+  // Group topics by user (track both name and id for feedback links)
+  const userTopics = new Map<string, { name: string; id: string }[]>();
   for (const topic of topics) {
     const existing = userTopics.get(topic.user_id) || [];
-    existing.push(topic.name);
+    existing.push({ name: topic.name, id: topic.id });
     userTopics.set(topic.user_id, existing);
   }
 
@@ -124,9 +124,9 @@ export async function GET(request: Request) {
 
   // Step 3: Filter users whose preferred delivery hour matches the current
   // hour in their timezone. Each hourly cron run only processes matching users.
-  const usersToProcess: [string, string[]][] = [];
+  const usersToProcess: [string, { name: string; id: string }[]][] = [];
 
-  for (const [userId, topicNames] of userTopics) {
+  for (const [userId, topicInfos] of userTopics) {
     const profile = profileMap.get(userId);
     if (!profile) continue;
 
@@ -145,7 +145,7 @@ export async function GET(request: Request) {
       continue; // Not this user's delivery hour
     }
 
-    usersToProcess.push([userId, topicNames]);
+    usersToProcess.push([userId, topicInfos]);
   }
 
   console.log(
@@ -181,13 +181,17 @@ export async function GET(request: Request) {
     error?: string;
   }[] = [];
 
-  for (const [userId, topicNames] of usersToProcess) {
+  for (const [userId, topicInfos] of usersToProcess) {
     const profile = profileMap.get(userId);
     if (!profile) {
       console.warn(`[cron] No profile found for user ${userId}, skipping`);
       results.push({ userId, success: false, error: "No profile found" });
       continue;
     }
+
+    const topicNames = topicInfos.map((t) => t.name);
+    const topicIdMap: Record<string, string> = {};
+    for (const t of topicInfos) topicIdMap[t.name] = t.id;
 
     // Check trial/subscription status — skip users who can't receive briefings
     const trialInfo = getTrialInfo(profile);
@@ -230,9 +234,9 @@ export async function GET(request: Request) {
         previousBriefings ?? undefined
       );
 
-      // Store in database
+      // Store in database (select id for feedback links)
       const subjectLine = generateSubjectLine(briefing.structured);
-      const { error: insertError } = await supabase
+      const { data: insertedBriefing, error: insertError } = await supabase
         .from("briefings")
         .insert({
           user_id: userId,
@@ -241,7 +245,9 @@ export async function GET(request: Request) {
           topics_covered: briefing.topicsCovered,
           grounded: briefing.grounded,
           subject_line: subjectLine,
-        });
+        })
+        .select("id")
+        .single();
 
       if (insertError) {
         console.error(
@@ -256,6 +262,11 @@ export async function GET(request: Request) {
         continue;
       }
 
+      // Build feedback context for email links
+      const feedbackContext: FeedbackContext | undefined = insertedBriefing?.id
+        ? { userId, briefingId: insertedBriefing.id, topicIds: topicIdMap }
+        : undefined;
+
       // Always send email — grounded briefings get citations, ungrounded get
       // an honest "overview" (no fake dates). Users signed up for daily briefings.
       let emailSent = false;
@@ -268,6 +279,7 @@ export async function GET(request: Request) {
         structured: briefing.structured,
         trialInfo,
         grounded: briefing.grounded,
+        feedbackContext,
       });
 
       if (emailResult.success) {

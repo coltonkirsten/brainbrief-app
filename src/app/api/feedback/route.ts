@@ -1,5 +1,6 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * GET /api/feedback — 1-click feedback from email links
@@ -103,6 +104,106 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: { "Content-Type": "text/html" },
   });
+}
+
+/**
+ * POST /api/feedback — authenticated feedback from dashboard
+ *
+ * Body: { briefingId: string, ratings: { topicId: string, rating: string }[] }
+ * Returns: JSON { success: true }
+ * Idempotent: upserts on (user_id, topic_id, briefing_id)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { briefingId, ratings } = body as {
+      briefingId?: string;
+      ratings?: { topicId: string; rating: string }[];
+    };
+
+    if (!briefingId || !ratings || !Array.isArray(ratings) || ratings.length === 0) {
+      return NextResponse.json({ error: "Missing briefingId or ratings" }, { status: 400 });
+    }
+
+    // Validate rating values
+    const validRatings = ["too_basic", "spot_on", "go_deeper"];
+    for (const r of ratings) {
+      if (!r.topicId || !validRatings.includes(r.rating)) {
+        return NextResponse.json({ error: "Invalid rating data" }, { status: 400 });
+      }
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(briefingId)) {
+      return NextResponse.json({ error: "Invalid briefingId" }, { status: 400 });
+    }
+    for (const r of ratings) {
+      if (!uuidRegex.test(r.topicId)) {
+        return NextResponse.json({ error: "Invalid topicId" }, { status: 400 });
+      }
+    }
+
+    // Use service role client for upserts (RLS on topic_feedback requires auth.uid(),
+    // but we've already verified the user — service role ensures writes succeed)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("[feedback] Missing Supabase env vars");
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+    }
+
+    const adminDb = createServerClient(supabaseUrl, supabaseServiceKey, {
+      cookies: { getAll: () => [], setAll: () => {} },
+    });
+
+    // Verify briefing belongs to this user
+    const { data: briefingCheck } = await adminDb
+      .from("briefings")
+      .select("id")
+      .eq("id", briefingId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!briefingCheck) {
+      return NextResponse.json({ error: "Briefing not found" }, { status: 404 });
+    }
+
+    // Upsert all ratings (idempotent)
+    const upsertData = ratings.map((r) => ({
+      user_id: user.id,
+      topic_id: r.topicId,
+      briefing_id: briefingId,
+      rating: r.rating,
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { error } = await adminDb
+      .from("topic_feedback")
+      .upsert(upsertData, { onConflict: "user_id,topic_id,briefing_id" });
+
+    if (error) {
+      console.error("[feedback] Upsert error:", error);
+      return NextResponse.json({ error: "Failed to save feedback" }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("[feedback] POST error:", message);
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+  }
 }
 
 /**

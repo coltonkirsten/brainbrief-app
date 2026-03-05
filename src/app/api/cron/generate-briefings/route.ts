@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
-import { sendBriefingEmail, generateSubjectLine, type FeedbackContext } from "@/lib/email";
+import { sendBriefingEmail, generateSubjectLine } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
 import { processLifecycleEmails } from "@/lib/lifecycle-emails";
 
@@ -190,8 +190,6 @@ export async function GET(request: Request) {
     }
 
     const topicNames = topicInfos.map((t) => t.name);
-    const topicIdMap: Record<string, string> = {};
-    for (const t of topicInfos) topicIdMap[t.name] = t.id;
 
     // Check trial/subscription status — skip users who can't receive briefings
     const trialInfo = getTrialInfo(profile);
@@ -262,11 +260,6 @@ export async function GET(request: Request) {
         continue;
       }
 
-      // Build feedback context for email links
-      const feedbackContext: FeedbackContext | undefined = insertedBriefing?.id
-        ? { userId, briefingId: insertedBriefing.id, topicIds: topicIdMap }
-        : undefined;
-
       // Always send email — grounded briefings get citations, ungrounded get
       // an honest "overview" (no fake dates). Users signed up for daily briefings.
       let emailSent = false;
@@ -279,7 +272,6 @@ export async function GET(request: Request) {
         structured: briefing.structured,
         trialInfo,
         grounded: briefing.grounded,
-        feedbackContext,
       });
 
       if (emailResult.success) {

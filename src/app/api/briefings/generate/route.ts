@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
-import { sendBriefingEmail, generateSubjectLine, type FeedbackContext } from "@/lib/email";
+import { sendBriefingEmail, generateSubjectLine } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
 
 // Allow up to 60s for Gemini generation + email delivery
@@ -92,8 +92,6 @@ export async function POST() {
     }
 
     const topicNames = topics.map((t) => t.name);
-    const topicIdMap: Record<string, string> = {};
-    for (const t of topics) topicIdMap[t.name] = t.id;
 
     // Get user profile for display name and trial status
     const { data: profile } = await supabase
@@ -173,11 +171,6 @@ export async function POST() {
     let emailSent = false;
     const emailAddress = profile?.email || user.email;
 
-    // Build feedback context for email links
-    const feedbackContext: FeedbackContext | undefined = insertedBriefing?.id
-      ? { userId: user.id, briefingId: insertedBriefing.id, topicIds: topicIdMap }
-      : undefined;
-
     if (emailAddress) {
       const emailResult = await sendBriefingEmail({
         to: emailAddress,
@@ -187,7 +180,6 @@ export async function POST() {
         structured: briefing.structured,
         trialInfo,
         grounded: briefing.grounded,
-        feedbackContext,
       });
 
       if (emailResult.success) {

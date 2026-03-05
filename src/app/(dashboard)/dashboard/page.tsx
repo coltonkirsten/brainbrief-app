@@ -9,6 +9,7 @@ import ManageBillingButton from "./manage-billing-button";
 import DeliveryTimePicker from "./delivery-time-picker";
 import { getTrialInfo } from "@/lib/trial";
 import OnboardingView from "./onboarding-view";
+import BriefingFeedback from "./briefing-feedback";
 
 export const metadata = {
   title: "Dashboard | Brain Brief",
@@ -51,6 +52,29 @@ export default async function DashboardPage() {
   const trialInfo = getTrialInfo(
     profileResult.data ?? { trial_ends_at: null, subscription_status: "trialing" }
   );
+
+  // Fetch existing feedback for latest briefing (if any)
+  let existingFeedback: { topic_id: string; rating: string }[] = [];
+  if (latestBriefing?.id) {
+    const { data: feedbackData } = await supabase
+      .from("topic_feedback")
+      .select("topic_id, rating")
+      .eq("briefing_id", latestBriefing.id)
+      .eq("user_id", user.id);
+    existingFeedback = feedbackData ?? [];
+  }
+
+  // Map topics covered in latest briefing to their IDs for the feedback component
+  const briefingTopicsWithIds = latestBriefing?.topics_covered
+    ? (latestBriefing.topics_covered as string[])
+        .map((topicName: string) => {
+          const match = topics.find(
+            (t) => t.name.toLowerCase() === topicName.toLowerCase()
+          );
+          return match ? { id: match.id, name: match.name } : null;
+        })
+        .filter((t): t is { id: string; name: string } => t !== null)
+    : [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -219,6 +243,7 @@ export default async function DashboardPage() {
               Latest Archive
             </h2>
             {latestBriefing ? (
+              <>
               <div className="bg-card shadow-xl shadow-slate-200/50 border border-border rounded-2xl overflow-hidden">
                 <div className="bg-muted border-b border-border px-8 py-6 flex items-center justify-between">
                   <h2 className="font-serif text-xl font-bold text-primary">Today's Briefing</h2>
@@ -257,6 +282,18 @@ export default async function DashboardPage() {
                   />
                 </div>
               </div>
+
+              {/* Feedback component — appears below the briefing card */}
+              {briefingTopicsWithIds.length > 0 && latestBriefing?.id && (
+                <div className="mt-6">
+                  <BriefingFeedback
+                    briefingId={latestBriefing.id}
+                    topics={briefingTopicsWithIds}
+                    existingFeedback={existingFeedback}
+                  />
+                </div>
+              )}
+              </>
             ) : (
               <div className="bg-card shadow-sm border border-border rounded-2xl p-12 text-center">
                 <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center mx-auto mb-6">

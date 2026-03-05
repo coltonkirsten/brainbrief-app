@@ -341,6 +341,12 @@ FORMAT \u2014 write exactly this:
 - Third key development if the search results contain one. 2-3 sentences.
 **The Bottom Line:** 1-2 sentences connecting the dots \u2014 the bigger picture for a busy professional.
 
+ENGAGEMENT RULE:
+- When possible, include one surprising, counterintuitive, or lesser-known detail in your coverage. This could be an unexpected statistic, a non-obvious implication, or a connection most readers would miss.
+- Weave it naturally into a bullet point \u2014 do NOT create a separate "Did you know?" section or label it as "surprising." It should feel like a discovery the reader makes while reading, not a gimmick.
+- This detail MUST still come from the search results \u2014 never fabricate for the sake of being interesting.
+- If nothing surprising exists in the results, that\u2019s fine. Accuracy always beats interestingness.
+
 If search results are thin, write fewer bullets rather than inventing content. One well-sourced bullet is better than three fabricated ones.
 
 Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but accurate \u2014 every fact must trace back to a search result.`;

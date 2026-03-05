@@ -210,13 +210,13 @@ export async function generateBriefing(
     : new Map<string, string[]>();
 
   if (coverageMap.size > 0) {
-    console.log(`[gemini] Previous coverage found for ${coverageMap.size} topics`);
+    console.log(`[BRIEFING] Previous coverage found for ${coverageMap.size}/${sanitizedTopics.length} topics: ${Array.from(coverageMap.keys()).join(', ')}`);
   }
 
   // Fix A: Generate each topic in parallel with separate API calls.
   // Each topic gets its own focused Google Search queries, preventing
   // source recycling and improving coverage for niche topics.
-  console.log(`[gemini] Generating ${sanitizedTopics.length} topics in parallel...`);
+  console.log(`[BRIEFING] === Starting generation for ${sanitizedTopics.length} topics: ${sanitizedTopics.join(', ')} ===`);
   const results = await Promise.allSettled(
     sanitizedTopics.map((topic) => {
       const previousCoverage = coverageMap.get(topic);
@@ -244,7 +244,7 @@ export async function generateBriefing(
       if (result.value.grounded) anyGrounded = true;
     } else {
       // Topic generation failed entirely — add graceful fallback
-      console.error(`[gemini] Topic "${sanitizedTopics[i]}" failed:`, result.reason);
+      console.error(`[BRIEFING][${sanitizedTopics[i]}] FAILED ENTIRELY:`, result.reason);
       topicBriefings.push({
         name: sanitizedTopics[i],
         headline: sanitizedTopics[i],
@@ -256,6 +256,14 @@ export async function generateBriefing(
       });
     }
   }
+
+  // Summary logging
+  console.log(`[BRIEFING] === GENERATION SUMMARY ===`);
+  for (const tb of topicBriefings) {
+    const isLimited = tb.headline.includes("Limited Recent Coverage");
+    console.log(`[BRIEFING]   ${tb.name}: ${tb.bullets.length} bullets, headline="${tb.headline.substring(0, 80)}", bottomLine=${tb.bottomLine ? (tb.bottomLine.length + ' chars') : 'NONE'}, limited=${isLimited}`);
+  }
+  console.log(`[BRIEFING] Total sources: ${allSources.length}, any grounded: ${anyGrounded}`);
 
   // If ALL topics had limited/no coverage, mark entire briefing as ungrounded
   if (topicBriefings.every((t) => t.headline.includes("Limited Recent Coverage"))) {
@@ -351,12 +359,21 @@ If search results are thin, write fewer bullets rather than inventing content. O
 
 Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but accurate \u2014 every fact must trace back to a search result.`;
 
+  // Diagnostic logging: dedup context
+  if (previousCoverage) {
+    console.log(`[BRIEFING][${topicName}] Dedup context provided (${previousCoverage.length} chars)`);
+    console.log(`[BRIEFING][${topicName}] Dedup preview: ${previousCoverage.substring(0, 200)}...`);
+  } else {
+    console.log(`[BRIEFING][${topicName}] No dedup context (no previous coverage)`);
+  }
+
   let responseText = "";
   let chunks: SourceLink[] = [];
   let supports: GroundingSupport[] = [];
   let grounded = false;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    console.log(`[BRIEFING][${topicName}] Attempt ${attempt}/${MAX_ATTEMPTS} — calling Gemini...`);
     const response = await getGeminiClient().models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
@@ -376,11 +393,14 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
         parts?.map((p) => ("text" in p ? p.text : "")).join("") ?? "";
     }
 
+    console.log(`[BRIEFING][${topicName}] Response text length: ${responseText.length} chars`);
+
     if (!responseText) {
       if (attempt < MAX_ATTEMPTS) {
-        console.warn(`[gemini] Topic "${topicName}" attempt ${attempt}: empty response, retrying...`);
+        console.warn(`[BRIEFING][${topicName}] Attempt ${attempt}: EMPTY response, retrying...`);
         continue;
       }
+      console.error(`[BRIEFING][${topicName}] All attempts returned empty — returning limited coverage`);
       return {
         topic: buildLimitedCoverageTopic(topicName),
         sources: [],
@@ -390,6 +410,10 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
 
     // Extract grounding metadata
     const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const webSearchQueries = (groundingMetadata as any)?.webSearchQueries ?? [];
+
     chunks =
       groundingMetadata?.groundingChunks
         ?.filter((chunk) => chunk.web?.uri)
@@ -401,9 +425,14 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     supports = (groundingMetadata as any)?.groundingSupports ?? [];
 
-    console.log(
-      `[gemini] Topic "${topicName}" attempt ${attempt}: ${chunks.length} chunks, ${supports.length} supports`
-    );
+    // Diagnostic: grounding metadata summary
+    console.log(`[BRIEFING][${topicName}] Grounding: ${webSearchQueries.length} queries, ${chunks.length} chunks, ${supports.length} supports`);
+    if (webSearchQueries.length > 0) {
+      console.log(`[BRIEFING][${topicName}] Search queries: ${JSON.stringify(webSearchQueries)}`);
+    }
+    if (chunks.length > 0) {
+      console.log(`[BRIEFING][${topicName}] Source domains: ${chunks.map(c => c.title).join(', ')}`);
+    }
 
     if (chunks.length > 0) {
       grounded = true;
@@ -412,14 +441,14 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
 
     if (attempt < MAX_ATTEMPTS) {
       console.warn(
-        `[gemini] Topic "${topicName}" attempt ${attempt}: 0 chunks, retrying...`
+        `[BRIEFING][${topicName}] Attempt ${attempt}: 0 chunks (no grounding), retrying...`
       );
     }
   }
 
   // No grounding after retries — return limited coverage
   if (!grounded) {
-    console.warn(`[gemini] Topic "${topicName}": no grounding after ${MAX_ATTEMPTS} attempts`);
+    console.warn(`[BRIEFING][${topicName}] NO GROUNDING after ${MAX_ATTEMPTS} attempts — returning limited coverage`);
     return {
       topic: buildLimitedCoverageTopic(topicName),
       sources: [],
@@ -434,8 +463,11 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
   if (parsed && parsed.topics.length > 0) {
     topic = parsed.topics[0];
     topic.name = topicName; // Ensure consistent topic name
+    console.log(`[BRIEFING][${topicName}] Parsed: headline="${topic.headline}", ${topic.bullets.length} raw bullets, bottomLine=${topic.bottomLine ? 'YES' : 'NO'} (${topic.bottomLine?.length ?? 0} chars)`);
   } else {
     // Couldn't parse structured data — use raw text as fallback
+    console.warn(`[BRIEFING][${topicName}] PARSE FAILED — using raw text fallback`);
+    console.log(`[BRIEFING][${topicName}] Raw response first 300 chars: ${responseText.substring(0, 300)}`);
     const cleanText = responseText.replace(/^##.*\n?/m, "").trim();
     topic = {
       name: topicName,
@@ -445,17 +477,28 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
     };
   }
 
+  // Log raw bullets before stripping
+  const rawBulletCount = topic.bullets.length;
+  console.log(`[BRIEFING][${topicName}] Raw bullets (${rawBulletCount}):`);
+  topic.bullets.forEach((b, i) => {
+    console.log(`[BRIEFING][${topicName}]   [${i}] ${b.substring(0, 120)}${b.length > 120 ? '...' : ''}`);
+  });
+
   // Fix D: Validate grounding — strip bullets with zero grounding supports
   if (supports.length > 0) {
     topic = validateAndStripUngrounded(topic, responseText, chunks, supports);
+    const strippedCount = rawBulletCount - topic.bullets.length;
     const sourceCounts = (topic.bulletSources ?? []).map((bs) => bs.length);
-    console.log(`[gemini] Topic "${topicName}" after validation: ${topic.bullets.length} bullets, sources: [${sourceCounts.join(",")}]`);
+    console.log(`[BRIEFING][${topicName}] After stripping: ${topic.bullets.length}/${rawBulletCount} bullets kept (${strippedCount} stripped), sources per bullet: [${sourceCounts.join(",")}]`);
+    if (topic.headline.includes("Limited Recent Coverage")) {
+      console.warn(`[BRIEFING][${topicName}] ⚠ ALL BULLETS STRIPPED — fell back to limited coverage`);
+    }
   } else if (chunks.length > 0) {
     // Have chunks but no supports — use keyword matching as fallback
+    console.log(`[BRIEFING][${topicName}] No supports available — using keyword matching for sources`);
     const tempData: BriefingData = { greeting: "", topics: [topic] };
     matchSourcesToTopics(chunks, tempData);
     topic = tempData.topics[0];
-    console.log(`[gemini] Topic "${topicName}": keyword-matched sources (no supports available)`);
   }
 
   // Fix truncated bullets (Gemini sometimes cuts off mid-sentence)
@@ -463,9 +506,11 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
 
   // Ensure Bottom Line exists — generate a simple fallback if missing
   if (!topic.bottomLine || topic.bottomLine.trim().length < 10) {
+    console.log(`[BRIEFING][${topicName}] Bottom line missing or too short — using generic fallback`);
     topic.bottomLine = `Developments in ${topicName} continue to evolve — stay tuned for updates.`;
   }
 
+  console.log(`[BRIEFING][${topicName}] ✓ DONE — ${topic.bullets.length} final bullets, grounded=true`);
   return { topic, sources: chunks, grounded: true };
 }
 
@@ -523,7 +568,7 @@ function validateAndStripUngrounded(
 
     if (bulletStart === -1) {
       // Bullet not found in response at all — likely a parsing artifact, skip
-      console.log(`[gemini] Stripping bullet (not found in response): "${bullet.substring(0, 60)}..."`);
+      console.log(`[BRIEFING][${topic.name}] STRIPPED (not found in response): "${bullet.substring(0, 80)}..."`);
       continue;
     }
 
@@ -533,7 +578,7 @@ function validateAndStripUngrounded(
 
     if (dedupedSources.length === 0) {
       // Zero grounding supports — likely hallucinated, strip it
-      console.log(`[gemini] Stripping ungrounded bullet for "${topic.name}": "${bullet.substring(0, 60)}..."`);
+      console.log(`[BRIEFING][${topic.name}] STRIPPED (0 grounding supports): "${bullet.substring(0, 120)}"`);
       continue;
     }
 
@@ -543,7 +588,7 @@ function validateAndStripUngrounded(
 
   // If all bullets were stripped, return limited coverage fallback
   if (validBullets.length === 0) {
-    console.warn(`[gemini] All bullets stripped for "${topic.name}" \u2014 using limited coverage fallback`);
+    console.warn(`[BRIEFING][${topic.name}] ALL BULLETS STRIPPED — using limited coverage fallback`);
     return buildLimitedCoverageTopic(topic.name);
   }
 

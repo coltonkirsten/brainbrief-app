@@ -28,6 +28,10 @@ interface SendBriefingEmailParams {
   trialInfo?: TrialInfo;
   /** Whether the briefing was grounded with live sources */
   grounded?: boolean;
+  /** User ID — added as hint param in email links for mismatch detection */
+  userId?: string;
+  /** Briefing ID — added to "Rate this briefing" link for context */
+  briefingId?: string;
 }
 
 export async function sendBriefingEmail({
@@ -38,6 +42,8 @@ export async function sendBriefingEmail({
   structured,
   trialInfo,
   grounded,
+  userId,
+  briefingId,
 }: SendBriefingEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -55,8 +61,8 @@ export async function sendBriefingEmail({
       }
 
       const emailHtml = structured
-        ? buildStructuredEmailTemplate(structured, trialInfo, grounded)
-        : buildLegacyEmailTemplate(html);
+        ? buildStructuredEmailTemplate(structured, trialInfo, grounded, userId, briefingId)
+        : buildLegacyEmailTemplate(html, userId, briefingId);
 
       const { data, error } = await resend.emails.send({
         from: fromAddress,
@@ -189,7 +195,13 @@ export function generateSubjectLine(structured?: BriefingData): string {
 // Structured email template — Chelsea's "Premium Editorial" design
 // ---------------------------------------------------------------------------
 
-function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo, grounded?: boolean): string {
+function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo, grounded?: boolean, userId?: string, briefingId?: string): string {
+  // Build dashboard URLs with user hint params for mismatch detection
+  const uidParam = userId ? `&uid=${userId}` : "";
+  const briefingParam = briefingId ? `&briefing_id=${briefingId}` : "";
+  const rateUrl = `https://www.brainbrief.app/dashboard?ref=email${uidParam}${briefingParam}`;
+  const manageUrl = `https://www.brainbrief.app/dashboard?ref=email${uidParam}`;
+
   const year = new Date().getFullYear();
   const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -488,10 +500,10 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
               <p style="margin: 20px 0 0;">
-                <a href="https://www.brainbrief.app/dashboard" style="display: inline-block; padding: 8px 20px; border-radius: 6px; border: 1px solid #D1FAE5; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #059669; text-decoration: none; background-color: #F0FDF4;">Rate this briefing</a>
+                <a href="${rateUrl}" style="display: inline-block; padding: 8px 20px; border-radius: 6px; border: 1px solid #D1FAE5; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #059669; text-decoration: none; background-color: #F0FDF4;">Rate this briefing</a>
               </p>
               <p style="margin: 12px 0 0;">
-                <a href="https://www.brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
+                <a href="${manageUrl}" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
               </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://www.brainbrief.app/unsubscribe" class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
@@ -525,7 +537,13 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
 // Legacy email template — wraps raw HTML content (fallback)
 // ---------------------------------------------------------------------------
 
-function buildLegacyEmailTemplate(contentHtml: string): string {
+function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefingId?: string): string {
+  // Build dashboard URLs with user hint params for mismatch detection
+  const uidParam = userId ? `&uid=${userId}` : "";
+  const briefingParam = briefingId ? `&briefing_id=${briefingId}` : "";
+  const rateUrl = `https://www.brainbrief.app/dashboard?ref=email${uidParam}${briefingParam}`;
+  const manageUrl = `https://www.brainbrief.app/dashboard?ref=email${uidParam}`;
+
   const year = new Date().getFullYear();
   const dateStr = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -608,10 +626,10 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
               <p style="margin: 20px 0 0;">
-                <a href="https://www.brainbrief.app/dashboard" style="display: inline-block; padding: 8px 20px; border-radius: 6px; border: 1px solid #D1FAE5; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #059669; text-decoration: none; background-color: #F0FDF4;">Rate this briefing</a>
+                <a href="${rateUrl}" style="display: inline-block; padding: 8px 20px; border-radius: 6px; border: 1px solid #D1FAE5; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #059669; text-decoration: none; background-color: #F0FDF4;">Rate this briefing</a>
               </p>
               <p style="margin: 12px 0 0;">
-                <a href="https://www.brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
+                <a href="${manageUrl}" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
               </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://www.brainbrief.app/unsubscribe" class="legacy-footer-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>

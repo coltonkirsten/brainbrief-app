@@ -272,6 +272,8 @@ export async function GET(request: Request) {
         structured: briefing.structured,
         trialInfo,
         grounded: briefing.grounded,
+        userId,
+        briefingId: insertedBriefing?.id,
       });
 
       if (emailResult.success) {

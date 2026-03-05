@@ -180,6 +180,8 @@ export async function POST() {
         structured: briefing.structured,
         trialInfo,
         grounded: briefing.grounded,
+        userId: user.id,
+        briefingId: insertedBriefing?.id,
       });
 
       if (emailResult.success) {

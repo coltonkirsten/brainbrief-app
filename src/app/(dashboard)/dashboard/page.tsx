@@ -10,6 +10,7 @@ import DeliveryTimePicker from "./delivery-time-picker";
 import { getTrialInfo } from "@/lib/trial";
 import OnboardingView from "./onboarding-view";
 import BriefingFeedback from "./briefing-feedback";
+import EmailMismatchBanner from "./email-mismatch-banner";
 
 export const metadata = {
   title: "Dashboard | Brain Brief",
@@ -145,6 +146,11 @@ export default async function DashboardPage() {
       {/* Checkout success banner (client component, shows only when ?checkout=success) */}
       <Suspense>
         <CheckoutSuccessBanner />
+      </Suspense>
+
+      {/* Email mismatch banner — shows when arriving from an email link for a different account */}
+      <Suspense>
+        <EmailMismatchBanner currentUserId={user.id} currentUserEmail={user.email ?? ""} />
       </Suspense>
 
       {/* Main Content or Onboarding */}

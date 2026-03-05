@@ -269,7 +269,9 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
 
       const bulletItems = topic.bullets
         .map((bullet, bi) => {
-          const bulletSourceList = topic.bulletSources?.[bi] ?? [];
+          const rawSources = topic.bulletSources?.[bi] ?? [];
+          // Filter to only sources with valid URIs — don't show unclickable names
+          const bulletSourceList = rawSources.filter((s) => s.uri && s.uri.trim().length > 0);
           // Render inline source citations after the bullet text
           const citationHtml =
             bulletSourceList.length > 0
@@ -606,6 +608,9 @@ function buildLegacyEmailTemplate(contentHtml: string): string {
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
               <p style="margin: 20px 0 0;">
+                <a href="https://www.brainbrief.app/dashboard" style="display: inline-block; padding: 8px 20px; border-radius: 6px; border: 1px solid #D1FAE5; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #059669; text-decoration: none; background-color: #F0FDF4;">Rate this briefing</a>
+              </p>
+              <p style="margin: 12px 0 0;">
                 <a href="https://www.brainbrief.app/dashboard" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
               </p>
               <p style="margin: 20px 0 0;">

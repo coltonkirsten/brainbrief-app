@@ -354,10 +354,11 @@ FORMAT REQUIREMENT \u2014 CRITICAL:
 - Do NOT write plain paragraphs. Every piece of information must be a bullet point starting with "- ".
 - Do NOT use asterisks (*) for bullets. Use dashes (-) only.
 
-NO META-COMMENTARY:
-- NEVER include commentary about the search results, coverage availability, or your research process.
-- Do NOT write phrases like "coverage was limited," "news was sparse," "no significant developments were found," "recent coverage for X was limited," or "in the immediate past."
-- Simply write the news you found. If you only found one or two stories, just write those \u2014 do not comment on the fact that there was not more.
+NO META-COMMENTARY \u2014 THIS APPLIES TO BULLETS AND THE BOTTOM LINE:
+- NEVER include commentary about the search results, coverage availability, or your research process in ANY part of the output \u2014 bullets OR Bottom Line.
+- Do NOT write phrases like "coverage was limited," "coverage was sparse," "news was sparse," "no significant developments were found," "recent coverage for X was limited," "in the immediate past," "direct collaborative news was sparse," "within the past X hours was limited," or ANY variation of these.
+- Do NOT start any sentence (bullet or Bottom Line) with "While coverage was..." or "Although news was..." or similar hedging.
+- Simply write the news you found. If you only found one or two stories, just write those \u2014 do not comment on the quantity of available coverage.
 
 ENGAGEMENT RULE:
 - When possible, include one surprising, counterintuitive, or lesser-known detail in your coverage. This could be an unexpected statistic, a non-obvious implication, or a connection most readers would miss.
@@ -514,6 +515,11 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
   // Fix truncated bullets (Gemini sometimes cuts off mid-sentence)
   topic.bullets = topic.bullets.map(trimToLastSentence);
 
+  // Strip inline citation brackets that Gemini sometimes writes into the text
+  // e.g., "[Securityboulevard, Itbrew]" or "[Forbes, Techinformed]" at end of bullets.
+  // Our system adds proper hyperlinked citations separately via bulletSources.
+  topic.bullets = topic.bullets.map((b) => stripInlineCitations(b));
+
   // Strip meta-commentary from bullets and bottom line.
   // Gemini sometimes leaks internal reasoning like "coverage was limited" or
   // "news was sparse" into user-facing text.
@@ -576,6 +582,23 @@ function trimToLastSentence(text: string): string {
 }
 
 /**
+ * Strip inline citation brackets that Gemini writes directly into response text.
+ * Examples: "[Securityboulevard, Itbrew]", "[Forbes, Techinformed]", "[1]", "[1, 2]"
+ * Our system adds proper hyperlinked citations via bulletSources, so these
+ * raw text citations should be removed to avoid unclickable bracket text.
+ */
+function stripInlineCitations(text: string): string {
+  // Match trailing "[Source1, Source2]" patterns — capitalized words separated by commas
+  // Also matches numeric citations like "[1]", "[1, 2, 3]"
+  const stripped = text
+    .replace(/\s*\[[\d,\s]+\]\s*$/g, "") // [1, 2, 3] at end
+    .replace(/\s*\[[A-Z][a-zA-Z]*(?:,\s*[A-Z][a-zA-Z]*)*\]\s*$/g, "") // [Forbes, Techinformed] at end
+    .replace(/\s*\[[A-Z][a-zA-Z.]*(?:,\s*[A-Z][a-zA-Z.]*)*\]\s*$/g, "") // [Bbc.com, Reuters.com] at end
+    .trim();
+  return stripped || text; // Safety: never return empty string
+}
+
+/**
  * Strip meta-commentary about search results from user-facing text.
  * Gemini sometimes leaks phrases like "coverage was limited" or "news was sparse"
  * into bullets and bottom lines. These are internal reasoning, not news.
@@ -589,21 +612,29 @@ function trimToLastSentence(text: string): string {
 function stripMetaCommentary(text: string, topicName: string): string {
   const original = text;
 
-  // Patterns that indicate meta-commentary about search coverage
+  // Patterns that indicate meta-commentary about search coverage.
+  // These catch a wide range of Gemini's hedging phrases. Greedy quantifiers
+  // are used inside patterns that need to span long entity names like
+  // "joint SpaceX and NASA developments within the past 24-48 hours".
   const metaPatterns = [
-    /recent coverage (?:for .+? )?was limited\.?\s*/i,
-    /coverage (?:for .+? )?was (?:limited|sparse|thin)\.?\s*/i,
-    /news was (?:sparse|limited|thin)\.?\s*/i,
-    /no significant (?:new )?developments (?:were|have been) found\.?\s*/i,
+    /recent coverage (?:for .+ )?was (?:limited|sparse|thin|unavailable)\.?\s*/i,
+    /coverage (?:for .+ )?was (?:limited|sparse|thin|unavailable)\.?\s*/i,
+    /coverage (?:for .+ )?within the (?:past|last) .+ was (?:limited|sparse|thin|unavailable)\.?\s*/i,
+    /news (?:for .+ )?was (?:sparse|limited|thin)(?:\s+in the immediate past)?\.?\s*/i,
+    /no significant (?:new )?developments (?:were|have been) (?:found|reported)\.?\s*/i,
     /(?:there were |there was )?limited (?:recent )?(?:news|coverage|developments)\.?\s*/i,
     /in the immediate past[.,]?\s*/i,
-    /within the (?:past|last) \d+-?\d* hours was limited\.?\s*/i,
-    /direct (?:collaborative )?news .+ was sparse[.,]?\s*/i,
+    /within the (?:past|last) \d+-?\d*\s*hours[, ].*?was (?:limited|sparse|thin)\.?\s*/i,
+    /direct (?:collaborative )?news .+ was (?:sparse|limited|thin)[.,]?\s*/i,
+    /(?:specific|direct|collaborative|joint) .+ (?:news|coverage|developments) .+ was (?:sparse|limited|thin)\.?\s*/i,
+    /no (?:major |new |significant )?(?:news|developments|updates) (?:were |was )?(?:found|available|reported)\.?\s*/i,
+    /information (?:on|about|regarding) .+ (?:was|is) (?:limited|sparse|scarce)\.?\s*/i,
   ];
 
   // Handle "While [meta-commentary], [actual content]" pattern
-  // e.g., "While direct collaborative news was sparse, SpaceX continues..."
-  const whileMetaPattern = /^While\b.+?\b(?:was (?:sparse|limited|thin)|coverage was limited|news was (?:sparse|limited))[^,]*[.,]\s*/i;
+  // e.g., "While direct collaborative news was sparse in the immediate past, SpaceX continues..."
+  // Uses greedy .+ so it can span long entity names and temporal qualifiers
+  const whileMetaPattern = /^(?:While|Although|Though)\b.+?\b(?:was (?:sparse|limited|thin|unavailable)|coverage was (?:limited|sparse)|news was (?:sparse|limited)|developments (?:were|have been) (?:limited|sparse))[^,]*[.,]+\s*/i;
   const whileMatch = text.match(whileMetaPattern);
   if (whileMatch) {
     text = text.substring(whileMatch[0].length);
@@ -1055,7 +1086,9 @@ function generateHtmlFromStructured(data: BriefingData): string {
     html += `<h2>${escapeHtml(topic.headline)}</h2>\n`;
     html += `<ul>\n`;
     topic.bullets.forEach((bullet, bi) => {
-      const bulletSourceList = topic.bulletSources?.[bi] ?? [];
+      const rawSources = topic.bulletSources?.[bi] ?? [];
+      // Filter to only sources with valid URIs — don't show unclickable names
+      const bulletSourceList = rawSources.filter((s) => s.uri && s.uri.trim().length > 0);
       if (bulletSourceList.length > 0) {
         // Inline citations after the bullet text
         const citations = bulletSourceList
@@ -1100,7 +1133,9 @@ function generateTextFromStructured(data: BriefingData): string {
     if (i > 0) text += `\n---\n\n`;
     text += `${topic.headline}\n\n`;
     topic.bullets.forEach((bullet, bi) => {
-      const bulletSourceList = topic.bulletSources?.[bi] ?? [];
+      const rawSources = topic.bulletSources?.[bi] ?? [];
+      // Filter to only sources with valid URIs
+      const bulletSourceList = rawSources.filter((s) => s.uri && s.uri.trim().length > 0);
       if (bulletSourceList.length > 0) {
         const citations = bulletSourceList.map((s) => cleanDomain(s.title)).join(", ");
         text += `  \u2022 ${bullet} [${citations}]\n`;
@@ -1121,6 +1156,9 @@ function generateTextFromStructured(data: BriefingData): string {
   });
 
   text += `\nStay informed. Stay sharp. \u2014 Brain Brief`;
+  text += `\n\nRate this briefing: https://www.brainbrief.app/dashboard`;
+  text += `\nManage topics: https://www.brainbrief.app/dashboard`;
+  text += `\nUnsubscribe: https://www.brainbrief.app/unsubscribe`;
   return text;
 }
 

@@ -337,7 +337,7 @@ CRITICAL RULES \u2014 YOU MUST FOLLOW THESE:
 - NEVER fabricate or invent company names, product names, people, organizations, or events
 - NEVER create fictional entities even if they sound plausible
 - Every specific claim (names, funding amounts, percentages, dates, statistics) MUST come directly from the search results
-- If the search results contain limited recent news for this topic, be honest: write "Recent coverage was limited" and provide only what the search actually returned
+- If the search results contain limited recent news for this topic, just write the news you found — even if it is only one or two stories
 - Do NOT fill gaps in coverage with invented information
 - Do NOT attribute information to sources that don\u2019t contain it
 - Every company, organization, and person you mention MUST appear in the search results
@@ -353,6 +353,11 @@ FORMAT REQUIREMENT \u2014 CRITICAL:
 - Each bullet point MUST start with a dash and a space ("- ") on its own line.
 - Do NOT write plain paragraphs. Every piece of information must be a bullet point starting with "- ".
 - Do NOT use asterisks (*) for bullets. Use dashes (-) only.
+
+NO META-COMMENTARY:
+- NEVER include commentary about the search results, coverage availability, or your research process.
+- Do NOT write phrases like "coverage was limited," "news was sparse," "no significant developments were found," "recent coverage for X was limited," or "in the immediate past."
+- Simply write the news you found. If you only found one or two stories, just write those \u2014 do not comment on the fact that there was not more.
 
 ENGAGEMENT RULE:
 - When possible, include one surprising, counterintuitive, or lesser-known detail in your coverage. This could be an unexpected statistic, a non-obvious implication, or a connection most readers would miss.
@@ -509,17 +514,37 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
   // Fix truncated bullets (Gemini sometimes cuts off mid-sentence)
   topic.bullets = topic.bullets.map(trimToLastSentence);
 
+  // Strip meta-commentary from bullets and bottom line.
+  // Gemini sometimes leaks internal reasoning like "coverage was limited" or
+  // "news was sparse" into user-facing text.
+  topic.bullets = topic.bullets.map((b) => stripMetaCommentary(b, topicName));
+  // Remove bullets that became empty after stripping
+  if (topic.bulletSources) {
+    const filtered: { bullet: string; sources: SourceLink[] }[] = [];
+    for (let i = 0; i < topic.bullets.length; i++) {
+      if (topic.bullets[i].length >= 30) {
+        filtered.push({ bullet: topic.bullets[i], sources: topic.bulletSources[i] ?? [] });
+      } else {
+        console.log(`[BRIEFING][${topicName}] Removed empty bullet after meta-commentary strip`);
+      }
+    }
+    topic.bullets = filtered.map((f) => f.bullet);
+    topic.bulletSources = filtered.map((f) => f.sources);
+  } else {
+    topic.bullets = topic.bullets.filter((b) => b.length >= 30);
+  }
+  if (topic.bottomLine) {
+    topic.bottomLine = stripMetaCommentary(topic.bottomLine, topicName);
+  }
+
   // If Bottom Line is missing but we have real content, leave it empty rather
   // than inserting a generic "stay tuned" placeholder. The email/dashboard
   // templates already handle missing bottomLine gracefully.
   if (!topic.bottomLine || topic.bottomLine.trim().length < 10) {
-    // Only use fallback when we literally have no real bullets (limited coverage)
-    if (topic.bullets.length <= 1 && topic.bullets[0]?.includes("No significant verified")) {
-      topic.bottomLine = "";
-    } else {
+    if (topic.bullets.length > 0) {
       console.log(`[BRIEFING][${topicName}] Bottom line missing — leaving empty (real content exists)`);
-      topic.bottomLine = "";
     }
+    topic.bottomLine = "";
   }
 
   console.log(`[BRIEFING][${topicName}] ✓ DONE — ${topic.bullets.length} final bullets, grounded=true`);
@@ -548,6 +573,77 @@ function trimToLastSentence(text: string): string {
 
   // No good sentence boundary found — append ellipsis
   return trimmed + "...";
+}
+
+/**
+ * Strip meta-commentary about search results from user-facing text.
+ * Gemini sometimes leaks phrases like "coverage was limited" or "news was sparse"
+ * into bullets and bottom lines. These are internal reasoning, not news.
+ *
+ * Strategy:
+ * 1. If bullet starts with meta-commentary followed by "However," / "That said," etc.,
+ *    strip everything up to and including that transition word.
+ * 2. Remove standalone meta-commentary sentences from within text.
+ * 3. Clean up any resulting leading/trailing whitespace or orphaned punctuation.
+ */
+function stripMetaCommentary(text: string, topicName: string): string {
+  const original = text;
+
+  // Patterns that indicate meta-commentary about search coverage
+  const metaPatterns = [
+    /recent coverage (?:for .+? )?was limited\.?\s*/i,
+    /coverage (?:for .+? )?was (?:limited|sparse|thin)\.?\s*/i,
+    /news was (?:sparse|limited|thin)\.?\s*/i,
+    /no significant (?:new )?developments (?:were|have been) found\.?\s*/i,
+    /(?:there were |there was )?limited (?:recent )?(?:news|coverage|developments)\.?\s*/i,
+    /in the immediate past[.,]?\s*/i,
+    /within the (?:past|last) \d+-?\d* hours was limited\.?\s*/i,
+    /direct (?:collaborative )?news .+ was sparse[.,]?\s*/i,
+  ];
+
+  // Handle "While [meta-commentary], [actual content]" pattern
+  // e.g., "While direct collaborative news was sparse, SpaceX continues..."
+  const whileMetaPattern = /^While\b.+?\b(?:was (?:sparse|limited|thin)|coverage was limited|news was (?:sparse|limited))[^,]*[.,]\s*/i;
+  const whileMatch = text.match(whileMetaPattern);
+  if (whileMatch) {
+    text = text.substring(whileMatch[0].length);
+    if (text.length > 0) {
+      text = text.charAt(0).toUpperCase() + text.slice(1);
+    }
+  }
+
+  // Check if text starts with meta-commentary followed by a transition word
+  // e.g., "Recent coverage was limited. However, SpaceX launched..."
+  const transitionPattern = /^(.+?)\b(However|That said|Nevertheless|Nonetheless|Still|But|Yet)[,.]?\s+/i;
+  const transitionMatch = text.match(transitionPattern);
+
+  if (transitionMatch) {
+    const preamble = transitionMatch[1];
+    // Check if the preamble is meta-commentary
+    const isMeta = metaPatterns.some((p) => p.test(preamble));
+    if (isMeta) {
+      // Strip preamble + transition word, keep the actual news
+      text = text.substring(transitionMatch[0].length);
+      // Capitalize first letter of remaining text
+      if (text.length > 0) {
+        text = text.charAt(0).toUpperCase() + text.slice(1);
+      }
+    }
+  }
+
+  // Also strip standalone meta-commentary sentences anywhere in text
+  for (const pattern of metaPatterns) {
+    text = text.replace(pattern, " ");
+  }
+
+  // Clean up whitespace
+  text = text.replace(/\s{2,}/g, " ").trim();
+
+  if (text !== original) {
+    console.log(`[BRIEFING][${topicName}] Stripped meta-commentary: "${original.substring(0, 60)}..." → "${text.substring(0, 60)}..."`);
+  }
+
+  return text;
 }
 
 // ---------- Grounding Validation (Fix D) ----------

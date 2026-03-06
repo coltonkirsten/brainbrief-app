@@ -402,6 +402,8 @@ function buildStandaloneHtml(params: {
                 <a href="https://www.brainbrief.app/dashboard" style="color: #64748B; text-decoration: underline;">Manage your account</a>
                 &nbsp;&middot;&nbsp;
                 <a href="https://www.brainbrief.app/unsubscribe" style="color: #64748B; text-decoration: underline;">Unsubscribe</a>
+                &nbsp;&middot;&nbsp;
+                <a href="mailto:support@brainbrief.app" style="color: #64748B; text-decoration: underline;">Support</a>
               </p>
             </td>
           </tr>

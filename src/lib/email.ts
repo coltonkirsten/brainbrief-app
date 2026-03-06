@@ -512,6 +512,8 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
                 <a href="https://www.brainbrief.app/terms" style="color: #94A3B8; text-decoration: underline;">Terms</a>
                 &nbsp;&middot;&nbsp;
                 <a href="https://www.brainbrief.app/privacy" style="color: #94A3B8; text-decoration: underline;">Privacy</a>
+                &nbsp;&middot;&nbsp;
+                <a href="mailto:support@brainbrief.app" style="color: #94A3B8; text-decoration: underline;">Support</a>
               </p>
             </td>
           </tr>
@@ -638,6 +640,8 @@ function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefing
                 <a href="https://www.brainbrief.app/terms" style="color: #94A3B8; text-decoration: underline;">Terms</a>
                 &nbsp;&middot;&nbsp;
                 <a href="https://www.brainbrief.app/privacy" style="color: #94A3B8; text-decoration: underline;">Privacy</a>
+                &nbsp;&middot;&nbsp;
+                <a href="mailto:support@brainbrief.app" style="color: #94A3B8; text-decoration: underline;">Support</a>
               </p>
               <p class="legacy-footer-text" style="margin: 24px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8;">
                 &copy; ${year} Brain Brief. All rights reserved.

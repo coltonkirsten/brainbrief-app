@@ -111,8 +111,19 @@ export default async function DashboardPage() {
                   <ManageBillingButton />
                 </>
               )}
-              <span className="text-sm font-medium text-muted-foreground">{user.email}</span>
+              <Link
+                href="/account"
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                Account
+              </Link>
             </div>
+            <Link
+              href="/account"
+              className="sm:hidden text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+            >
+              Account
+            </Link>
             <SignOutButton />
           </div>
         </div>

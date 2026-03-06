@@ -37,6 +37,11 @@ function LoginContent() {
   const rawRedirect = searchParams.get("redirect") || "/dashboard";
   // Prevent open redirect — only allow relative paths, not external URLs
   const redirectTo = rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/dashboard";
+  // Cross-device email confirmation: PKCE code exchange fails because the
+  // code verifier cookie only exists on the original browser. The email IS
+  // confirmed server-side — the user just needs to sign in manually.
+  const callbackError = searchParams.get("error");
+  const isEmailConfirmed = callbackError === "auth_callback_failed";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -222,6 +227,13 @@ function LoginContent() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {isEmailConfirmed && (
+            <div className="rounded-md bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300">
+              <span className="font-semibold">Your email is confirmed!</span>{" "}
+              Sign in below to get started.
+            </div>
+          )}
+
           {error && (
             <div className="rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}

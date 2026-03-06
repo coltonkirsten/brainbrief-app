@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import TopicManager from "./topic-manager";
 import GenerateButton from "./generate-button";
 import CheckoutSuccessBanner from "./checkout-success-banner";
-import ManageBillingButton from "./manage-billing-button";
 import DeliveryTimePicker from "./delivery-time-picker";
 import { getTrialInfo } from "@/lib/trial";
 import OnboardingView from "./onboarding-view";
@@ -104,12 +103,9 @@ export default async function DashboardPage() {
                 </Link>
               )}
               {trialInfo.isSubscriber && (
-                <>
-                  <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent border border-accent/20">
-                    Pro
-                  </span>
-                  <ManageBillingButton />
-                </>
+                <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent border border-accent/20">
+                  Pro
+                </span>
               )}
               <Link
                 href="/account"

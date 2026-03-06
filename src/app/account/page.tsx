@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getTrialInfo } from "@/lib/trial";
 import DeleteAccountButton from "./delete-account-button";
+import ManageBillingButton from "./manage-billing-button";
 
 export const metadata = {
   title: "Account | Brain Brief",
@@ -156,18 +157,7 @@ export default async function AccountPage() {
                 Manage your subscription, update payment method, or view invoices
                 through the Stripe Customer Portal.
               </p>
-              <form action="/api/billing/portal" method="POST">
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                    <line x1="1" y1="10" x2="23" y2="10" />
-                  </svg>
-                  Manage Subscription
-                </button>
-              </form>
+              <ManageBillingButton />
             </div>
           ) : trialInfo.isTrialActive ? (
             <div className="space-y-3">

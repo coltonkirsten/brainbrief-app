@@ -35,17 +35,33 @@ export default async function AccountPage() {
   // Compute plan display label
   let planLabel = "Free Trial";
   let planDetail = "";
+  const isCanceled = profile?.subscription_status === "canceled";
 
-  if (trialInfo.isSubscriber || profile?.subscription_status === "past_due") {
+  // Parse current_period_end — stored as ISO string in DB (NOT a Unix timestamp)
+  function formatPeriodEnd(): string {
+    if (!profile?.current_period_end) return "";
+    const periodEnd = new Date(profile.current_period_end);
+    if (isNaN(periodEnd.getTime())) return "";
+    return periodEnd.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  if (isCanceled) {
+    const planType = profile?.plan_type;
+    planLabel = "Canceled";
+    const endDate = formatPeriodEnd();
+    planDetail = endDate
+      ? `Your ${planType === "annual" ? "annual" : "monthly"} subscription was canceled. Access ended ${endDate}.`
+      : "Your subscription has been canceled.";
+  } else if (trialInfo.isSubscriber || profile?.subscription_status === "past_due") {
     const planType = profile?.plan_type;
     planLabel = planType === "annual" ? "Pro Annual" : "Pro Monthly";
-    if (profile?.current_period_end) {
-      const periodEnd = new Date(profile.current_period_end * 1000);
-      planDetail = `Current period ends ${periodEnd.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })}`;
+    const endDate = formatPeriodEnd();
+    if (endDate) {
+      planDetail = `Current period ends ${endDate}`;
     }
     if (profile?.subscription_status === "past_due") {
       planDetail += " (payment past due — updating payment method recommended)";
@@ -127,9 +143,11 @@ export default async function AccountPage() {
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     trialInfo.isSubscriber
                       ? "bg-accent/10 text-accent border border-accent/20"
-                      : trialInfo.isTrialActive
-                        ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
-                        : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"
+                      : isCanceled
+                        ? "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800"
+                        : trialInfo.isTrialActive
+                          ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                          : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800"
                   }`}
                 >
                   {planLabel}
@@ -158,6 +176,26 @@ export default async function AccountPage() {
                 through the Stripe Customer Portal.
               </p>
               <ManageBillingButton />
+            </div>
+          ) : isCanceled ? (
+            <div className="space-y-3">
+              <div className="rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 px-4 py-3">
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  Your subscription has been canceled
+                </p>
+                <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                  You no longer have access to daily briefings. Resubscribe anytime to pick up where you left off.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-start gap-3">
+                <Link
+                  href="/subscribe"
+                  className="inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent/90 transition-colors"
+                >
+                  Resubscribe — $6/mo
+                </Link>
+                {profile?.stripe_customer_id && <ManageBillingButton />}
+              </div>
             </div>
           ) : trialInfo.isTrialActive ? (
             <div className="space-y-3">

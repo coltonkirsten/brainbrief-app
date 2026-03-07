@@ -108,6 +108,12 @@ export default async function DashboardPage() {
                 </span>
               )}
               <Link
+                href="/feedback"
+                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                Feedback
+              </Link>
+              <Link
                 href="/account"
                 className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >

@@ -3,9 +3,11 @@
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { XSignupConversion } from "@/components/x-conversion";
 
 interface OnboardingViewProps {
   userId: string;
+  userEmail?: string;
   maxTopics: number;
 }
 
@@ -32,7 +34,7 @@ const PROGRESS_STEPS = [
   "Your briefing is ready!",
 ];
 
-export default function OnboardingView({ userId, maxTopics }: OnboardingViewProps) {
+export default function OnboardingView({ userId, userEmail, maxTopics }: OnboardingViewProps) {
   const router = useRouter();
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
@@ -156,6 +158,9 @@ export default function OnboardingView({ userId, maxTopics }: OnboardingViewProp
   // ---------- Topic selection state ----------
   return (
     <main className="max-w-3xl mx-auto px-6 py-12 sm:py-24 min-h-[80vh] flex flex-col items-center justify-center">
+      {/* X Ads signup conversion — fires once when fresh signup lands on onboarding */}
+      <XSignupConversion email={userEmail} userId={userId} />
+
       <div className="text-center mb-10">
         <div className="w-16 h-16 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
           <span className="font-serif font-bold text-3xl">B</span>

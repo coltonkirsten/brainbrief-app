@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Merriweather, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { XPixel } from "@/components/x-pixel";
 import "./globals.css";
 
 const inter = Inter({
@@ -81,6 +82,7 @@ export default function RootLayout({
       >
         {children}
         <Analytics />
+        <XPixel />
       </body>
     </html>
   );

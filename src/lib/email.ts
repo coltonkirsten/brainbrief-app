@@ -203,19 +203,19 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
   const manageUrl = `https://www.brainbrief.app/dashboard?ref=email${uidParam}`;
 
   const year = new Date().getFullYear();
-  const dateStr = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  // #6: Shortened date format — won't wrap on mobile next to logo
+  const now = new Date();
+  const dateStr = `${now.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()} \u00b7 ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}`;
 
-  // Welcome header for Day 1 of trial (auto-detected from trialInfo)
-  const welcomeHeader = trialInfo && trialInfo.isTrialActive && !trialInfo.isSubscriber && trialInfo.trialDayNumber === 1
+  const isTrial = trialInfo && trialInfo.isTrialActive && !trialInfo.isSubscriber;
+
+  // #8: Welcome header for Day 1 — BELOW logo, light indigo background
+  const welcomeHeader = isTrial && trialInfo.trialDayNumber === 1
     ? `
       <!-- ============ WELCOME HEADER (DAY 1) ============ -->
       <tr>
-        <td class="welcome-bg" style="padding: 20px 24px 0 24px; background-color: #FFFFFF;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="welcome-card" style="background-color: #FAFAFA; border: 1px solid #F1F5F9; border-radius: 8px;">
+        <td style="padding: 0 24px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="welcome-card" style="background-color: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 8px;">
             <tr>
               <td style="padding: 20px;">
                 <p class="text-heading" style="margin: 0 0 12px 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
@@ -235,44 +235,50 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
       `
     : "";
 
-  // Build trial countdown footer based on trial day
+  // Build trial countdown footer + subscribe CTA based on trial day
   let footerCountdown = "";
-  if (trialInfo && trialInfo.isTrialActive && !trialInfo.isSubscriber) {
+  let subscribeCta = "";
+  if (isTrial) {
     const day = trialInfo.trialDayNumber;
     if (day === 1) {
       footerCountdown = `
-              <p style="margin: 0 0 20px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
-                Day 1 of 7 — your free trial is active &middot; <a href="https://www.brainbrief.app/dashboard" style="color: #64748B; text-decoration: underline;">Manage Topics</a> &middot; <a href="https://www.brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to keep your briefings &rarr;</a>
+              <p style="margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
+                Day 1 of 7 — your free trial is active
               </p>`;
     } else if (day >= 2 && day <= 5) {
       const daysLeft = 7 - day + 1;
       footerCountdown = `
-              <p style="margin: 0 0 20px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
-                Day ${day} of 7 &middot; ${daysLeft} days left in your free trial &middot; <a href="https://www.brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to keep your briefings &rarr;</a>
+              <p style="margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
+                Day ${day} of 7 &middot; ${daysLeft} days left in your free trial
               </p>`;
     } else if (day === 6) {
       footerCountdown = `
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
                 <tr>
                   <td class="trial-card" style="padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; background-color: #F8FAFC; text-align: center;">
                     <p class="trial-card-text" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 500; color: #334155;">
-                      Day 6 of 7 &middot; Your last free briefing is tomorrow. &middot; <a href="https://www.brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Keep your briefings going — $6/month &rarr;</a>
+                      Day 6 of 7 &middot; Your last free briefing is tomorrow.
                     </p>
                   </td>
                 </tr>
               </table>`;
     } else if (day === 7) {
       footerCountdown = `
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
                 <tr>
                   <td class="trial-card" style="padding: 16px; border: 1px solid #CBD5E1; border-radius: 8px; background-color: #F1F5F9; text-align: center;">
                     <p class="trial-card-text" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
-                      Day 7 of 7 &middot; This is your last free briefing. Your briefings will pause after today. &middot; <a href="https://www.brainbrief.app/subscribe" style="color: #10B981; font-weight: 600; text-decoration: none;">Subscribe to Brain Brief Pro — $6/month &rarr;</a>
+                      Day 7 of 7 &middot; This is your last free briefing.
                     </p>
                   </td>
                 </tr>
               </table>`;
     }
+    // #4: Full-width subscribe CTA button for all trial users
+    subscribeCta = `
+              <p style="margin: 0 0 20px 0;">
+                <a href="https://www.brainbrief.app/subscribe" style="display: block; padding: 14px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 8px; text-align: center;">Subscribe to keep your briefings &rarr;</a>
+              </p>`;
   }
 
   const topicBlocks = data.topics
@@ -282,24 +288,24 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
       const bulletItems = topic.bullets
         .map((bullet, bi) => {
           const rawSources = topic.bulletSources?.[bi] ?? [];
-          // Filter to only sources with valid URIs — don't show unclickable names
           const bulletSourceList = rawSources.filter((s) => s.uri && s.uri.trim().length > 0);
-          // Render inline source citations after the bullet text
+          // #11: Citations — 11px muted gray, underlined for accessibility
           const citationHtml =
             bulletSourceList.length > 0
-              ? ` <span style="font-size: 12px; color: #94A3B8;">[${bulletSourceList
+              ? ` <span style="font-size: 11px; color: #94A3B8;">[${bulletSourceList
                   .map(
                     (s) =>
-                      `<a href="${escapeHtml(s.uri)}" style="color: #10B981; text-decoration: underline; font-size: 12px;" target="_blank">${escapeHtml(cleanSourceTitle(s.title))}</a>`
+                      `<a href="${escapeHtml(s.uri)}" style="color: #94A3B8; text-decoration: underline; font-size: 11px;" target="_blank">${escapeHtml(cleanSourceTitle(s.title))}</a>`
                   )
                   .join(", ")}]</span>`
               : "";
+          // #1: Narrower bullet column (12px) + less left padding (4px)
           return `
               <tr>
-                <td style="padding: 0 0 8px 0; vertical-align: top; width: 20px;">
+                <td style="padding: 0 0 8px 0; vertical-align: top; width: 12px;">
                   <span style="color: #10B981; font-size: 18px; line-height: 1;">&#8226;</span>
                 </td>
-                <td class="text-bullet" style="padding: 0 0 8px 8px; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #334155;">
+                <td class="text-bullet" style="padding: 0 0 8px 4px; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #334155;">
                   ${escapeHtml(bullet)}${citationHtml}
                 </td>
               </tr>`;
@@ -341,13 +347,12 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
                         .map((source) => {
                           const displayTitle = cleanSourceTitle(source.title);
                           const domain = extractDomain(source.uri, source.title);
-                          // Skip domain suffix if title IS the domain (avoids "formula1.com · formula1.com")
                           const domainSuffix = domain && displayTitle.toLowerCase() !== domain.toLowerCase()
                             ? `<span style="color: #94A3B8; font-size: 11px;"> · ${escapeHtml(domain)}</span>`
                             : "";
                           return `
                       <p style="margin: 0 0 4px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5;">
-                        <a href="${escapeHtml(source.uri)}" style="color: #10B981; text-decoration: underline;" target="_blank">
+                        <a href="${escapeHtml(source.uri)}" style="color: #94A3B8; text-decoration: underline;" target="_blank">
                           ${escapeHtml(displayTitle)}
                         </a>
                         ${domainSuffix}
@@ -361,14 +366,24 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
             </tr>`
           : "";
 
+      // #3: 40px padding between topics + thin divider (not on last)
+      const divider = !isLast
+        ? `
+          <tr>
+            <td style="padding: 20px 24px 0 24px;">
+              <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 0;">
+            </td>
+          </tr>`
+        : "";
+
       return `
           <!-- Topic: ${escapeHtml(topic.name)} -->
           <tr>
-            <td class="email-body-cell" style="padding: 24px 24px${isLast ? "" : "; border-bottom: 1px solid #F1F5F9"};">
+            <td class="email-body-cell" style="padding: ${i === 0 ? "24px" : "20px"} 24px ${isLast ? "24px" : "0"} 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <!-- Badge -->
                 <tr>
-                  <td style="padding: 0 0 8px 0;">
+                  <td style="padding: 0 0 12px 0;">
                     <span class="topic-badge" style="display: inline-block; padding: 4px 12px; border-radius: 4px; background-color: #F1F5F9; font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 700; color: #0F172A; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #E2E8F0;">
                       ${escapeHtml(topic.name)}
                     </span>
@@ -377,7 +392,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
                 <!-- Headline -->
                 <tr>
                   <td style="padding: 0 0 12px 0;">
-                    <h2 class="text-heading" style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; color: #0F172A; line-height: 1.3;">
+                    <h2 class="text-heading topic-headline" style="margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 700; color: #0F172A; line-height: 1.3;">
                       ${escapeHtml(topic.headline)}
                     </h2>
                   </td>
@@ -394,7 +409,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
                 ${sourceLinks}
               </table>
             </td>
-          </tr>`;
+          </tr>${divider}`;
     })
     .join("");
 
@@ -417,9 +432,16 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
   <![endif]-->
   <style>
     :root { color-scheme: light dark; }
+    /* #1: Mobile width reclaim */
+    @media (max-width: 480px) {
+      .email-outer-pad { padding: 16px 8px !important; }
+      .email-inner-pad { padding-left: 16px !important; padding-right: 16px !important; }
+      /* #7: Responsive headline size */
+      .topic-headline { font-size: 22px !important; line-height: 28px !important; }
+    }
     @media (prefers-color-scheme: dark) {
       .email-bg { background-color: #0F172A !important; }
-      .email-card { background-color: #1E293B !important; }
+      .email-card { background-color: #1E293B !important; border-color: #334155 !important; }
       .email-header { background-color: #1E293B !important; border-color: #334155 !important; }
       .email-intro { background-color: #1A2332 !important; }
       .email-footer { background-color: #1A2332 !important; border-color: #334155 !important; }
@@ -431,25 +453,24 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
       .topic-badge { background-color: #334155 !important; color: #F8FAFC !important; border-color: #475569 !important; }
       .bottom-line-bg { background-color: #0F172A !important; }
       .bottom-line-text { color: #F8FAFC !important; }
-      .welcome-bg { background-color: #1E293B !important; }
-      .welcome-card { background-color: #0F172A !important; border-color: #334155 !important; }
+      .welcome-card { background-color: #1E293B !important; border-color: #475569 !important; }
       .trial-card { background-color: #0F172A !important; border-color: #334155 !important; }
       .trial-card-text { color: #F8FAFC !important; }
       .overview-text { color: #94A3B8 !important; }
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; background-color: #FFFFFF;">
-  <table role="presentation" class="email-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF;">
+<body style="margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; background-color: #F8FAFC;">
+  <!-- #13: Off-white outer background -->
+  <table role="presentation" class="email-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC;">
     <tr>
-      <td align="center" style="padding: 24px 12px;">
-        <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 640px; background-color: #FFFFFF;">
-
-          ${welcomeHeader}
+      <td align="center" class="email-outer-pad" style="padding: 24px 12px;">
+        <!-- #2: Rounded container with border -->
+        <table role="presentation" class="email-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 640px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; border: 1px solid #E2E8F0;">
 
           <!-- ============ HEADER ============ -->
           <tr>
-            <td class="email-header" style="padding: 28px 24px 20px 24px; border-bottom: 1px solid #F1F5F9;">
+            <td class="email-header email-inner-pad" style="padding: 28px 24px 20px 24px; border-bottom: 1px solid #F1F5F9;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="vertical-align: middle;">
@@ -467,13 +488,16 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
             </td>
           </tr>
 
-          <!-- ============ INTRO ============ -->
+          <!-- #8: Welcome header AFTER logo (Day 1 only) -->
+          ${welcomeHeader}
+
+          <!-- #10: Shortened intro -->
           <tr>
-            <td class="email-intro" style="padding: 20px 24px; background-color: #FAFAFA;">
+            <td class="email-intro email-inner-pad" style="padding: 20px 24px; background-color: #FAFAFA;">
               <p class="text-body" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #475569;">
-                ${escapeHtml(data.greeting)} ${grounded === false
-                  ? "No breaking news found today \u2014 here\u2019s a quick overview of where things stand with your topics."
-                  : "Here\u2019s your personalized intelligence briefing on the topics that matter most today."}
+                ${grounded === false
+                  ? "No breaking news found today \u2014 here\u2019s a quick overview of where things stand."
+                  : "Here\u2019s your briefing."}
               </p>
             </td>
           </tr>
@@ -484,7 +508,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
           ${grounded === false ? `
           <!-- ============ OVERVIEW NOTE ============ -->
           <tr>
-            <td style="padding: 4px 24px 12px 24px;">
+            <td class="email-inner-pad" style="padding: 4px 24px 12px 24px;">
               <p class="overview-text" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8; line-height: 1.5; font-style: italic;">
                 This is an overview briefing. Live source citations will return in your next edition.
               </p>
@@ -494,16 +518,19 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
 
           <!-- ============ FOOTER ============ -->
           <tr>
-            <td class="email-footer" style="padding: 28px 24px; background-color: #FAFAFA; border-top: 1px solid #F1F5F9; text-align: center;">
+            <td class="email-footer email-inner-pad" style="padding: 28px 24px; background-color: #FAFAFA; border-top: 1px solid #F1F5F9; text-align: center;">
               ${footerCountdown}
+              <!-- #4: Subscribe CTA for trial users -->
+              ${subscribeCta}
               <p class="text-muted" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B; line-height: 1.6;">
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
+              <!-- #5: Rate = primary green button; Manage Topics = text link -->
               <p style="margin: 20px 0 0;">
-                <a href="${rateUrl}" style="display: inline-block; padding: 8px 20px; border-radius: 6px; border: 1px solid #D1FAE5; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #059669; text-decoration: none; background-color: #F0FDF4;">Rate this briefing</a>
+                <a href="${rateUrl}" style="display: inline-block; padding: 10px 24px; background-color: #10B981; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 8px;">Rate this briefing</a>
               </p>
               <p style="margin: 12px 0 0;">
-                <a href="${manageUrl}" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
+                <a href="${manageUrl}" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #64748B; text-decoration: underline;">Manage Topics</a>
               </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://www.brainbrief.app/unsubscribe" class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
@@ -520,10 +547,9 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
 
         </table>
 
-        <!-- Copyright below card -->
+        <!-- #12: Cut "Powered by AI" tagline -->
         <p class="text-muted" style="margin: 24px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #94A3B8; text-align: center;">
-          &copy; ${year} Brain Brief. All rights reserved.<br>
-          <span style="font-size: 10px; opacity: 0.7;">Powered by AI &bull; Grounded in Truth</span>
+          &copy; ${year} Brain Brief. All rights reserved.
         </p>
         <p class="text-muted" style="margin: 8px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #CBD5E1; text-align: center;">
           Brain Brief &middot; PO Box 254752 &middot; Sacramento, CA 95825
@@ -547,11 +573,8 @@ function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefing
   const manageUrl = `https://www.brainbrief.app/dashboard?ref=email${uidParam}`;
 
   const year = new Date().getFullYear();
-  const dateStr = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  const now = new Date();
+  const dateStr = `${now.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()} \u00b7 ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}`;
 
   // Add inline styles to HTML elements for email client compatibility
   const styledContent = addEmailInlineStyles(contentHtml);
@@ -575,9 +598,13 @@ function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefing
   <![endif]-->
   <style>
     :root { color-scheme: light dark; }
+    @media (max-width: 480px) {
+      .legacy-outer-pad { padding: 16px 8px !important; }
+      .legacy-inner-pad { padding-left: 16px !important; padding-right: 16px !important; }
+    }
     @media (prefers-color-scheme: dark) {
       .legacy-bg { background-color: #0F172A !important; }
-      .legacy-card { background-color: #1E293B !important; }
+      .legacy-card { background-color: #1E293B !important; border-color: #334155 !important; }
       .legacy-header { background-color: #1E293B !important; border-color: #334155 !important; }
       .legacy-content { background-color: #1E293B !important; color: #CBD5E1 !important; }
       .legacy-content h1, .legacy-content h2, .legacy-content h3 { color: #F8FAFC !important; }
@@ -591,14 +618,14 @@ function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefing
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-  <table role="presentation" class="legacy-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FFFFFF;">
+<body style="margin: 0; padding: 0; background-color: #F8FAFC; font-family: Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" class="legacy-bg" width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC;">
     <tr>
-      <td align="center" style="padding: 24px 12px;">
-        <table role="presentation" class="legacy-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 640px; background-color: #FFFFFF;">
+      <td align="center" class="legacy-outer-pad" style="padding: 24px 12px;">
+        <table role="presentation" class="legacy-card" width="100%" cellpadding="0" cellspacing="0" style="max-width: 640px; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; border: 1px solid #E2E8F0;">
           <!-- Header -->
           <tr>
-            <td class="legacy-header" style="padding: 28px 24px 20px 24px; background-color: #FFFFFF; border-bottom: 1px solid #F1F5F9;">
+            <td class="legacy-header legacy-inner-pad" style="padding: 28px 24px 20px 24px; background-color: #FFFFFF; border-bottom: 1px solid #F1F5F9;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="vertical-align: middle;">
@@ -617,21 +644,21 @@ function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefing
           </tr>
           <!-- Content -->
           <tr>
-            <td class="legacy-content" style="padding: 24px; background-color: #FFFFFF; color: #334155; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6;">
+            <td class="legacy-content legacy-inner-pad" style="padding: 24px; background-color: #FFFFFF; color: #334155; font-family: Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6;">
               ${styledContent}
             </td>
           </tr>
           <!-- Footer -->
           <tr>
-            <td class="legacy-footer" style="padding: 28px 24px; background-color: #FAFAFA; border-top: 1px solid #F1F5F9; text-align: center;">
+            <td class="legacy-footer legacy-inner-pad" style="padding: 28px 24px; background-color: #FAFAFA; border-top: 1px solid #F1F5F9; text-align: center;">
               <p class="legacy-footer-text" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B; line-height: 1.6;">
                 You're receiving this because you subscribed to topics on Brain Brief.
               </p>
               <p style="margin: 20px 0 0;">
-                <a href="${rateUrl}" style="display: inline-block; padding: 8px 20px; border-radius: 6px; border: 1px solid #D1FAE5; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; color: #059669; text-decoration: none; background-color: #F0FDF4;">Rate this briefing</a>
+                <a href="${rateUrl}" style="display: inline-block; padding: 10px 24px; background-color: #10B981; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; text-decoration: none; border-radius: 8px;">Rate this briefing</a>
               </p>
               <p style="margin: 12px 0 0;">
-                <a href="${manageUrl}" style="display: inline-block; padding: 10px 20px; background-color: #0F172A; color: #FFFFFF; font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">Manage Topics</a>
+                <a href="${manageUrl}" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #64748B; text-decoration: underline;">Manage Topics</a>
               </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://www.brainbrief.app/unsubscribe" class="legacy-footer-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>

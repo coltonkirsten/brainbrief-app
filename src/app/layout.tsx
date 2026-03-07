@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Merriweather, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -79,6 +80,7 @@ export default function RootLayout({
         className={`${inter.variable} ${merriweather.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground`}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );

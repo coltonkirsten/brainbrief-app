@@ -1094,7 +1094,7 @@ function generateHtmlFromStructured(data: BriefingData): string {
         const citations = bulletSourceList
           .map(
             (s) =>
-              `<a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener" style="color: #10b981; text-decoration: none; font-size: 0.85em;">${escapeHtml(cleanDomain(s.title))}</a>`
+              `<a href="${escapeHtml(s.uri)}" target="_blank" rel="noopener" style="color: #10b981; text-decoration: underline; font-size: 0.85em;">${escapeHtml(cleanDomain(s.title))}</a>`
           )
           .join(", ");
         html += `  <li>${escapeHtml(bullet)} <span style="color: #94a3b8;">[${citations}]</span></li>\n`;

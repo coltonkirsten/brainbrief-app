@@ -290,7 +290,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
               ? ` <span style="font-size: 12px; color: #94A3B8;">[${bulletSourceList
                   .map(
                     (s) =>
-                      `<a href="${escapeHtml(s.uri)}" style="color: #10B981; text-decoration: none; border-bottom: 1px solid #D1FAE5; font-size: 12px;" target="_blank">${escapeHtml(cleanSourceTitle(s.title))}</a>`
+                      `<a href="${escapeHtml(s.uri)}" style="color: #10B981; text-decoration: underline; font-size: 12px;" target="_blank">${escapeHtml(cleanSourceTitle(s.title))}</a>`
                   )
                   .join(", ")}]</span>`
               : "";
@@ -347,7 +347,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
                             : "";
                           return `
                       <p style="margin: 0 0 4px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5;">
-                        <a href="${escapeHtml(source.uri)}" style="color: #10B981; text-decoration: none; border-bottom: 1px solid #D1FAE5;" target="_blank">
+                        <a href="${escapeHtml(source.uri)}" style="color: #10B981; text-decoration: underline;" target="_blank">
                           ${escapeHtml(displayTitle)}
                         </a>
                         ${domainSuffix}

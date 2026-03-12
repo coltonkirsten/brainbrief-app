@@ -15,6 +15,21 @@ export const metadata: Metadata = {
     url: "https://www.brainbrief.app/blog",
     siteName: "Brain Brief",
     type: "website",
+    images: [
+      {
+        url: "https://www.brainbrief.app/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Brain Brief Blog",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog — Brain Brief",
+    description:
+      "Ideas on staying informed without the noise. Essays on information overload, intentional reading, and building a smarter news diet.",
+    images: ["https://www.brainbrief.app/og-image.png"],
   },
 };
 

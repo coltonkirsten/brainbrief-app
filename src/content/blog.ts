@@ -3,6 +3,7 @@ export interface BlogPost {
   title: string;
   metaDescription: string;
   keyword: string;
+  coverImage?: string; // path relative to /public, e.g. "/blog/slug.png"
   publishedAt: string; // ISO date string
   readingTime: number; // minutes
   content: string; // markdown
@@ -15,6 +16,7 @@ export const blogPosts: BlogPost[] = [
     metaDescription:
       "Learn how to stay genuinely informed without the anxiety and time drain of doomscrolling — and what a healthier information diet actually looks like.",
     keyword: "how to stay informed without doomscrolling",
+    coverImage: "/blog/stay-informed-without-doomscrolling.png",
     publishedAt: "2026-01-20",
     readingTime: 7,
     content: `The problem isn't your willpower. It's the business model.
@@ -87,6 +89,7 @@ That's the philosophy behind [Brain Brief](https://brainbrief.app). Choose your 
     metaDescription:
       "Newsletter fatigue is real. After a decade of inbox overload, the era of generic email digests is ending. Here's what comes next — and why it's better.",
     keyword: "newsletter fatigue",
+    coverImage: "/blog/generic-newsletters-are-dead.png",
     publishedAt: "2026-01-24",
     readingTime: 8,
     content: `In 2020, newsletters were supposed to save us.
@@ -156,6 +159,7 @@ The inbox isn't going anywhere. The twenty-newsletter subscription stack is.`,
     metaDescription:
       "AI-powered morning briefings aren't just faster news — they're a fundamentally different approach to staying informed. Here's what makes them different.",
     keyword: "AI news briefing",
+    coverImage: "/blog/five-minute-morning-briefing.png",
     publishedAt: "2026-01-28",
     readingTime: 8,
     content: `Somewhere between the morning newspaper and the doomscrolling era, we lost the idea that staying informed could be a calm, finite experience.
@@ -227,6 +231,7 @@ It arrives in your inbox. You read it. You're done.`,
     metaDescription:
       "Information overload isn't just annoying — it has measurable costs to your focus, decision-making, and career performance. Here's what the research shows.",
     keyword: "information overload solutions",
+    coverImage: "/blog/hidden-cost-of-information-overload.png",
     publishedAt: "2026-02-01",
     readingTime: 9,
     content: `Every knowledge worker has experienced some version of this: you spent the morning reading — news, newsletters, Slack, email, a few articles you meant to skim — and by noon you feel both exhausted and somehow behind. You've been consuming information for hours. You don't feel more informed.
@@ -298,6 +303,7 @@ The goal isn't to be less informed. It's to be actually informed, rather than ju
     metaDescription:
       "RSS, news apps, newsletters, social media — each approach to staying informed has real tradeoffs. Here's an honest breakdown to help you build the right information diet.",
     keyword: "best way to stay up to date on news",
+    coverImage: "/blog/rss-apps-newsletters-comparison.png",
     publishedAt: "2026-02-04",
     readingTime: 10,
     content: `There is no shortage of tools that promise to help you stay informed. After two decades of media experimentation, the options have proliferated: RSS readers, curated news apps, Substack newsletters, email digests, Twitter lists, Reddit, podcasts, and now AI-powered briefings. Each has a committed user base that insists it's the right approach.
@@ -429,6 +435,7 @@ The goal is deliberate design. Most people's information diet happened to them; 
     metaDescription:
       "Senior professionals can't afford to doomscroll — or to be uninformed. Here's how the best of them stay genuinely current in under 30 minutes a day.",
     keyword: "how executives stay informed",
+    coverImage: "/blog/how-executives-stay-informed.png",
     publishedAt: "2026-02-07",
     readingTime: 9,
     content: `There's a specific irony in how most people approach staying informed: the more you need to know — the more consequential your decisions, the more domains you operate across, the more people who depend on your judgment — the less time you have to find out.
@@ -505,6 +512,7 @@ This isn't a heroic discipline. It's a system. And systems, unlike willpower, sc
     metaDescription:
       "Most people's information diet happened to them — they never chose it. Here's a simple audit to find out if what you're reading actually matches what you care about.",
     keyword: "information diet",
+    coverImage: "/blog/reading-wrong-things.png",
     publishedAt: "2026-02-10",
     readingTime: 7,
     content: `Here's a question worth sitting with: when did you last choose what to follow?
@@ -576,6 +584,7 @@ Those two things feel similar in the moment. Over time, the difference compounds
     metaDescription:
       "You read constantly but retain almost nothing. This isn't a memory problem — it's a processing problem. Here's what cognitive science says about why, and what actually works.",
     keyword: "why can't I remember what I read",
+    coverImage: "/blog/why-you-cant-remember-what-you-read.png",
     publishedAt: "2026-02-13",
     readingTime: 8,
     content: `You've had this experience: you read something, close the tab, and twenty minutes later can't recall what it said. Not the details — the gist. You remember reading *something* about the topic. You can't tell someone what you learned.
@@ -649,6 +658,7 @@ The goal isn't to read more. It's to actually know what you read.`,
     metaDescription:
       "From the morning newspaper to algorithmic feeds to AI briefings — how information delivery has evolved, where it's going, and why true personalization finally matters.",
     keyword: "personalized news digest",
+    coverImage: "/blog/rise-of-personalized-briefing.png",
     publishedAt: "2026-02-17",
     readingTime: 9,
     content: `For most of the twentieth century, staying informed meant reading the same thing as everyone else.
@@ -715,6 +725,7 @@ One briefing. Your topics. Five minutes. Done.`,
     metaDescription:
       "Feeling informed and actually being informed are different things. Here are five signs your current reading habits are producing the feeling without the substance.",
     keyword: "information overload signs",
+    coverImage: "/blog/five-signs-information-diet-failing.png",
     publishedAt: "2026-02-20",
     readingTime: 8,
     content: `There's a version of staying informed that looks like staying informed but produces almost none of the benefits. You're reading constantly. You have opinions on current events. You could name the relevant parties in most major stories if pressed.
@@ -802,6 +813,7 @@ Less, better understood, on the topics that actually matter to you.`,
     metaDescription:
       "ChatGPT, Perplexity, and Google are all building personalized news briefings in 2026. This shift didn't happen overnight — it was the only logical outcome of two decades of information overload.",
     keyword: "personalized news briefing",
+    coverImage: "/blog/personalized-briefing-category.png",
     publishedAt: "2026-03-10",
     readingTime: 8,
     content: `Something quietly significant happened in the news industry at the beginning of 2026.
@@ -889,6 +901,7 @@ The category is real. The timing is now.
     metaDescription:
       "More information isn't making us better informed. Here's the counterintuitive case for consuming less — and the framework for doing it well.",
     keyword: "information overload tips",
+    coverImage: "/blog/read-less-understand-more.png",
     publishedAt: "2026-03-12",
     readingTime: 7,
     content: `Here's a question worth sitting with: when did you last feel genuinely well-informed?

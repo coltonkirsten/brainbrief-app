@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Clock, ArrowLeft } from "lucide-react";
 import { getAllPosts } from "@/content/blog";
 import type { Metadata } from "next";
@@ -69,34 +70,47 @@ export default function BlogIndexPage() {
         <div className="space-y-0 divide-y divide-border">
           {posts.map((post) => (
             <article key={post.slug} className="py-8 first:pt-0 group">
-              <Link href={`/blog/${post.slug}`} className="block">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
-                  <time dateTime={post.publishedAt}>
-                    {new Date(post.publishedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </time>
-                  <span className="text-border">/</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {post.readingTime} min read
+              <Link href={`/blog/${post.slug}`} className="block sm:flex sm:gap-6">
+                {post.coverImage && (
+                  <div className="flex-shrink-0 mb-4 sm:mb-0 rounded-xl overflow-hidden sm:w-48 sm:h-28">
+                    <Image
+                      src={post.coverImage}
+                      alt={post.title}
+                      width={384}
+                      height={224}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+                    <time dateTime={post.publishedAt}>
+                      {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </time>
+                    <span className="text-border">/</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      {post.readingTime} min read
+                    </span>
+                  </div>
+
+                  <h2 className="text-xl sm:text-2xl font-bold font-serif text-primary group-hover:text-accent transition-colors leading-snug">
+                    {post.title}
+                  </h2>
+
+                  <p className="mt-3 text-muted-foreground leading-relaxed line-clamp-2">
+                    {post.metaDescription}
+                  </p>
+
+                  <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-accent group-hover:gap-2.5 transition-all">
+                    Read more
+                    <ArrowRight className="w-4 h-4" />
                   </span>
                 </div>
-
-                <h2 className="text-xl sm:text-2xl font-bold font-serif text-primary group-hover:text-accent transition-colors leading-snug">
-                  {post.title}
-                </h2>
-
-                <p className="mt-3 text-muted-foreground leading-relaxed line-clamp-2">
-                  {post.metaDescription}
-                </p>
-
-                <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-accent group-hover:gap-2.5 transition-all">
-                  Read more
-                  <ArrowRight className="w-4 h-4" />
-                </span>
               </Link>
             </article>
           ))}

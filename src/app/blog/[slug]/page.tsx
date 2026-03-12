@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ArrowRight, Clock } from "lucide-react";
 import { notFound } from "next/navigation";
 import { marked } from "marked";
@@ -22,6 +23,10 @@ export async function generateMetadata({
   const post = getPostBySlug(slug);
   if (!post) return {};
 
+  const ogImage = post.coverImage
+    ? `https://www.brainbrief.app${post.coverImage}`
+    : "https://www.brainbrief.app/og-image.png";
+
   return {
     title: `${post.title} — Brain Brief`,
     description: post.metaDescription,
@@ -33,11 +38,20 @@ export async function generateMetadata({
       siteName: "Brain Brief",
       type: "article",
       publishedTime: post.publishedAt,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.metaDescription,
+      images: [ogImage],
     },
   };
 }
@@ -95,6 +109,20 @@ export default async function BlogPostPage({ params }: PageProps) {
           <ArrowLeft className="w-4 h-4" />
           All posts
         </Link>
+
+        {/* Cover image */}
+        {post.coverImage && (
+          <div className="mb-10 -mx-6 sm:mx-0 rounded-none sm:rounded-2xl overflow-hidden">
+            <Image
+              src={post.coverImage}
+              alt={post.title}
+              width={1200}
+              height={630}
+              className="w-full h-auto"
+              priority
+            />
+          </div>
+        )}
 
         {/* Article header */}
         <header className="mb-10">

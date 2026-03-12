@@ -882,6 +882,93 @@ The category is real. The timing is now.
 
 *Brain Brief delivers a personalized daily briefing on the topics you choose. Takes about five minutes to read. [Start your free trial](https://brainbrief.app).*`,
   },
+  {
+    slug: "read-less-understand-more",
+    title:
+      "The Case for Reading Less (And Why It Will Make You Better Informed)",
+    metaDescription:
+      "More information isn't making us better informed. Here's the counterintuitive case for consuming less — and the framework for doing it well.",
+    keyword: "information overload tips",
+    publishedAt: "2026-03-12",
+    readingTime: 7,
+    content: `Here's a question worth sitting with: when did you last feel genuinely well-informed?
+
+Not caught-up. Not current. Actually well-informed — the kind where you understood something deeply enough to explain it to someone else, or where it meaningfully changed how you were thinking about a problem.
+
+If you're struggling to answer, you're not alone. And the reason probably isn't that you're not reading enough.
+
+---
+
+## The Volume Trap
+
+There's an assumption embedded in most advice about staying informed: that the problem is a deficit of information. Read more newsletters. Follow more experts. Check the news more often. Stay current.
+
+This assumption is almost certainly wrong — and acting on it makes the problem worse.
+
+The average person with a smartphone encounters between 4,000 and 10,000 pieces of content per day, across news apps, email, social feeds, and messaging. A significant fraction of that is intentionally informative. Almost none of it is retained.
+
+The human brain processes information in roughly two stages. Working memory — what you're actively thinking about right now — is severely limited. Long-term memory requires consolidation: time, repetition, or strong emotional or contextual encoding. When you're moving quickly through a feed, skimming headlines, opening articles and half-reading them before moving on, you're generating the sensation of being informed without triggering the conditions for information to actually stick.
+
+This is why you can spend an hour on news and struggle to recall what you read by dinner. The volume was high. The retention was close to zero.
+
+---
+
+## What Cognitive Science Actually Says
+
+Research on information processing has produced a consistent finding: context-switching is expensive. Every time you move from one article to a different topic, your brain spends time — measurable, non-trivial time — reloading context and reorienting. In a traditional news session, you might make dozens of these switches.
+
+The cost compounds. Studies on task-switching suggest that these micro-interruptions can reduce effective cognitive performance by up to 40%. Applied to reading, this means that skimming ten articles on different topics produces substantially less understanding than reading two articles carefully.
+
+There's also a concept called cognitive load — the total amount of mental effort being used at any given moment. High-volume information consumption, especially with the visual noise of modern news and social feeds, pushes cognitive load toward its limits quickly. When you're at capacity, comprehension drops and retention drops with it.
+
+The implication is uncomfortable but clear: more reading doesn't produce more understanding. At a certain point — one that most regular news consumers have long since passed — it actively reduces it.
+
+---
+
+## The Paradox of the Well-Informed Person
+
+Think about people you know who seem genuinely well-informed — the ones you'd call if you wanted to understand what's actually happening with AI regulation, or the economy, or healthcare policy.
+
+They are rarely the people who read the most. They tend to be people who read selectively, think carefully about what they take in, and have developed strong filters for what deserves their attention.
+
+In knowledge-worker terms, this is the difference between breadth and depth. Breadth — having surface familiarity with many things — is easy to mistake for being informed. It produces confident-sounding opinions and the ability to follow conversations. It rarely produces genuine understanding.
+
+Depth — actually understanding fewer things well — is harder to achieve, less socially visible, and substantially more useful. It's what allows you to connect dots across topics, notice when something important is actually happening, and form views that hold up under scrutiny.
+
+Reading less, but better, is the path to depth.
+
+---
+
+## What Reading Less Actually Looks Like
+
+This isn't an argument for ignorance. It's an argument for selectivity.
+
+In practice, reading less while staying better informed means making a small number of deliberate choices upfront rather than a large number of reactive choices throughout the day.
+
+**Decide what you actually need to follow.** Most people consume news reactively — whatever appears in the feed, whatever gets shared, whatever the algorithm surfaces. A better approach is to identify, in advance, three to five domains that matter to you: your professional field, a geopolitical area you care about, a topic you're personally interested in. Everything else can be occasional rather than daily.
+
+**Change the intake mechanism.** A social feed is designed to maximize engagement, not understanding. The format — short items, variable reward, infinite scroll — is hostile to the conditions that produce retention. A curated briefing, a long-form newsletter from a writer you trust, or even a well-edited podcast produces significantly more comprehension per unit of time spent.
+
+**Give information somewhere to land.** Most consumed information evaporates because there's no processing step. Even minimal processing — taking a note, explaining a concept to someone else, connecting what you just read to something you already knew — dramatically improves retention. Reading with a specific question in mind helps too.
+
+**Let recency work for you, not against you.** If something is genuinely important, it will still be important next week. The anxiety that drives constant news-checking ("I might miss something") rarely corresponds to actual consequences. Most breaking news doesn't require immediate action from most people. Batch your news intake — once in the morning, once in the afternoon at most — and you'll find the important things were still there.
+
+---
+
+## The Goal Is Understanding, Not Currency
+
+There's a useful test for any piece of information you consume: does knowing this change what you think or what you do?
+
+If the honest answer is no — if you're reading it because it appeared, because it felt urgent, because staying current is a habit rather than a strategy — it's probably contributing to the noise rather than the signal.
+
+The best-informed people aren't the ones who read everything. They're the ones who've built a system that reliably delivers the signal they need, without forcing them to wade through everything else first.
+
+Reading less, on purpose, is how you get there.
+
+---
+
+*Brain Brief delivers a personalized daily briefing on the topics you choose. Takes about five minutes to read. Start your free trial at [brainbrief.app](https://brainbrief.app).*`,
+  },
 ];
 
 /** Get all blog posts sorted by date (newest first) */

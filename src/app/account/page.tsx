@@ -23,7 +23,7 @@ export default async function AccountPage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "trial_ends_at, subscription_status, plan_type, current_period_end, stripe_customer_id, stripe_subscription_id"
+      "trial_ends_at, subscription_status, plan_type, current_period_end, stripe_customer_id, stripe_subscription_id, created_at"
     )
     .eq("user_id", user.id)
     .maybeSingle();

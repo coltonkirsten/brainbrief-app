@@ -96,7 +96,7 @@ export async function POST() {
     // Get user profile for display name and trial status
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name, email, timezone, trial_ends_at, subscription_status")
+      .select("display_name, email, timezone, trial_ends_at, subscription_status, created_at")
       .eq("user_id", user.id)
       .maybeSingle();
 

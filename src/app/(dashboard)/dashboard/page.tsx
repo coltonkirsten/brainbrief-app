@@ -30,7 +30,7 @@ export default async function DashboardPage() {
   const [profileResult, topicsResult, briefingResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("trial_ends_at, subscription_status, preferred_time, timezone")
+      .select("trial_ends_at, subscription_status, preferred_time, timezone, created_at")
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase

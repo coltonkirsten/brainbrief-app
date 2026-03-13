@@ -40,6 +40,7 @@ export interface TrialInfo {
 export function getTrialInfo(profile: {
   trial_ends_at: string | null;
   subscription_status: string;
+  created_at?: string | null;
 }): TrialInfo {
   const subscriptionStatus = (profile.subscription_status || "trialing") as SubscriptionStatus;
   const isSubscriber = subscriptionStatus === "active";
@@ -57,12 +58,21 @@ export function getTrialInfo(profile: {
   const trialDaysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
 
   // Day number (1-indexed, for "Day X of 7")
-  const trialDayNumber = trialEndsAt
-    ? Math.min(
-        TRIAL_DURATION_DAYS,
-        Math.max(1, TRIAL_DURATION_DAYS - trialDaysRemaining + 1)
-      )
-    : TRIAL_DURATION_DAYS;
+  // Use created_at (account age) to avoid resetting when trial is extended.
+  // Falls back to trial_ends_at calculation for backwards compatibility.
+  let trialDayNumber: number;
+  if (profile.created_at) {
+    const createdAt = new Date(profile.created_at);
+    const daysSinceCreation = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+    trialDayNumber = Math.min(TRIAL_DURATION_DAYS, Math.max(1, daysSinceCreation + 1));
+  } else if (trialEndsAt) {
+    trialDayNumber = Math.min(
+      TRIAL_DURATION_DAYS,
+      Math.max(1, TRIAL_DURATION_DAYS - trialDaysRemaining + 1)
+    );
+  } else {
+    trialDayNumber = TRIAL_DURATION_DAYS;
+  }
 
   // Access rules
   // past_due = payment failed but Stripe is still retrying (grace period ~7 days)

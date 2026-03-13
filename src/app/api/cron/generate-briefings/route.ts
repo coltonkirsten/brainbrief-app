@@ -107,7 +107,7 @@ export async function GET(request: Request) {
   const userIds = Array.from(userTopics.keys());
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("user_id, display_name, email, timezone, preferred_time, trial_ends_at, subscription_status")
+    .select("user_id, display_name, email, timezone, preferred_time, trial_ends_at, subscription_status, created_at")
     .in("user_id", userIds);
 
   if (profilesError) {

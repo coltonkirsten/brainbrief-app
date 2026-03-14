@@ -1158,7 +1158,9 @@ function generateTextFromStructured(data: BriefingData): string {
   text += `\nStay informed. Stay sharp. \u2014 Brain Brief`;
   text += `\n\nRate this briefing: https://www.brainbrief.app/dashboard`;
   text += `\nManage topics: https://www.brainbrief.app/dashboard`;
-  text += `\nUnsubscribe: https://www.brainbrief.app/unsubscribe`;
+  text += `\n\nKnow someone who'd benefit from five focused minutes each morning?`;
+  text += `\nShare Brain Brief: https://www.brainbrief.app?utm_source=email&utm_medium=share&utm_campaign=forward`;
+  text += `\n\nUnsubscribe: https://www.brainbrief.app/unsubscribe`;
   return text;
 }
 

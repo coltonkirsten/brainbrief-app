@@ -532,6 +532,11 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
               <p style="margin: 12px 0 0;">
                 <a href="${manageUrl}" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #64748B; text-decoration: underline;">Manage Topics</a>
               </p>
+              <!-- Share CTA -->
+              <p style="margin: 24px 0 0; padding: 16px 20px; background-color: #F0FDF4; border-radius: 8px; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #166534; line-height: 1.5;">
+                Know someone who&rsquo;d benefit from five focused minutes each morning?<br/>
+                <a href="https://www.brainbrief.app?utm_source=email&amp;utm_medium=share&amp;utm_campaign=forward" style="color: #059669; font-weight: 600; text-decoration: underline;">Share Brain Brief</a> &mdash; or just forward this email.
+              </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://www.brainbrief.app/unsubscribe" class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
               </p>
@@ -659,6 +664,11 @@ function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefing
               </p>
               <p style="margin: 12px 0 0;">
                 <a href="${manageUrl}" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #64748B; text-decoration: underline;">Manage Topics</a>
+              </p>
+              <!-- Share CTA -->
+              <p style="margin: 24px 0 0; padding: 16px 20px; background-color: #F0FDF4; border-radius: 8px; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #166534; line-height: 1.5;">
+                Know someone who&rsquo;d benefit from five focused minutes each morning?<br/>
+                <a href="https://www.brainbrief.app?utm_source=email&amp;utm_medium=share&amp;utm_campaign=forward" style="color: #059669; font-weight: 600; text-decoration: underline;">Share Brain Brief</a> &mdash; or just forward this email.
               </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://www.brainbrief.app/unsubscribe" class="legacy-footer-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>

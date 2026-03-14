@@ -74,8 +74,46 @@ export default async function BlogPostPage({ params }: PageProps) {
   const prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
   const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
 
+  // Article JSON-LD structured data for Google Discover + Rich Results
+  const ogImage = post.coverImage
+    ? `https://www.brainbrief.app${post.coverImage}`
+    : "https://www.brainbrief.app/og-image.png";
+
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.metaDescription,
+    image: ogImage,
+    datePublished: post.publishedAt,
+    dateModified: post.publishedAt,
+    author: {
+      "@type": "Organization",
+      name: "Brain Brief",
+      url: "https://www.brainbrief.app",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Brain Brief",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://www.brainbrief.app/logo-512.png",
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://www.brainbrief.app/blog/${post.slug}`,
+    },
+    wordCount: post.content.split(/\s+/).length,
+    timeRequired: `PT${post.readingTime}M`,
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full">
         <Link

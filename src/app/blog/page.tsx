@@ -36,8 +36,28 @@ export const metadata: Metadata = {
 export default function BlogIndexPage() {
   const posts = getAllPosts();
 
+  // ItemList JSON-LD — helps Google understand the blog collection
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "The Brain Brief Blog",
+    description:
+      "Ideas on staying informed without the noise. Essays on information overload, intentional reading, and building a smarter news diet.",
+    numberOfItems: posts.length,
+    itemListElement: posts.map((post, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `https://www.brainbrief.app/blog/${post.slug}`,
+      name: post.title,
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 py-6 max-w-5xl mx-auto w-full">
         <Link

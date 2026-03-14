@@ -235,44 +235,60 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
       `
     : "";
 
-  // Build trial countdown footer + subscribe CTA based on trial day
+  // Build trial countdown footer + subscribe CTA based on trial status
+  // Use trialDaysRemaining (from trial_ends_at) for urgency triggers,
+  // not trialDayNumber (from created_at), so extended trials don't
+  // falsely show "last free briefing" warnings.
   let footerCountdown = "";
   let subscribeCta = "";
   if (isTrial) {
     const day = trialInfo.trialDayNumber;
+    const daysLeft = trialInfo.trialDaysRemaining;
     if (day === 1) {
       footerCountdown = `
               <p style="margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
                 Day 1 of 7 — your free trial is active
               </p>`;
-    } else if (day >= 2 && day <= 5) {
-      const daysLeft = 7 - day + 1;
-      footerCountdown = `
-              <p style="margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
-                Day ${day} of 7 &middot; ${daysLeft} days left in your free trial
-              </p>`;
-    } else if (day === 6) {
-      footerCountdown = `
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
-                <tr>
-                  <td class="trial-card" style="padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; background-color: #F8FAFC; text-align: center;">
-                    <p class="trial-card-text" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 500; color: #334155;">
-                      Day 6 of 7 &middot; Your last free briefing is tomorrow.
-                    </p>
-                  </td>
-                </tr>
-              </table>`;
-    } else if (day === 7) {
+    } else if (daysLeft <= 0) {
+      // Trial expired — shouldn't normally reach here (cron skips expired)
+      // but handle gracefully
       footerCountdown = `
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
                 <tr>
                   <td class="trial-card" style="padding: 16px; border: 1px solid #CBD5E1; border-radius: 8px; background-color: #F1F5F9; text-align: center;">
                     <p class="trial-card-text" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
-                      Day 7 of 7 &middot; This is your last free briefing.
+                      Your free trial has ended.
                     </p>
                   </td>
                 </tr>
               </table>`;
+    } else if (daysLeft === 1) {
+      footerCountdown = `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
+                <tr>
+                  <td class="trial-card" style="padding: 16px; border: 1px solid #CBD5E1; border-radius: 8px; background-color: #F1F5F9; text-align: center;">
+                    <p class="trial-card-text" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #0F172A;">
+                      This is your last free briefing.
+                    </p>
+                  </td>
+                </tr>
+              </table>`;
+    } else if (daysLeft === 2) {
+      footerCountdown = `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 16px 0;">
+                <tr>
+                  <td class="trial-card" style="padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; background-color: #F8FAFC; text-align: center;">
+                    <p class="trial-card-text" style="margin: 0; font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 500; color: #334155;">
+                      Your last free briefing is tomorrow.
+                    </p>
+                  </td>
+                </tr>
+              </table>`;
+    } else {
+      footerCountdown = `
+              <p style="margin: 0 0 16px 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #64748B;">
+                ${daysLeft} days left in your free trial
+              </p>`;
     }
     // #4: Full-width subscribe CTA button for all trial users
     subscribeCta = `

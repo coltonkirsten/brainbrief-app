@@ -19,7 +19,7 @@ export const revalidate = 60;
 const SAMPLE_USER_ID = "0a1ee72f-2d65-4062-8c0b-db92305cae1d";
 
 export const metadata: Metadata = {
-  title: "Today's AI Briefing — Brain Brief",
+  title: "Today's AI Briefing",
   description:
     "A daily AI-synthesized intelligence briefing on Artificial Intelligence. See what Brain Brief delivers to your inbox every morning — sourced, cited, and ready in 5 minutes.",
   openGraph: {

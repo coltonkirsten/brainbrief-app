@@ -83,7 +83,7 @@ export default function LandingPage() {
             {/* Step 1 */}
             <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
               <div className="flex-1 order-2 md:order-1 relative rounded-2xl overflow-hidden bg-background border border-border shadow-sm">
-                <Image src="/hiw-step-1.png" alt="Pick your topics" width={800} height={600} className="w-full h-auto object-cover" />
+                <Image src="/hiw-step-1.png" alt="Pick your topics" width={800} height={600} className="w-full h-auto object-contain" />
               </div>
               <div className="flex-1 order-1 md:order-2">
                 <div className="w-12 h-12 rounded-full bg-muted border border-border flex items-center justify-center mb-6 shadow-sm">
@@ -108,14 +108,14 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex-1 relative rounded-2xl overflow-hidden bg-background border border-border shadow-sm">
-                <Image src="/hiw-step-2.png" alt="Email Briefing Example" width={800} height={600} className="w-full h-auto object-cover" />
+                <Image src="/hiw-step-2.png" alt="Email Briefing Example" width={800} height={600} className="w-full h-auto object-contain" />
               </div>
             </div>
 
             {/* Step 3 */}
             <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
               <div className="flex-1 order-2 md:order-1 relative rounded-2xl overflow-hidden bg-background border border-border shadow-sm">
-                <Image src="/hiw-step-3.png" alt="Morning notification" width={800} height={600} className="w-full h-auto object-cover" />
+                <Image src="/hiw-step-3.png" alt="Morning notification" width={800} height={600} className="w-full h-auto object-contain" />
               </div>
               <div className="flex-1 order-1 md:order-2">
                 <div className="w-12 h-12 rounded-full bg-muted border border-border flex items-center justify-center mb-6 shadow-sm">

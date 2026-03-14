@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { CheckCircle2, Clock, Inbox, ArrowRight, BrainCircuit } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import BriefingCarousel from "./briefing-carousel";
 
 export default function LandingPage() {

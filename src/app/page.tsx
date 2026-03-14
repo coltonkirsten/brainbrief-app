@@ -1,9 +1,87 @@
 import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle2, ArrowRight } from "lucide-react";
+import { createServerClient } from "@supabase/ssr";
+import LiveBriefingCarousel from "./live-briefing-carousel";
+import type { SampleBriefing } from "./live-briefing-carousel";
 import BriefingCarousel from "./briefing-carousel";
 
-export default function LandingPage() {
+// Revalidate every 5 minutes — sample briefings change daily
+export const revalidate = 300;
+
+const SAMPLE_USER_ID = "0a1ee72f-2d65-4062-8c0b-db92305cae1d";
+
+/**
+ * Fetch today's sample briefings from the database.
+ * Returns structured data for the live carousel, or empty array
+ * if no sample briefings exist yet (falls back to static carousel).
+ */
+async function getSampleBriefings(): Promise<SampleBriefing[]> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) return [];
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll() {
+          return [];
+        },
+        setAll() {},
+      },
+    });
+
+    // Get the 3 most recent sample briefings (one per topic)
+    const { data: briefings } = await supabase
+      .from("briefings")
+      .select(
+        "topics_covered, structured_data, subject_line, created_at"
+      )
+      .eq("user_id", SAMPLE_USER_ID)
+      .not("structured_data", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (!briefings || briefings.length === 0) return [];
+
+    // Transform DB rows into SampleBriefing shape
+    const results: SampleBriefing[] = [];
+
+    for (const row of briefings) {
+      const structured = row.structured_data as {
+        topics?: {
+          name: string;
+          headline: string;
+          bullets: string[];
+          bottomLine: string;
+          bulletSources?: { title: string; uri: string }[][];
+        }[];
+      } | null;
+
+      if (!structured?.topics?.[0]) continue;
+
+      const topic = structured.topics[0];
+      results.push({
+        topic: topic.name || (row.topics_covered as string[])?.[0] || "News",
+        headline: topic.headline || row.subject_line || "Today's Briefing",
+        bullets: topic.bullets || [],
+        bottomLine: topic.bottomLine || "",
+        sources: topic.bulletSources || [],
+        createdAt: row.created_at,
+      });
+    }
+
+    return results;
+  } catch (err) {
+    console.error("[landing] Failed to fetch sample briefings:", err);
+    return [];
+  }
+}
+
+export default async function LandingPage() {
+  const sampleBriefings = await getSampleBriefings();
+  const hasLiveData = sampleBriefings.length >= 2;
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-accent/20">
       {/* Nav */}
@@ -63,8 +141,12 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Briefing Carousel */}
-        <BriefingCarousel />
+        {/* Briefing Carousel — live data when available, static fallback otherwise */}
+        {hasLiveData ? (
+          <LiveBriefingCarousel briefings={sampleBriefings} />
+        ) : (
+          <BriefingCarousel />
+        )}
       </main>
 
       {/* How it works */}
@@ -78,7 +160,7 @@ export default function LandingPage() {
               We replace endless doomscrolling and cluttered RSS feeds with a single, highly-curated daily briefing.
             </p>
           </div>
-          
+
           <div className="space-y-32">
             {/* Step 1 */}
             <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
@@ -102,9 +184,9 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-full bg-muted border border-border flex items-center justify-center mb-6 shadow-sm">
                   <span className="font-serif font-bold text-accent text-lg">2</span>
                 </div>
-                <h3 className="font-serif font-bold text-3xl mb-4 text-primary">We synthesize the day's news.</h3>
+                <h3 className="font-serif font-bold text-3xl mb-4 text-primary">We synthesize the day&apos;s news.</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed">
-                  Our AI doesn't just summarize; it connects the dots. You get dense, fact-checked insights directly related to your chosen topics, fully cited so you can trust the source.
+                  Our AI doesn&apos;t just summarize; it connects the dots. You get dense, fact-checked insights directly related to your chosen topics, fully cited so you can trust the source.
                 </p>
               </div>
               <div className="flex-1 relative rounded-2xl overflow-hidden bg-background border border-border shadow-sm">
@@ -142,13 +224,13 @@ export default function LandingPage() {
               We believe in clear, transparent pricing. One plan, everything included.
             </p>
           </div>
-          
+
           <div className="max-w-lg mx-auto">
             <div className="bg-muted shadow-lg border border-border rounded-2xl p-10 relative">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent px-4 py-1 text-xs font-bold text-white uppercase tracking-wider shadow-sm">
                 7-Day Free Trial
               </div>
-              
+
               <div className="text-center mb-8">
                 <h3 className="text-xl font-bold font-serif text-primary mb-2">Brain Brief Premium</h3>
                 <div className="flex flex-col items-center justify-center mt-4">
@@ -164,7 +246,7 @@ export default function LandingPage() {
                   </p>
                 </div>
               </div>
-              
+
               <ul className="space-y-4 text-sm text-primary mb-10">
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />
@@ -183,7 +265,7 @@ export default function LandingPage() {
                   <span><strong>No ads, no tracking,</strong> no data selling</span>
                 </li>
               </ul>
-              
+
               <Link
                 href="/signup"
                 className="block w-full rounded-md bg-primary py-3.5 text-center text-sm font-medium text-primary-foreground hover:bg-primary-hover transition-all shadow-sm"

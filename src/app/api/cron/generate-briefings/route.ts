@@ -152,63 +152,99 @@ export async function GET(request: Request) {
     `[cron] ${usersToProcess.length} of ${userTopics.size} users matched for this hour`
   );
 
-  // Generate sample briefing for /sample page (once per day at 6 AM ET, or on-demand via ?seed_sample=1)
+  // Generate sample briefings for landing page carousel + /sample page
+  // 3 topics generated daily at 6 AM ET, or on-demand via ?seed_sample=1
   let sampleGenerated = false;
   const SAMPLE_USER_ID = "0a1ee72f-2d65-4062-8c0b-db92305cae1d";
-  const SAMPLE_TOPIC = "Artificial Intelligence";
+  const SAMPLE_TOPICS = [
+    "Artificial Intelligence",
+    "Climate Change",
+    "Personal Finance",
+  ];
   const sampleHour = getCurrentHourInTimezone("America/New_York");
   const forceSample = new URL(request.url).searchParams.get("seed_sample") === "1";
   if (sampleHour === 6 || forceSample) {
     try {
-      // Check if sample was already generated today
+      // Check which sample topics already have a briefing today
       const todayStart = new Date();
       todayStart.setUTCHours(0, 0, 0, 0);
-      const { data: existingSample } = await supabase
+      const { data: existingSamples } = await supabase
         .from("briefings")
-        .select("id")
+        .select("topics_covered")
         .eq("user_id", SAMPLE_USER_ID)
-        .gte("created_at", todayStart.toISOString())
-        .limit(1)
-        .maybeSingle();
+        .gte("created_at", todayStart.toISOString());
 
-      if (!existingSample) {
-        console.log("[cron] Generating daily sample briefing for /sample page");
+      const existingTopics = new Set(
+        (existingSamples ?? []).flatMap(
+          (s: { topics_covered: string[] }) => s.topics_covered ?? []
+        )
+      );
+
+      const missingTopics = SAMPLE_TOPICS.filter(
+        (t) => !existingTopics.has(t)
+      );
+
+      if (missingTopics.length > 0) {
+        console.log(
+          `[cron] Generating ${missingTopics.length} sample briefings: ${missingTopics.join(", ")}`
+        );
 
         // Fetch previous sample briefings for dedup
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const sevenDaysAgo = new Date(
+          Date.now() - 7 * 24 * 60 * 60 * 1000
+        ).toISOString();
         const { data: prevSamples } = await supabase
           .from("briefings")
           .select("created_at, content_text, topics_covered")
           .eq("user_id", SAMPLE_USER_ID)
           .gte("created_at", sevenDaysAgo)
           .order("created_at", { ascending: false })
-          .limit(7);
+          .limit(21);
 
-        const sampleBriefing = await generateBriefing(
-          [SAMPLE_TOPIC],
-          null,
-          "America/New_York",
-          prevSamples ?? undefined
-        );
+        for (const topic of missingTopics) {
+          try {
+            const sampleBriefing = await generateBriefing(
+              [topic],
+              null,
+              "America/New_York",
+              prevSamples ?? undefined
+            );
 
-        const subjectLine = generateSubjectLine(sampleBriefing.structured);
+            const subjectLine = generateSubjectLine(
+              sampleBriefing.structured
+            );
 
-        await supabase.from("briefings").insert({
-          user_id: SAMPLE_USER_ID,
-          content_html: sampleBriefing.contentHtml,
-          content_text: sampleBriefing.contentText,
-          topics_covered: sampleBriefing.topicsCovered,
-          grounded: sampleBriefing.grounded,
-          subject_line: subjectLine,
-          sent_at: new Date().toISOString(),
-        });
+            await supabase.from("briefings").insert({
+              user_id: SAMPLE_USER_ID,
+              content_html: sampleBriefing.contentHtml,
+              content_text: sampleBriefing.contentText,
+              topics_covered: sampleBriefing.topicsCovered,
+              grounded: sampleBriefing.grounded,
+              subject_line: subjectLine,
+              structured_data: sampleBriefing.structured
+                ? JSON.parse(JSON.stringify(sampleBriefing.structured))
+                : null,
+              sent_at: new Date().toISOString(),
+            });
+
+            console.log(
+              `[cron] Sample "${topic}": grounded=${sampleBriefing.grounded}`
+            );
+          } catch (topicErr) {
+            const msg =
+              topicErr instanceof Error ? topicErr.message : "Unknown error";
+            console.error(
+              `[cron] Sample "${topic}" generation failed:`,
+              msg
+            );
+          }
+        }
 
         sampleGenerated = true;
-        console.log(
-          `[cron] Sample briefing generated: grounded=${sampleBriefing.grounded}`
-        );
       } else {
-        console.log("[cron] Sample briefing already generated today, skipping");
+        console.log(
+          "[cron] All 3 sample briefings already generated today, skipping"
+        );
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";

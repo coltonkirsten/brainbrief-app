@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CheckCircle2, Clock, Inbox, ArrowRight, BrainCircuit } from "lucide-react";
 import BriefingCarousel from "./briefing-carousel";
 
@@ -67,44 +68,64 @@ export default function LandingPage() {
       </main>
 
       {/* How it works */}
-      <section id="how-it-works" className="px-6 py-24 bg-card border-y border-border">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold font-serif text-primary mb-4">
-              Intelligence, automated.
+      <section id="how-it-works" className="px-6 py-32 bg-card border-y border-border">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-24">
+            <h2 className="text-3xl md:text-5xl font-bold font-serif text-primary mb-6">
+              How it works
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-xl">
               We replace endless doomscrolling and cluttered RSS feeds with a single, highly-curated daily briefing.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div className="flex flex-col">
-              <div className="w-12 h-12 rounded-lg bg-muted border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
-                <Inbox className="w-6 h-6 text-accent" />
+          <div className="space-y-32">
+            {/* Step 1 */}
+            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
+              <div className="flex-1 order-2 md:order-1 relative rounded-2xl overflow-hidden bg-background border border-border shadow-sm">
+                <Image src="/hiw-step-1.png" alt="Pick your topics" width={800} height={600} className="w-full h-auto object-cover" />
               </div>
-              <h3 className="font-serif font-bold text-xl mb-3 text-primary">1. Curate your focus</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Define the topics, industries, or companies that matter to you. We track thousands of sources globally to ensure nothing critical is missed.
-              </p>
+              <div className="flex-1 order-1 md:order-2">
+                <div className="w-12 h-12 rounded-full bg-muted border border-border flex items-center justify-center mb-6 shadow-sm">
+                  <span className="font-serif font-bold text-accent text-lg">1</span>
+                </div>
+                <h3 className="font-serif font-bold text-3xl mb-4 text-primary">Pick what matters to you.</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Define the exact topics, industries, or companies you care about. We monitor thousands of live sources to ensure you never miss a critical signal.
+                </p>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <div className="w-12 h-12 rounded-lg bg-muted border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
-                <BrainCircuit className="w-6 h-6 text-accent" />
+
+            {/* Step 2 (Centerpiece) */}
+            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
+              <div className="flex-1">
+                <div className="w-12 h-12 rounded-full bg-muted border border-border flex items-center justify-center mb-6 shadow-sm">
+                  <span className="font-serif font-bold text-accent text-lg">2</span>
+                </div>
+                <h3 className="font-serif font-bold text-3xl mb-4 text-primary">We synthesize the day's news.</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Our AI doesn't just summarize; it connects the dots. You get dense, fact-checked insights directly related to your chosen topics, fully cited so you can trust the source.
+                </p>
               </div>
-              <h3 className="font-serif font-bold text-xl mb-3 text-primary">2. AI synthesis</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Our proprietary engine distills hours of reading into high-signal summaries, identifying key trends and highlighting "The Bottom Line."
-              </p>
+              <div className="flex-1 relative rounded-2xl overflow-hidden bg-background border border-border shadow-sm">
+                <Image src="/hiw-step-2.png" alt="Email Briefing Example" width={800} height={600} className="w-full h-auto object-cover" />
+              </div>
             </div>
-            <div className="flex flex-col">
-              <div className="w-12 h-12 rounded-lg bg-muted border border-border text-primary flex items-center justify-center mb-6 shadow-sm">
-                <Clock className="w-6 h-6 text-accent" />
+
+            {/* Step 3 */}
+            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
+              <div className="flex-1 order-2 md:order-1 relative rounded-2xl overflow-hidden bg-background border border-border shadow-sm">
+                <Image src="/hiw-step-3.png" alt="Morning notification" width={800} height={600} className="w-full h-auto object-cover" />
               </div>
-              <h3 className="font-serif font-bold text-xl mb-3 text-primary">3. Read in minutes</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Receive a beautifully formatted, editorial-grade email on your schedule. Reclaim your time and attention without sacrificing awareness.
-              </p>
+              <div className="flex-1 order-1 md:order-2">
+                <div className="w-12 h-12 rounded-full bg-muted border border-border flex items-center justify-center mb-6 shadow-sm">
+                  <span className="font-serif font-bold text-accent text-lg">3</span>
+                </div>
+                <h3 className="font-serif font-bold text-3xl mb-4 text-primary">Ready before your first coffee.</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed">
+                  Delivered straight to your inbox every morning at 7:00 AM. Stop scrolling and start reading. Get smart, and get on with your day.
+                </p>
+              </div>
             </div>
           </div>
         </div>

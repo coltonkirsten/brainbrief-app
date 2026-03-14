@@ -152,6 +152,70 @@ export async function GET(request: Request) {
     `[cron] ${usersToProcess.length} of ${userTopics.size} users matched for this hour`
   );
 
+  // Generate sample briefing for /sample page (once per day at 6 AM ET, or on-demand via ?seed_sample=1)
+  let sampleGenerated = false;
+  const SAMPLE_USER_ID = "0a1ee72f-2d65-4062-8c0b-db92305cae1d";
+  const SAMPLE_TOPIC = "Artificial Intelligence";
+  const sampleHour = getCurrentHourInTimezone("America/New_York");
+  const forceSample = new URL(request.url).searchParams.get("seed_sample") === "1";
+  if (sampleHour === 6 || forceSample) {
+    try {
+      // Check if sample was already generated today
+      const todayStart = new Date();
+      todayStart.setUTCHours(0, 0, 0, 0);
+      const { data: existingSample } = await supabase
+        .from("briefings")
+        .select("id")
+        .eq("user_id", SAMPLE_USER_ID)
+        .gte("created_at", todayStart.toISOString())
+        .limit(1)
+        .maybeSingle();
+
+      if (!existingSample) {
+        console.log("[cron] Generating daily sample briefing for /sample page");
+
+        // Fetch previous sample briefings for dedup
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: prevSamples } = await supabase
+          .from("briefings")
+          .select("created_at, content_text, topics_covered")
+          .eq("user_id", SAMPLE_USER_ID)
+          .gte("created_at", sevenDaysAgo)
+          .order("created_at", { ascending: false })
+          .limit(7);
+
+        const sampleBriefing = await generateBriefing(
+          [SAMPLE_TOPIC],
+          null,
+          "America/New_York",
+          prevSamples ?? undefined
+        );
+
+        const subjectLine = generateSubjectLine(sampleBriefing.structured);
+
+        await supabase.from("briefings").insert({
+          user_id: SAMPLE_USER_ID,
+          content_html: sampleBriefing.contentHtml,
+          content_text: sampleBriefing.contentText,
+          topics_covered: sampleBriefing.topicsCovered,
+          grounded: sampleBriefing.grounded,
+          subject_line: subjectLine,
+          sent_at: new Date().toISOString(),
+        });
+
+        sampleGenerated = true;
+        console.log(
+          `[cron] Sample briefing generated: grounded=${sampleBriefing.grounded}`
+        );
+      } else {
+        console.log("[cron] Sample briefing already generated today, skipping");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error("[cron] Sample briefing generation failed:", msg);
+    }
+  }
+
   if (usersToProcess.length === 0) {
     // Still process lifecycle emails even when no briefings are due
     console.log("[cron] Processing post-trial lifecycle emails...");
@@ -171,6 +235,7 @@ export async function GET(request: Request) {
       message: "No users matched for this hour",
       usersProcessed: 0,
       lifecycleSent: lifecycleResult.sent,
+      sampleGenerated,
     });
   }
 
@@ -303,71 +368,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Step 6: Generate sample briefing for /sample page (once per day at 6 AM ET)
-  let sampleGenerated = false;
-  const SAMPLE_USER_ID = "0a1ee72f-2d65-4062-8c0b-db92305cae1d";
-  const SAMPLE_TOPIC = "Artificial Intelligence";
-  const sampleHour = getCurrentHourInTimezone("America/New_York");
-  const forceSample = new URL(request.url).searchParams.get("seed_sample") === "1";
-  if (sampleHour === 6 || forceSample) {
-    try {
-      // Check if sample was already generated today
-      const todayStart = new Date();
-      todayStart.setUTCHours(0, 0, 0, 0);
-      const { data: existingSample } = await supabase
-        .from("briefings")
-        .select("id")
-        .eq("user_id", SAMPLE_USER_ID)
-        .gte("created_at", todayStart.toISOString())
-        .limit(1)
-        .maybeSingle();
-
-      if (!existingSample) {
-        console.log("[cron] Generating daily sample briefing for /sample page");
-
-        // Fetch previous sample briefings for dedup
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        const { data: prevSamples } = await supabase
-          .from("briefings")
-          .select("created_at, content_text, topics_covered")
-          .eq("user_id", SAMPLE_USER_ID)
-          .gte("created_at", sevenDaysAgo)
-          .order("created_at", { ascending: false })
-          .limit(7);
-
-        const sampleBriefing = await generateBriefing(
-          [SAMPLE_TOPIC],
-          null,
-          "America/New_York",
-          prevSamples ?? undefined
-        );
-
-        const subjectLine = generateSubjectLine(sampleBriefing.structured);
-
-        await supabase.from("briefings").insert({
-          user_id: SAMPLE_USER_ID,
-          content_html: sampleBriefing.contentHtml,
-          content_text: sampleBriefing.contentText,
-          topics_covered: sampleBriefing.topicsCovered,
-          grounded: sampleBriefing.grounded,
-          subject_line: subjectLine,
-          sent_at: new Date().toISOString(), // Mark as "sent" so it doesn't look unsent
-        });
-
-        sampleGenerated = true;
-        console.log(
-          `[cron] Sample briefing generated: grounded=${sampleBriefing.grounded}`
-        );
-      } else {
-        console.log("[cron] Sample briefing already generated today, skipping");
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      console.error("[cron] Sample briefing generation failed:", msg);
-    }
-  }
-
-  // Step 7: Process post-trial lifecycle emails (Day 8 + Day 10 standalone emails)
+  // Step 6: Process post-trial lifecycle emails (Day 8 + Day 10 standalone emails)
   console.log("[cron] Processing post-trial lifecycle emails...");
   let lifecycleResult = { sent: 0, errors: 0, details: [] as string[] };
   try {

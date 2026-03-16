@@ -1,10 +1,17 @@
 /**
- * Post-trial email sequence.
+ * Lifecycle email sequence.
  *
- * After a user's 7-day free trial ends, we send exactly two standalone emails:
+ * Two categories:
  *
- *   Day  8 — "Your briefings have stopped" (trial ended notice)
- *   Day 10 — "Miss me?" follow-up with Gemini-generated topic teaser (final email ever)
+ * A. ONBOARDING NUDGE
+ *   Fires 24h after email confirmation if the user has 0 topics.
+ *   One-shot — won't re-send if they still haven't added topics.
+ *   Goal: recover users who confirmed but dropped off during onboarding.
+ *
+ * B. POST-TRIAL SEQUENCE
+ *   After a user's 7-day free trial ends, we send exactly two standalone emails:
+ *     Day  8 — "Your briefing is paused" (trial ended notice)
+ *     Day 10 — "Miss me?" follow-up with Gemini-generated topic teaser (final email ever)
  *
  * After Day 10, no more emails are sent. The user's account stays active
  * and they can subscribe at any time to resume briefings.
@@ -21,7 +28,10 @@ import { TRIAL_DURATION_DAYS } from "./trial";
 // Types
 // ---------------------------------------------------------------------------
 
-export type LifecycleEmailKey = "day8_trial_ended" | "day10_miss_me";
+export type LifecycleEmailKey =
+  | "no_topics_nudge"
+  | "day8_trial_ended"
+  | "day10_miss_me";
 
 interface LifecycleEmailDef {
   key: LifecycleEmailKey;
@@ -57,7 +67,10 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
   {
     key: "day8_trial_ended",
     triggerDay: TRIAL_DURATION_DAYS + 1, // Day 8
-    subject: () => "Your Brain Brief trial has ended",
+    subject: (ctx) =>
+      ctx.topicNames.length > 0
+        ? `Your ${ctx.topicNames[0]} briefing is paused`
+        : "Your briefing is paused",
     buildHtml: (ctx) =>
       buildStandaloneHtml({
         preheader: "Your topics are saved and waiting",
@@ -88,7 +101,7 @@ const LIFECYCLE_EMAILS: LifecycleEmailDef[] = [
         : "Your briefings miss you",
     buildHtml: (ctx) =>
       buildStandaloneHtml({
-        preheader: "The world didn't stop.",
+        preheader: "Here's what happened while you were gone.",
         headline: `${greeting(ctx)} It's been a few days since your last Brain Brief.`,
         body: `
           <p style="${bodyStyle}">
@@ -128,6 +141,25 @@ export async function processLifecycleEmails(
   const logs: string[] = [];
   let sent = 0;
   let errors = 0;
+
+  // -----------------------------------------------------------------------
+  // A. Onboarding nudge — 24h after signup, user has 0 topics
+  // -----------------------------------------------------------------------
+  try {
+    const nudgeResult = await processOnboardingNudge(supabase);
+    sent += nudgeResult.sent;
+    errors += nudgeResult.errors;
+    logs.push(...nudgeResult.details);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("[lifecycle] Onboarding nudge processing failed:", msg);
+    errors++;
+    logs.push(`[error] Onboarding nudge fatal: ${msg}`);
+  }
+
+  // -----------------------------------------------------------------------
+  // B. Post-trial sequence — Day 8 + Day 10
+  // -----------------------------------------------------------------------
 
   // Get users whose trial has expired but haven't subscribed
   const { data: profiles, error: profilesError } = await supabase
@@ -230,6 +262,138 @@ export async function processLifecycleEmails(
           msg
         );
       }
+    }
+  }
+
+  return { sent, errors, details: logs };
+}
+
+// ---------------------------------------------------------------------------
+// Onboarding nudge — confirmed email + 0 topics after 24h
+// ---------------------------------------------------------------------------
+
+async function processOnboardingNudge(
+  supabase: SupabaseClient
+): Promise<{ sent: number; errors: number; details: string[] }> {
+  const logs: string[] = [];
+  let sent = 0;
+  let errors = 0;
+
+  // Get all trialing users who haven't received the nudge yet
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profiles")
+    .select(
+      "user_id, email, display_name, created_at, lifecycle_emails_sent"
+    )
+    .eq("subscription_status", "trialing");
+
+  if (profilesError || !profiles) {
+    if (profilesError) {
+      console.error("[lifecycle] Nudge: failed to fetch profiles:", profilesError);
+    }
+    return { sent: 0, errors: profilesError ? 1 : 0, details: [] };
+  }
+
+  const now = new Date();
+  const NUDGE_DELAY_MS = 24 * 60 * 60 * 1000; // 24 hours
+  const NUDGE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000; // 3-day send window
+
+  for (const profile of profiles) {
+    const alreadySent: string[] = profile.lifecycle_emails_sent || [];
+    if (alreadySent.includes("no_topics_nudge")) continue;
+
+    // Check if 24h have passed since signup
+    const createdAt = new Date(profile.created_at);
+    const elapsed = now.getTime() - createdAt.getTime();
+    if (elapsed < NUDGE_DELAY_MS) continue;
+
+    // Don't send if too old (> 3 days — they've moved on)
+    if (elapsed > NUDGE_WINDOW_MS) {
+      await markEmailSent(
+        supabase,
+        profile.user_id,
+        alreadySent,
+        "no_topics_nudge"
+      );
+      logs.push(
+        `[skip] ${profile.email}: no_topics_nudge (past 3-day window)`
+      );
+      continue;
+    }
+
+    // Check if user has 0 active topics
+    const { count } = await supabase
+      .from("topics")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile.user_id)
+      .eq("is_active", true);
+
+    if ((count ?? 0) > 0) {
+      // User already has topics — mark as sent so we don't check again
+      await markEmailSent(
+        supabase,
+        profile.user_id,
+        alreadySent,
+        "no_topics_nudge"
+      );
+      logs.push(
+        `[skip] ${profile.email}: no_topics_nudge (has ${count} topics)`
+      );
+      continue;
+    }
+
+    // Send the nudge
+    try {
+      const name = profile.display_name
+        ? `Hi ${profile.display_name},`
+        : "Hi there,";
+
+      const subject = "You're all set up — now pick your first topics!";
+      const html = buildStandaloneHtml({
+        preheader:
+          "It takes 30 seconds to pick your topics and start receiving briefings.",
+        headline: `${name} Your account is ready.`,
+        body: `
+          <p style="${bodyStyle}">
+            You signed up for Brain Brief &mdash; but you haven't picked any topics yet.
+          </p>
+          <p style="${bodyStyle}">
+            Once you add a few topics, we'll start delivering your personalized intelligence briefing every morning. It takes about 30 seconds.
+          </p>
+          <p style="${bodyStyle}">
+            Some popular picks to get started: <strong>Artificial Intelligence</strong>, <strong>Climate Change</strong>, <strong>Personal Finance</strong>, or anything you're curious about.
+          </p>`,
+        ctaText: "Pick your topics &rarr;",
+        ctaSubtext: "",
+      });
+      const text =
+        `${name} Your account is ready.\n\n` +
+        "You signed up for Brain Brief — but you haven't picked any topics yet.\n\n" +
+        "Once you add a few topics, we'll start delivering your personalized intelligence briefing every morning. It takes about 30 seconds.\n\n" +
+        "Some popular picks to get started: Artificial Intelligence, Climate Change, Personal Finance, or anything you're curious about.\n\n" +
+        "Pick your topics: https://www.brainbrief.app/dashboard\n";
+
+      await sendStandaloneEmail({ to: profile.email, subject, html, text });
+      await markEmailSent(
+        supabase,
+        profile.user_id,
+        alreadySent,
+        "no_topics_nudge"
+      );
+
+      sent++;
+      logs.push(`[sent] ${profile.email}: no_topics_nudge`);
+      console.log(
+        `[lifecycle] Sent onboarding nudge to ${profile.email}`
+      );
+    } catch (err) {
+      errors++;
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      logs.push(`[error] ${profile.email}: no_topics_nudge — ${msg}`);
+      console.error(
+        `[lifecycle] Failed to send nudge to ${profile.email}:`,
+        msg
+      );
     }
   }
 

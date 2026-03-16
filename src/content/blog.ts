@@ -982,6 +982,86 @@ Reading less, on purpose, is how you get there.
 
 *Brain Brief delivers a personalized daily briefing on the topics you choose. Takes about five minutes to read. Start your free trial at [brainbrief.app](https://brainbrief.app).*`,
   },
+  {
+    slug: "why-you-cant-stop-checking-news",
+    title:
+      "Why You Can't Stop Checking the News (And How to Break the Cycle)",
+    metaDescription:
+      "News anxiety is a real psychological pattern — not a discipline problem. Here's why your brain keeps pulling you back to the feed, and what actually breaks the cycle.",
+    keyword: "news anxiety",
+    coverImage: "/blog/why-you-cant-stop-checking-news.png",
+    publishedAt: "2026-03-16",
+    readingTime: 8,
+    content: `There is a specific feeling that most regular news consumers know: you checked the news twenty minutes ago. Nothing has changed. You check again anyway.
+
+It is not quite anxiety. It is not quite curiosity. It is something closer to an itch — a low-grade compulsion that does not fully resolve even when you scratch it. You read the headlines, close the app, and within minutes feel the pull again.
+
+This is not a discipline problem. It is a design problem, built into how your brain processes uncertainty, and reinforced by platforms that profit from exactly this behavior.
+
+---
+
+## The Neuroscience of Compulsive Checking
+
+The human brain evolved in an environment where new information was often genuinely important. A rustle in the grass, a change in weather, an unfamiliar face — these inputs required rapid attention because ignoring them could be costly.
+
+That orienting reflex, the automatic pull of attention toward anything new or uncertain, is hardwired. It does not distinguish between a predator and a news alert. Both trigger the same basic response: pay attention, something might matter here.
+
+Modern news is engineered to exploit this. Headlines are written to create uncertainty rather than resolve it. Push notifications are timed to interrupt. The infinite scroll removes any natural stopping point. Every platform's engagement model depends on activating the same orienting reflex, over and over, without ever fully satisfying it.
+
+This is why checking the news rarely produces the feeling of being informed. The format is not designed to inform — it is designed to keep you checking.
+
+---
+
+## Uncertainty Is the Hook
+
+The psychologist B.F. Skinner identified a pattern called variable ratio reinforcement: rewards that arrive on an unpredictable schedule produce the most persistent behavior. Slot machines work on this principle. So does every social feed and news app.
+
+When you check the news, sometimes there is something significant. Usually there is not. The unpredictability of that ratio is precisely what makes the behavior hard to stop. If checking always produced something important, you would check at a set time and stop. If it never produced anything useful, you would stop checking entirely. It is the occasional hit — the story that actually matters — that keeps the behavior running.
+
+This is not a personal failing. It is a known psychological mechanism that took billions of dollars and decades of research to optimize.
+
+---
+
+## The Anxiety Paradox
+
+Here is the part that trips most people up: checking the news often feels like it is reducing anxiety. It is not.
+
+Anxiety, in the psychological sense, involves an uncertain future state. News consumption, when it is compulsive rather than deliberate, tends to increase the number of uncertain future states you are aware of without increasing your ability to affect any of them. You learn that something concerning is happening. You cannot do anything about it. The next news item presents another concerning thing. You learn about that too. By the end of a news session, you have accumulated more uncertainty without resolving any of it.
+
+Research from the American Psychological Association found that people who consume more news report significantly higher levels of stress than those who consume less — even when controlling for other factors. More news is not producing more calm. It is producing more surface area for anxiety to attach to.
+
+The checking behavior feels productive because it mimics the act of staying on top of things. It is the appearance of preparation without any of its effects.
+
+---
+
+## What Actually Breaks the Cycle
+
+The answer is not willpower. Trying to stop compulsive news checking through self-discipline is fighting a psychological mechanism with a psychological mechanism — and the compulsion has a much longer track record.
+
+What works is changing the structure.
+
+**Set a specific window and stick to it.** The brain's orienting reflex is partly triggered by open-endedness: if you can check at any time, the question of whether to check is always open. Closing that loop — deciding in advance that you will check once in the morning and once in the afternoon, and not otherwise — removes hundreds of small decisions throughout the day. The behavior becomes bounded.
+
+**Change the intake format.** A social feed or news app is structurally hostile to the kind of bounded reading that reduces anxiety. It is designed to expand, not close. A briefing format, something that covers what happened and then ends, works with the brain's natural desire for closure rather than against it. You finish it. There is nothing more to check.
+
+**Match inputs to what you can actually act on.** The strongest driver of news anxiety is consuming information about things you cannot influence. A natural filter: before adding a topic to your regular reading, ask whether knowing more about it changes anything you do or think. If the answer is no, it is probably feeding the loop rather than informing your life.
+
+**Accept a brief discomfort period.** Breaking any habitual behavior involves a period where the urge is strong and unsatisfied. This typically lasts a few days, not weeks. The compulsive checking loop, once disrupted and replaced with a structured alternative, usually loses its pull faster than people expect.
+
+---
+
+## The Goal Is Calm, Not Coverage
+
+The measure of a good information habit is not how much you consume. It is how you feel at the end of it.
+
+A well-designed information diet leaves you genuinely informed on the things that matter to your work and your life. It does not leave you with a low-grade sense of dread and a browser history full of half-read articles.
+
+If you finish your news session feeling worse than when you started, the format is the problem — not the news.
+
+---
+
+*Brain Brief delivers a daily briefing on the topics you choose, built to be read once and finished. No infinite scroll, no push notifications, no variable ratio reward schedule. Start your free trial at [brainbrief.app](https://brainbrief.app).*`,
+  },
 ];
 
 /** Get all blog posts sorted by date (newest first) */

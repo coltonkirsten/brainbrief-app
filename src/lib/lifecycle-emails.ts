@@ -321,6 +321,25 @@ async function processOnboardingNudge(
       continue;
     }
 
+    // Verify email is confirmed — unconfirmed users can't access the dashboard
+    try {
+      const { data: authUser } = await supabase.auth.admin.getUserById(
+        profile.user_id
+      );
+      if (!authUser?.user?.email_confirmed_at) {
+        logs.push(
+          `[skip] ${profile.email}: no_topics_nudge (email not confirmed)`
+        );
+        continue;
+      }
+    } catch {
+      // If auth check fails, skip this user rather than send to unconfirmed
+      logs.push(
+        `[skip] ${profile.email}: no_topics_nudge (auth check failed)`
+      );
+      continue;
+    }
+
     // Check if user has 0 active topics
     const { count } = await supabase
       .from("topics")

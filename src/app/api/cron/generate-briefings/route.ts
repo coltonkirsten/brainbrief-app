@@ -275,19 +275,19 @@ export async function GET(request: Request) {
     });
   }
 
-  // Step 4: Generate and send briefings for matched users
-  const results: {
-    userId: string;
-    success: boolean;
-    error?: string;
-  }[] = [];
+  // Step 4: Generate and send briefings for matched users — IN PARALLEL
+  // Previously sequential, which caused timeouts when one user's Gemini call
+  // was slow (e.g., Mar 17: first user took 275s, function timed out at 300s,
+  // remaining 3 users got nothing). Now all users run concurrently.
 
-  for (const [userId, topicInfos] of usersToProcess) {
+  async function processUser(
+    userId: string,
+    topicInfos: { name: string; id: string }[]
+  ): Promise<{ userId: string; success: boolean; error?: string }> {
     const profile = profileMap.get(userId);
     if (!profile) {
       console.warn(`[cron] No profile found for user ${userId}, skipping`);
-      results.push({ userId, success: false, error: "No profile found" });
-      continue;
+      return { userId, success: false, error: "No profile found" };
     }
 
     const topicNames = topicInfos.map((t) => t.name);
@@ -298,12 +298,11 @@ export async function GET(request: Request) {
       console.log(
         `[cron] Skipping ${profile.email} — trial expired, no active subscription (status: ${trialInfo.subscriptionStatus})`
       );
-      results.push({
+      return {
         userId,
         success: false,
         error: "Trial expired, no active subscription",
-      });
-      continue;
+      };
     }
 
     // No duplicate guard — scheduled briefings always send, even if the user
@@ -353,12 +352,11 @@ export async function GET(request: Request) {
           `[cron] Failed to store briefing for ${profile.email}:`,
           insertError
         );
-        results.push({
+        return {
           userId,
           success: false,
           error: `DB insert failed: ${insertError.message}`,
-        });
-        continue;
+        };
       }
 
       // Always send email — grounded briefings get citations, ungrounded get
@@ -393,16 +391,30 @@ export async function GET(request: Request) {
         `[cron] Briefing for ${profile.email}: generated=true, grounded=${briefing.grounded}, emailed=${emailSent}`
       );
 
-      results.push({ userId, success: true });
+      return { userId, success: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error(
         `[cron] Error generating briefing for ${profile.email}:`,
         message
       );
-      results.push({ userId, success: false, error: message });
+      return { userId, success: false, error: message };
     }
   }
+
+  // Launch all user briefings concurrently — prevents one slow Gemini call
+  // from blocking all other users (the Mar 17 bug)
+  const settled = await Promise.allSettled(
+    usersToProcess.map(([userId, topicInfos]) =>
+      processUser(userId, topicInfos)
+    )
+  );
+
+  const results = settled.map((s) =>
+    s.status === "fulfilled"
+      ? s.value
+      : { userId: "unknown", success: false, error: String(s.reason) }
+  );
 
   // Step 6: Process post-trial lifecycle emails (Day 8 + Day 10 standalone emails)
   console.log("[cron] Processing post-trial lifecycle emails...");
@@ -422,10 +434,28 @@ export async function GET(request: Request) {
   const elapsed = Date.now() - startTime;
   const successCount = results.filter((r) => r.success).length;
   const failCount = results.filter((r) => !r.success).length;
+  const eligibleCount = usersToProcess.length;
 
   console.log(
     `[cron] Done in ${elapsed}ms. Briefings: ${successCount} ok, ${failCount} failed. Lifecycle: ${lifecycleResult.sent} sent. Sample: ${sampleGenerated}.`
   );
+
+  // ⚠️ Alerting: warn if any eligible users didn't get their briefing
+  if (failCount > 0) {
+    console.error(
+      `[cron] ⚠️ ALERT: ${failCount} of ${eligibleCount} eligible users failed to receive briefings this hour. Check per-user results below.`
+    );
+  }
+  if (successCount < eligibleCount && successCount > 0) {
+    console.error(
+      `[cron] ⚠️ ALERT: Only ${successCount}/${eligibleCount} briefings succeeded. Possible Gemini timeout or API error.`
+    );
+  }
+  if (elapsed > 240000) {
+    console.warn(
+      `[cron] ⚠️ SLOW RUN: Took ${(elapsed / 1000).toFixed(0)}s (limit: 300s). Risk of timeout on busier hours.`
+    );
+  }
 
   // Log full details server-side but redact PII from response
   console.log("[cron] Per-user results:", JSON.stringify(results));
@@ -435,6 +465,7 @@ export async function GET(request: Request) {
     success: true,
     processed: successCount,
     failed: failCount,
+    eligible: eligibleCount,
     sampleGenerated,
   });
 }

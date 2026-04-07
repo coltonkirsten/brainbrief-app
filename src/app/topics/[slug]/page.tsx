@@ -125,15 +125,16 @@ export default async function TopicPage({ params }: PageProps) {
 
   const supabase = getSupabase();
 
-  // Fetch the latest briefing that covers this topic
-  // We search topics_covered JSONB array for the topic name
+  // Fetch the latest briefing that covers this topic.
+  // Use .filter() with raw PostgREST cs. syntax because .contains()
+  // doesn't properly encode JSONB arrays with spaces in strings.
   const { data: briefing } = await supabase
     .from("briefings")
     .select(
       "content_html, content_text, topics_covered, structured_data, subject_line, created_at, grounded"
     )
     .eq("user_id", SAMPLE_USER_ID)
-    .contains("topics_covered", [topic.name])
+    .filter("topics_covered", "cs", JSON.stringify([topic.name]))
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();

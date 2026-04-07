@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/generate-briefings",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/generate-seo-briefings",
+      "schedule": "0 10 * * *"
     }
   ]
 }

@@ -457,14 +457,24 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
     }
   }
 
-  // No grounding after retries — return limited coverage
+  // No grounding after retries — generate overview fallback (no search tool)
   if (!grounded) {
-    console.warn(`[BRIEFING][${topicName}] NO GROUNDING after ${MAX_ATTEMPTS} attempts — returning limited coverage`);
-    return {
-      topic: buildLimitedCoverageTopic(topicName),
-      sources: [],
-      grounded: false,
-    };
+    console.warn(`[BRIEFING][${topicName}] NO GROUNDING after ${MAX_ATTEMPTS} attempts — generating overview fallback...`);
+    try {
+      const overviewTopic = await generateOverviewFallback(topicName, today, timezone);
+      return {
+        topic: overviewTopic,
+        sources: [],
+        grounded: false,
+      };
+    } catch (overviewErr) {
+      console.error(`[BRIEFING][${topicName}] Overview fallback ALSO failed:`, overviewErr);
+      return {
+        topic: buildLimitedCoverageTopic(topicName),
+        sources: [],
+        grounded: false,
+      };
+    }
   }
 
   // Parse response into TopicBriefing
@@ -749,6 +759,120 @@ function buildLimitedCoverageTopic(topicName: string): TopicBriefing {
     bottomLine: "",
     bulletSources: [[]],
   };
+}
+
+/**
+ * Generate an overview fallback when Google Search grounding is unavailable.
+ * Makes a Gemini call WITHOUT the search tool — relies on the model's
+ * training data to provide an honest "state of play" overview.
+ *
+ * This produces useful content (context, trends, what to watch) rather than
+ * the empty "Limited Recent Coverage" message.
+ */
+async function generateOverviewFallback(
+  topicName: string,
+  today: string,
+  timezone?: string | null
+): Promise<TopicBriefing> {
+  const overviewPrompt = `You are Brain Brief — a concise intelligence analyst. Today is ${today} (${timezone || "America/New_York"} timezone).
+
+We could not retrieve live search results for this topic right now. Instead, provide a brief, useful overview of where things currently stand with ${topicName}.
+
+RULES:
+- Write based on your general knowledge — do NOT invent specific breaking news, dates, or events
+- Do NOT pretend to have searched the web or cite specific recent articles
+- DO provide useful context: key trends, important developments from the broader landscape, and what to watch
+- Be honest that this is a general overview, not a live news briefing
+- Keep it concise and useful — a busy professional should still learn something
+
+FORMAT — write exactly this structure:
+## ${topicName}: Overview
+- First key trend or development worth knowing about. 2-3 sentences with context.
+- Second key trend or development. 2-3 sentences.
+- Third trend if relevant. 2-3 sentences.
+**The Bottom Line:** 1-2 sentences on the bigger picture.
+
+FORMAT REQUIREMENT:
+- Each bullet point MUST start with a dash and a space ("- ") on its own line.
+- Do NOT write plain paragraphs. Use dashes (-) only.
+
+Write 100-150 words in a confident, editorial voice.`;
+
+  console.log(`[BRIEFING][${topicName}] Generating overview fallback (no search tool)...`);
+
+  const response = await getGeminiClient().models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: overviewPrompt,
+    config: {
+      temperature: 0.4, // Slightly higher for more natural overview writing
+      maxOutputTokens: 2048,
+      // NO tools — intentionally omitting googleSearch
+    },
+  });
+
+  let text = "";
+  try {
+    text = response.text ?? "";
+  } catch {
+    const parts = response.candidates?.[0]?.content?.parts;
+    text = parts?.map((p) => ("text" in p ? p.text : "")).join("") ?? "";
+  }
+
+  console.log(`[BRIEFING][${topicName}] Overview response: ${text.length} chars`);
+
+  if (!text || text.length < 50) {
+    console.warn(`[BRIEFING][${topicName}] Overview response too short (${text.length} chars) — falling back to limited coverage`);
+    return buildLimitedCoverageTopic(topicName);
+  }
+
+  // Parse the overview response
+  const parsed = tryParseStructuredFromMarkdown(text, "");
+  if (parsed && parsed.topics.length > 0) {
+    const topic = parsed.topics[0];
+    topic.name = topicName;
+    // Mark headline as overview so email template can frame it differently
+    if (!topic.headline.toLowerCase().includes("overview")) {
+      topic.headline = `${topicName}: Overview`;
+    }
+    console.log(`[BRIEFING][${topicName}] Overview parsed: ${topic.bullets.length} bullets, bottomLine=${topic.bottomLine ? "YES" : "NO"}`);
+    return topic;
+  }
+
+  // Fallback: use raw text as a single bullet
+  console.warn(`[BRIEFING][${topicName}] Overview parse failed — using raw text`);
+  const cleanText = text.replace(/^##.*\n?/m, "").replace(/\*\*The Bottom Line[\s\S]*$/, "").trim();
+  return {
+    name: topicName,
+    headline: `${topicName}: Overview`,
+    bullets: cleanText
+      .split(/\n- /)
+      .map((b) => b.replace(/^- /, "").trim())
+      .filter((b) => b.length > 30)
+      .slice(0, 3),
+    bottomLine: "",
+    bulletSources: [],
+  };
+}
+
+/**
+ * Check if a briefing's content is below minimum quality threshold.
+ * Returns true if the briefing should be suppressed (not sent).
+ *
+ * A briefing fails quality check if ALL topics have the generic
+ * "Limited Recent Coverage" fallback — meaning no useful content was
+ * generated for any topic.
+ */
+export function isBelowQualityThreshold(structured: BriefingData | undefined): boolean {
+  if (!structured?.topics?.length) return true;
+
+  const allLimited = structured.topics.every(
+    (t) =>
+      t.headline.includes("Limited Recent Coverage") &&
+      t.bullets.length <= 1 &&
+      t.bullets[0]?.includes("No significant verified developments")
+  );
+
+  return allLimited;
 }
 
 // ---------- Grounding Support Types ----------

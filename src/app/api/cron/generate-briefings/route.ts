@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { generateBriefing } from "@/lib/gemini";
+import { generateBriefing, isBelowQualityThreshold } from "@/lib/gemini";
 import { sendBriefingEmail, generateSubjectLine } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
 import { processLifecycleEmails } from "@/lib/lifecycle-emails";
@@ -359,32 +359,38 @@ export async function GET(request: Request) {
         };
       }
 
-      // Always send email — grounded briefings get citations, ungrounded get
-      // an honest "overview" (no fake dates). Users signed up for daily briefings.
+      // Quality gate: suppress email if ALL topics have garbage "Limited
+      // Recent Coverage" fallback. Better to skip a day than send empty content.
       let emailSent = false;
 
-      const emailResult = await sendBriefingEmail({
-        to: profile.email,
-        subject: subjectLine,
-        html: briefing.contentHtml,
-        text: briefing.contentText,
-        structured: briefing.structured,
-        trialInfo,
-        grounded: briefing.grounded,
-        userId,
-        briefingId: insertedBriefing?.id,
-      });
+      if (isBelowQualityThreshold(briefing.structured)) {
+        console.warn(
+          `[cron] ⚠️ QUALITY GATE: Suppressing email for ${profile.email} — all topics below quality threshold (limited coverage fallback). Briefing stored but not sent.`
+        );
+      } else {
+        const emailResult = await sendBriefingEmail({
+          to: profile.email,
+          subject: subjectLine,
+          html: briefing.contentHtml,
+          text: briefing.contentText,
+          structured: briefing.structured,
+          trialInfo,
+          grounded: briefing.grounded,
+          userId,
+          briefingId: insertedBriefing?.id,
+        });
 
-      if (emailResult.success) {
-        emailSent = true;
-        // Update sent_at timestamp
-        await supabase
-          .from("briefings")
-          .update({ sent_at: new Date().toISOString() })
-          .eq("user_id", userId)
-          .is("sent_at", null)
-          .order("created_at", { ascending: false })
-          .limit(1);
+        if (emailResult.success) {
+          emailSent = true;
+          // Update sent_at timestamp
+          await supabase
+            .from("briefings")
+            .update({ sent_at: new Date().toISOString() })
+            .eq("user_id", userId)
+            .is("sent_at", null)
+            .order("created_at", { ascending: false })
+            .limit(1);
+        }
       }
 
       console.log(

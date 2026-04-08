@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
-import { generateBriefing } from "@/lib/gemini";
+import { generateBriefing, isBelowQualityThreshold } from "@/lib/gemini";
 import { sendBriefingEmail, generateSubjectLine } from "@/lib/email";
 import { getTrialInfo } from "@/lib/trial";
 
@@ -166,12 +166,16 @@ export async function POST() {
       );
     }
 
-    // Always send email — grounded briefings get citations, ungrounded get
-    // an honest "overview" (no fake dates). Users signed up for daily briefings.
+    // Quality gate: suppress email if ALL topics have garbage fallback content
     let emailSent = false;
     const emailAddress = profile?.email || user.email;
+    const belowThreshold = isBelowQualityThreshold(briefing.structured);
 
-    if (emailAddress) {
+    if (belowThreshold) {
+      console.warn(
+        `[generate] Quality gate: suppressing email — all topics below quality threshold`
+      );
+    } else if (emailAddress) {
       const emailResult = await sendBriefingEmail({
         to: emailAddress,
         subject: subjectLine,

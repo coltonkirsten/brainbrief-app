@@ -411,12 +411,18 @@ Write in a confident, editorial voice. Aim for 120-160 words. Be substantive but
         console.warn(`[BRIEFING][${topicName}] Attempt ${attempt}: EMPTY response, retrying...`);
         continue;
       }
-      console.error(`[BRIEFING][${topicName}] All attempts returned empty — returning limited coverage`);
-      return {
-        topic: buildLimitedCoverageTopic(topicName),
-        sources: [],
-        grounded: false,
-      };
+      console.error(`[BRIEFING][${topicName}] All attempts returned empty — trying overview fallback`);
+      try {
+        const overviewTopic = await generateOverviewFallback(topicName, today, timezone);
+        return { topic: overviewTopic, sources: [], grounded: false };
+      } catch (overviewErr) {
+        console.error(`[BRIEFING][${topicName}] Overview fallback also failed:`, overviewErr);
+        return {
+          topic: buildLimitedCoverageTopic(topicName),
+          sources: [],
+          grounded: false,
+        };
+      }
     }
 
     // Extract grounding metadata

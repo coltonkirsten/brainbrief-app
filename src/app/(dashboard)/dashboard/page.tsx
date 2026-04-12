@@ -10,6 +10,7 @@ import { getTrialInfo } from "@/lib/trial";
 import OnboardingView from "./onboarding-view";
 import BriefingFeedback from "./briefing-feedback";
 import EmailMismatchBanner from "./email-mismatch-banner";
+import ReferralCard from "./referral-card";
 
 export const metadata = {
   title: "Dashboard | Brain Brief",
@@ -30,7 +31,7 @@ export default async function DashboardPage() {
   const [profileResult, topicsResult, briefingResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("trial_ends_at, subscription_status, preferred_time, timezone, created_at")
+      .select("trial_ends_at, subscription_status, preferred_time, timezone, created_at, referral_code")
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
@@ -52,6 +53,21 @@ export default async function DashboardPage() {
   const trialInfo = getTrialInfo(
     profileResult.data ?? { trial_ends_at: null, subscription_status: "trialing" }
   );
+
+  // Fetch referral stats for the referral card
+  const referralCode = profileResult.data?.referral_code ?? null;
+  let referralCount = 0;
+  let subscribedCount = 0;
+  if (referralCode) {
+    const { data: referralData } = await supabase
+      .from("referrals")
+      .select("status")
+      .eq("referrer_id", user.id);
+    if (referralData) {
+      referralCount = referralData.length;
+      subscribedCount = referralData.filter((r) => r.status === "subscribed").length;
+    }
+  }
 
   // Fetch existing feedback for latest briefing (if any)
   let existingFeedback: { topic_id: string; rating: string }[] = [];
@@ -220,6 +236,17 @@ export default async function DashboardPage() {
               timezone={profileResult.data?.timezone ?? "America/New_York"}
             />
           </div>
+
+          {/* Referral card */}
+          {referralCode && (
+            <div className="pt-6 border-t border-border">
+              <ReferralCard
+                referralCode={referralCode}
+                referralCount={referralCount}
+                subscribedCount={subscribedCount}
+              />
+            </div>
+          )}
 
           <div className="pt-6 border-t border-border">
             <h3 className="text-sm font-bold text-primary uppercase tracking-wider mb-4">On-Demand Briefing</h3>

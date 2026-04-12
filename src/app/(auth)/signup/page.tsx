@@ -61,6 +61,9 @@ function SignupForm() {
     [searchParams]
   );
 
+  // Capture referral code from URL (e.g., /signup?ref=XXXXXXXX)
+  const refCode = searchParams.get("ref") || undefined;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -85,6 +88,7 @@ function SignupForm() {
     if (utmParams.utm_source) metadata.utm_source = utmParams.utm_source;
     if (utmParams.utm_medium) metadata.utm_medium = utmParams.utm_medium;
     if (utmParams.utm_campaign) metadata.utm_campaign = utmParams.utm_campaign;
+    if (refCode) metadata.ref_code = refCode;
 
     // Detect browser timezone (e.g. "America/Los_Angeles", "Europe/London")
     try {

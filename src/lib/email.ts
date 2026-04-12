@@ -32,6 +32,8 @@ interface SendBriefingEmailParams {
   userId?: string;
   /** Briefing ID — added to "Rate this briefing" link for context */
   briefingId?: string;
+  /** User's unique referral code for personalized share link */
+  referralCode?: string;
 }
 
 export async function sendBriefingEmail({
@@ -44,6 +46,7 @@ export async function sendBriefingEmail({
   grounded,
   userId,
   briefingId,
+  referralCode,
 }: SendBriefingEmailParams): Promise<{
   success: boolean;
   messageId?: string;
@@ -61,8 +64,8 @@ export async function sendBriefingEmail({
       }
 
       const emailHtml = structured
-        ? buildStructuredEmailTemplate(structured, trialInfo, grounded, userId, briefingId)
-        : buildLegacyEmailTemplate(html, userId, briefingId);
+        ? buildStructuredEmailTemplate(structured, trialInfo, grounded, userId, briefingId, referralCode)
+        : buildLegacyEmailTemplate(html, userId, briefingId, referralCode);
 
       const { data, error } = await resend.emails.send({
         from: fromAddress,
@@ -195,7 +198,7 @@ export function generateSubjectLine(structured?: BriefingData): string {
 // Structured email template — Chelsea's "Premium Editorial" design
 // ---------------------------------------------------------------------------
 
-function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo, grounded?: boolean, userId?: string, briefingId?: string): string {
+function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo, grounded?: boolean, userId?: string, briefingId?: string, referralCode?: string): string {
   // Build dashboard URLs with user hint params for mismatch detection
   const uidParam = userId ? `&uid=${userId}` : "";
   const briefingParam = briefingId ? `&briefing_id=${briefingId}` : "";
@@ -206,6 +209,11 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
   // #6: Shortened date format — won't wrap on mobile next to logo
   const now = new Date();
   const dateStr = `${now.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()} \u00b7 ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}`;
+
+  // Personalized share link (with referral code if available)
+  const shareUrl = referralCode
+    ? `https://www.brainbrief.app/signup?ref=${referralCode}&amp;utm_source=email&amp;utm_medium=referral&amp;utm_campaign=share`
+    : `https://www.brainbrief.app?utm_source=email&amp;utm_medium=share&amp;utm_campaign=forward`;
 
   const isTrial = trialInfo && trialInfo.isTrialActive && !trialInfo.isSubscriber;
 
@@ -551,7 +559,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
               <!-- Share CTA -->
               <p style="margin: 24px 0 0; padding: 16px 20px; background-color: #F0FDF4; border-radius: 8px; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #166534; line-height: 1.5;">
                 Know someone who&rsquo;d benefit from five focused minutes each morning?<br/>
-                <a href="https://www.brainbrief.app?utm_source=email&amp;utm_medium=share&amp;utm_campaign=forward" style="color: #059669; font-weight: 600; text-decoration: underline;">Share Brain Brief</a> &mdash; or just forward this email.
+                <a href="${shareUrl}" style="color: #059669; font-weight: 600; text-decoration: underline;">Share Brain Brief</a> &mdash; or just forward this email.
               </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://www.brainbrief.app/unsubscribe" class="text-muted" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>
@@ -586,7 +594,7 @@ function buildStructuredEmailTemplate(data: BriefingData, trialInfo?: TrialInfo,
 // Legacy email template — wraps raw HTML content (fallback)
 // ---------------------------------------------------------------------------
 
-function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefingId?: string): string {
+function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefingId?: string, referralCode?: string): string {
   // Build dashboard URLs with user hint params for mismatch detection
   const uidParam = userId ? `&uid=${userId}` : "";
   const briefingParam = briefingId ? `&briefing_id=${briefingId}` : "";
@@ -596,6 +604,11 @@ function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefing
   const year = new Date().getFullYear();
   const now = new Date();
   const dateStr = `${now.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()} \u00b7 ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()}`;
+
+  // Personalized share link (with referral code if available)
+  const shareUrl = referralCode
+    ? `https://www.brainbrief.app/signup?ref=${referralCode}&amp;utm_source=email&amp;utm_medium=referral&amp;utm_campaign=share`
+    : `https://www.brainbrief.app?utm_source=email&amp;utm_medium=share&amp;utm_campaign=forward`;
 
   // Add inline styles to HTML elements for email client compatibility
   const styledContent = addEmailInlineStyles(contentHtml);
@@ -684,7 +697,7 @@ function buildLegacyEmailTemplate(contentHtml: string, userId?: string, briefing
               <!-- Share CTA -->
               <p style="margin: 24px 0 0; padding: 16px 20px; background-color: #F0FDF4; border-radius: 8px; font-family: Helvetica, Arial, sans-serif; font-size: 13px; color: #166534; line-height: 1.5;">
                 Know someone who&rsquo;d benefit from five focused minutes each morning?<br/>
-                <a href="https://www.brainbrief.app?utm_source=email&amp;utm_medium=share&amp;utm_campaign=forward" style="color: #059669; font-weight: 600; text-decoration: underline;">Share Brain Brief</a> &mdash; or just forward this email.
+                <a href="${shareUrl}" style="color: #059669; font-weight: 600; text-decoration: underline;">Share Brain Brief</a> &mdash; or just forward this email.
               </p>
               <p style="margin: 20px 0 0;">
                 <a href="https://www.brainbrief.app/unsubscribe" class="legacy-footer-text" style="font-family: Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 500; color: #94A3B8; text-decoration: underline;">Unsubscribe</a>

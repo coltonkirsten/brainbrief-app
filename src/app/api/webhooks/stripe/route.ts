@@ -151,6 +151,25 @@ async function handleCheckoutCompleted(
   }
 
   console.log(`[webhook] User ${userId} subscription activated (${planType})`);
+
+  // Update referral status to 'subscribed' if this user was referred
+  try {
+    const { data: updatedReferrals, error: refError } = await supabase
+      .from("referrals")
+      .update({ status: "subscribed", updated_at: new Date().toISOString() })
+      .eq("referred_id", userId)
+      .eq("status", "signed_up")
+      .select("referrer_id");
+
+    if (refError) {
+      console.error("[webhook] Failed to update referral status:", refError);
+    } else if (updatedReferrals && updatedReferrals.length > 0) {
+      console.log(`[webhook] Referral conversion tracked for user ${userId} (referrer: ${updatedReferrals[0].referrer_id})`);
+    }
+  } catch (refErr) {
+    // Non-critical — don't fail the webhook for referral tracking
+    console.error("[webhook] Referral tracking error:", refErr);
+  }
 }
 
 async function handleSubscriptionUpdated(

@@ -575,6 +575,391 @@ export const topicsList: SEOTopic[] = [
     category: "Niche & Emerging",
     relatedSlugs: ["electric-vehicles", "artificial-intelligence", "robotics"],
   },
+
+  // ── Expansion Wave 2 (Apr 2026) ──────────────────────────────────
+
+  // Technology & AI
+  {
+    slug: "open-source-ai",
+    name: "Open Source AI",
+    description:
+      "Open-weight models, community-driven AI projects, licensing debates, and the open-source AI ecosystem.",
+    keyword: "open source AI news",
+    category: "Technology & AI",
+    relatedSlugs: ["artificial-intelligence", "generative-ai", "software-engineering"],
+  },
+  {
+    slug: "dev-tools",
+    name: "Developer Tools",
+    description:
+      "IDEs, CI/CD platforms, AI coding assistants, and the tools shaping modern software development.",
+    keyword: "developer tools news",
+    category: "Technology & AI",
+    relatedSlugs: ["software-engineering", "web-development", "generative-ai"],
+  },
+  {
+    slug: "apple",
+    name: "Apple",
+    description:
+      "iPhone, Mac, Vision Pro, Apple Intelligence, and everything from the world's most valuable company.",
+    keyword: "Apple news today",
+    category: "Technology & AI",
+    relatedSlugs: ["semiconductors", "generative-ai", "artificial-intelligence"],
+  },
+  {
+    slug: "privacy-surveillance",
+    name: "Privacy & Surveillance",
+    description:
+      "Data privacy laws, surveillance technology, encryption battles, and the fight for digital rights.",
+    keyword: "digital privacy news",
+    category: "Technology & AI",
+    relatedSlugs: ["cybersecurity", "ai-regulation", "us-politics"],
+  },
+
+  // Business & Finance
+  {
+    slug: "venture-capital",
+    name: "Venture Capital",
+    description:
+      "Funding rounds, VC trends, valuations, and the investors shaping the startup landscape.",
+    keyword: "venture capital news",
+    category: "Business & Finance",
+    relatedSlugs: ["startups", "fintech", "generative-ai"],
+  },
+  {
+    slug: "commercial-real-estate",
+    name: "Commercial Real Estate",
+    description:
+      "Office markets, retail spaces, industrial logistics, REITs, and the post-pandemic CRE landscape.",
+    keyword: "commercial real estate news",
+    category: "Business & Finance",
+    relatedSlugs: ["real-estate", "global-economy", "remote-work"],
+  },
+  {
+    slug: "private-equity",
+    name: "Private Equity",
+    description:
+      "Buyouts, portfolio companies, fundraising, and how PE firms are reshaping industries.",
+    keyword: "private equity news",
+    category: "Business & Finance",
+    relatedSlugs: ["venture-capital", "stock-market", "global-economy"],
+  },
+  {
+    slug: "ecommerce",
+    name: "E-Commerce",
+    description:
+      "Online retail trends, marketplace dynamics, fulfillment innovation, and the future of shopping.",
+    keyword: "ecommerce news",
+    category: "Business & Finance",
+    relatedSlugs: ["supply-chain", "fintech", "creator-economy"],
+  },
+  {
+    slug: "insurance-industry",
+    name: "Insurance Industry",
+    description:
+      "Insurtech, underwriting automation, climate risk pricing, and the evolving insurance landscape.",
+    keyword: "insurance industry news",
+    category: "Business & Finance",
+    relatedSlugs: ["fintech", "climate-change", "artificial-intelligence"],
+  },
+
+  // Science & Climate
+  {
+    slug: "crispr-gene-editing",
+    name: "CRISPR & Gene Editing",
+    description:
+      "CRISPR therapies, gene drives, regulatory approvals, and the cutting edge of genetic engineering.",
+    keyword: "CRISPR gene editing news",
+    category: "Science & Climate",
+    relatedSlugs: ["biotech", "pharmaceuticals", "longevity"],
+  },
+  {
+    slug: "battery-technology",
+    name: "Battery Technology",
+    description:
+      "Solid-state batteries, grid storage, EV battery breakthroughs, and the energy storage revolution.",
+    keyword: "battery technology news",
+    category: "Science & Climate",
+    relatedSlugs: ["electric-vehicles", "renewable-energy", "semiconductors"],
+  },
+  {
+    slug: "carbon-capture",
+    name: "Carbon Capture",
+    description:
+      "Direct air capture, carbon credits, sequestration technology, and the business of removing CO₂.",
+    keyword: "carbon capture news",
+    category: "Science & Climate",
+    relatedSlugs: ["climate-change", "renewable-energy", "nuclear-energy"],
+  },
+  {
+    slug: "astronomy",
+    name: "Astronomy",
+    description:
+      "Telescope discoveries, exoplanets, cosmology breakthroughs, and our evolving view of the universe.",
+    keyword: "astronomy news today",
+    category: "Science & Climate",
+    relatedSlugs: ["space-exploration", "quantum-computing", "ocean-science"],
+  },
+  {
+    slug: "weather-climate-extremes",
+    name: "Extreme Weather",
+    description:
+      "Hurricanes, heat waves, wildfires, flooding, and how climate change is fueling extreme weather events.",
+    keyword: "extreme weather news",
+    category: "Science & Climate",
+    relatedSlugs: ["climate-change", "renewable-energy", "public-health"],
+  },
+  {
+    slug: "renewable-energy-policy",
+    name: "Renewable Energy Policy",
+    description:
+      "Tax credits, grid interconnection, permitting reform, and the policies accelerating clean energy.",
+    keyword: "renewable energy policy news",
+    category: "Science & Climate",
+    relatedSlugs: ["renewable-energy", "nuclear-energy", "us-politics"],
+  },
+
+  // Health & Wellness
+  {
+    slug: "womens-health",
+    name: "Women's Health",
+    description:
+      "Reproductive health research, menopause science, maternal care, and the women's health investment boom.",
+    keyword: "women's health news",
+    category: "Health & Wellness",
+    relatedSlugs: ["public-health", "biotech", "pharmaceuticals"],
+  },
+  {
+    slug: "sleep-science",
+    name: "Sleep Science",
+    description:
+      "Sleep research, circadian biology, sleep tech, and the science of why rest matters more than you think.",
+    keyword: "sleep science news",
+    category: "Health & Wellness",
+    relatedSlugs: ["mental-health", "fitness-science", "longevity"],
+  },
+  {
+    slug: "psychedelics-therapy",
+    name: "Psychedelics & Therapy",
+    description:
+      "Psilocybin, MDMA-assisted therapy, clinical trials, and the regulated psychedelic medicine movement.",
+    keyword: "psychedelic therapy news",
+    category: "Health & Wellness",
+    relatedSlugs: ["mental-health", "pharmaceuticals", "biotech"],
+  },
+  {
+    slug: "healthcare-policy",
+    name: "Healthcare Policy",
+    description:
+      "Drug pricing, insurance reform, hospital systems, and the policy battles shaping healthcare access.",
+    keyword: "healthcare policy news",
+    category: "Health & Wellness",
+    relatedSlugs: ["public-health", "pharmaceuticals", "us-politics"],
+  },
+
+  // Politics & Geopolitics
+  {
+    slug: "india",
+    name: "India",
+    description:
+      "Economic growth, tech industry expansion, geopolitics, and India's rising influence on the world stage.",
+    keyword: "India news today",
+    category: "Politics & Geopolitics",
+    relatedSlugs: ["china", "global-economy", "semiconductors"],
+  },
+  {
+    slug: "southeast-asia",
+    name: "Southeast Asia",
+    description:
+      "ASEAN economies, trade corridors, tech ecosystems, and geopolitical dynamics across Southeast Asia.",
+    keyword: "Southeast Asia news",
+    category: "Politics & Geopolitics",
+    relatedSlugs: ["china", "global-economy", "supply-chain"],
+  },
+  {
+    slug: "us-economy",
+    name: "US Economy",
+    description:
+      "Fed decisions, employment data, inflation, GDP, and the economic indicators that move markets.",
+    keyword: "US economy news today",
+    category: "Politics & Geopolitics",
+    relatedSlugs: ["stock-market", "global-economy", "us-politics"],
+  },
+  {
+    slug: "local-government",
+    name: "Local Government",
+    description:
+      "City councils, zoning reform, municipal budgets, and the local policy decisions that shape daily life.",
+    keyword: "local government news",
+    category: "Politics & Geopolitics",
+    relatedSlugs: ["us-politics", "urban-planning", "real-estate"],
+  },
+  {
+    slug: "trade-policy",
+    name: "Trade Policy",
+    description:
+      "Tariffs, trade agreements, sanctions, and the economic diplomacy reshaping global commerce.",
+    keyword: "trade policy news",
+    category: "Politics & Geopolitics",
+    relatedSlugs: ["us-foreign-policy", "china", "global-economy"],
+  },
+  {
+    slug: "defense-military",
+    name: "Defense & Military",
+    description:
+      "Defense contracts, military technology, NATO, and the geopolitics of global security.",
+    keyword: "defense news today",
+    category: "Politics & Geopolitics",
+    relatedSlugs: ["us-foreign-policy", "middle-east", "cybersecurity"],
+  },
+
+  // Culture & Sports
+  {
+    slug: "soccer",
+    name: "Soccer / Football",
+    description:
+      "Premier League, Champions League, MLS, transfer news, and the global game's biggest stories.",
+    keyword: "soccer news today",
+    category: "Culture & Sports",
+    relatedSlugs: ["nba", "nfl", "fantasy-sports"],
+  },
+  {
+    slug: "mlb",
+    name: "MLB Baseball",
+    description:
+      "Scores, trades, analytics, prospect rankings, and everything Major League Baseball.",
+    keyword: "MLB news today",
+    category: "Culture & Sports",
+    relatedSlugs: ["nba", "nfl", "fantasy-sports"],
+  },
+  {
+    slug: "formula-e",
+    name: "Formula E",
+    description:
+      "Electric racing results, team standings, technology developments, and the future of motorsport.",
+    keyword: "Formula E news",
+    category: "Culture & Sports",
+    relatedSlugs: ["formula-1", "electric-vehicles", "battery-technology"],
+  },
+  {
+    slug: "book-publishing",
+    name: "Book Publishing",
+    description:
+      "Bestseller lists, publishing industry shifts, author news, and the evolving world of books.",
+    keyword: "book publishing news",
+    category: "Culture & Sports",
+    relatedSlugs: ["film-tv", "creator-economy", "generative-ai"],
+  },
+  {
+    slug: "anime-manga",
+    name: "Anime & Manga",
+    description:
+      "New releases, adaptations, industry trends, and the global anime and manga phenomenon.",
+    keyword: "anime news today",
+    category: "Culture & Sports",
+    relatedSlugs: ["gaming", "film-tv", "music-industry"],
+  },
+  {
+    slug: "true-crime",
+    name: "True Crime",
+    description:
+      "Major cases, cold case breakthroughs, forensic science, and the true crime stories captivating the public.",
+    keyword: "true crime news",
+    category: "Culture & Sports",
+    relatedSlugs: ["podcasting", "film-tv", "us-politics"],
+  },
+  {
+    slug: "food-beverage",
+    name: "Food & Beverage",
+    description:
+      "Restaurant trends, food science, CPG brands, and the business of what we eat and drink.",
+    keyword: "food industry news",
+    category: "Culture & Sports",
+    relatedSlugs: ["nutrition-science", "ecommerce", "supply-chain"],
+  },
+
+  // Niche & Emerging
+  {
+    slug: "indie-game-dev",
+    name: "Indie Game Development",
+    description:
+      "Indie releases, game jams, tools like Godot and Unity, and the creators building games outside AAA studios.",
+    keyword: "indie game dev news",
+    category: "Niche & Emerging",
+    relatedSlugs: ["gaming", "creator-economy", "software-engineering"],
+  },
+  {
+    slug: "typescript",
+    name: "TypeScript",
+    description:
+      "New releases, type system improvements, ecosystem tools, and the language powering modern web development.",
+    keyword: "TypeScript news",
+    category: "Niche & Emerging",
+    relatedSlugs: ["web-development", "software-engineering", "dev-tools"],
+  },
+  {
+    slug: "kubernetes-devops",
+    name: "Kubernetes & DevOps",
+    description:
+      "Container orchestration, platform engineering, CI/CD, and the infrastructure behind modern apps.",
+    keyword: "Kubernetes DevOps news",
+    category: "Niche & Emerging",
+    relatedSlugs: ["cloud-computing", "software-engineering", "dev-tools"],
+  },
+  {
+    slug: "drones-uav",
+    name: "Drones & UAVs",
+    description:
+      "Commercial drones, delivery fleets, defense UAVs, regulations, and aerial technology breakthroughs.",
+    keyword: "drone news today",
+    category: "Niche & Emerging",
+    relatedSlugs: ["robotics", "defense-military", "autonomous-vehicles"],
+  },
+  {
+    slug: "water-scarcity",
+    name: "Water Scarcity",
+    description:
+      "Desalination, aquifer depletion, water rights, and the looming global freshwater crisis.",
+    keyword: "water scarcity news",
+    category: "Niche & Emerging",
+    relatedSlugs: ["climate-change", "weather-climate-extremes", "urban-planning"],
+  },
+  {
+    slug: "aging-population",
+    name: "Aging Population",
+    description:
+      "Demographic shifts, elder care innovation, retirement economics, and what an older world means for society.",
+    keyword: "aging population news",
+    category: "Niche & Emerging",
+    relatedSlugs: ["longevity", "healthcare-policy", "public-health"],
+  },
+  {
+    slug: "synthetic-biology",
+    name: "Synthetic Biology",
+    description:
+      "Engineered organisms, biomanufacturing, lab-grown materials, and the convergence of biology and engineering.",
+    keyword: "synthetic biology news",
+    category: "Niche & Emerging",
+    relatedSlugs: ["biotech", "crispr-gene-editing", "pharmaceuticals"],
+  },
+  {
+    slug: "legal-tech",
+    name: "Legal Tech",
+    description:
+      "AI contract review, litigation analytics, legal AI assistants, and technology transforming the legal industry.",
+    keyword: "legal tech news",
+    category: "Niche & Emerging",
+    relatedSlugs: ["artificial-intelligence", "generative-ai", "dev-tools"],
+  },
+  {
+    slug: "climate-tech",
+    name: "Climate Tech",
+    description:
+      "Cleantech startups, green hydrogen, climate fund investments, and the technology tackling the climate crisis.",
+    keyword: "climate tech news",
+    category: "Niche & Emerging",
+    relatedSlugs: ["climate-change", "renewable-energy", "venture-capital"],
+  },
 ];
 
 // ── Helper functions ────────────────────────────────────────────────

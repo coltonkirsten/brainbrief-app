@@ -7,10 +7,13 @@ import { getAllTopics } from "@/content/topics";
 /**
  * Cron endpoint: generates daily briefings for all SEO topic pages.
  *
- * Runs once daily at 10:00 UTC (6 AM ET) via Vercel Cron.
+ * Runs in TWO windows via Vercel Cron: 20:00 UTC + 21:00 UTC.
+ * With 97 topics at ~4.3s each, a single 300s window can only fit ~60 topics.
+ * The second window auto-picks up remaining topics (already-generated topics
+ * are skipped via the todayStart dedup check).
+ *
  * Each topic gets a single-topic briefing stored under the sample user ID.
- * Topics are processed in parallel batches to stay within Gemini rate limits
- * and the 300s Vercel function timeout.
+ * Topics are processed in parallel batches of 8.
  *
  * These briefings power the /topics/{slug} programmatic SEO pages.
  */

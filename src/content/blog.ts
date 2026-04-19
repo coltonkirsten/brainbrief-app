@@ -1148,6 +1148,7 @@ For staying informed on topics that matter to your work and your decisions, the 
     metaDescription:
       "Honest reviews of the 8 best AI newsletters in 2026 — what each does well, who it's for, and where it falls short. No affiliate links, no rankings.",
     keyword: "best AI newsletters 2026",
+    coverImage: "/blog/best-ai-newsletters-2026.png",
     publishedAt: "2026-04-18",
     readingTime: 8,
     content: `The number of AI newsletters has exploded. Search "best AI newsletter" and you'll find dozens of roundups, most of which are either outdated or thinly disguised affiliate lists. This one is neither.

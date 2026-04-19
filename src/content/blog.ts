@@ -1142,6 +1142,181 @@ For staying informed on topics that matter to your work and your decisions, the 
 
 *Brain Brief generates each briefing from current sources, with citations included throughout. You can read the briefing and follow the sources. That is the standard we hold ourselves to. Start your free trial at [brainbrief.app](https://brainbrief.app).*`,
   },
+  {
+    slug: "best-ai-newsletters-2026",
+    title: "The Best AI Newsletters in 2026: Honest Reviews of 8 Options",
+    metaDescription:
+      "Honest reviews of the 8 best AI newsletters in 2026 — what each does well, who it's for, and where it falls short. No affiliate links, no rankings.",
+    keyword: "best AI newsletters 2026",
+    publishedAt: "2026-04-18",
+    readingTime: 8,
+    content: `The number of AI newsletters has exploded. Search "best AI newsletter" and you'll find dozens of roundups, most of which are either outdated or thinly disguised affiliate lists. This one is neither.
+
+Below are honest reviews of eight genuine options — what each one does well, who it's actually for, and where it falls short. They're not ranked because the right choice depends entirely on who you are and what you're trying to accomplish.
+
+One note on methodology: all eight newsletters were evaluated based on their current formats, audience positioning, and publicly available information. None of them paid to be included.
+
+---
+
+## The Eight Newsletters
+
+### 1. The Rundown AI
+
+**rundown.ai | Daily | Free | 2M+ subscribers**
+
+The Rundown AI is the largest independent AI newsletter in existence. Founded by Rowan Cheung, it covers the day's most significant AI developments in a scannable, accessible format. Open rates reportedly exceed 50 percent, which is roughly double the industry average and suggests the audience is genuinely engaged rather than just subscribed.
+
+**What it does well:** Comprehensive daily coverage. If something significant happened in AI yesterday, The Rundown will have it. The format is tight — tools, models, and news organized in a way that's easy to scan without requiring deep technical knowledge. Good for professionals who want a broad picture of the AI landscape.
+
+**Where it falls short:** Breadth is the product, and breadth has a cost. The Rundown covers everything, which means it can't go deep on anything. If you're following AI for a specific professional purpose (legal AI tools, AI in healthcare, model evaluation methodology), the general coverage will often miss the details that matter to you. It also can't know what's relevant to you specifically.
+
+**Best for:** Non-technical professionals who want to stay current on AI as a category.
+
+---
+
+### 2. TLDR AI
+
+**tldr.tech/ai | Daily (weekdays) | Free | 1.25M+ subscribers**
+
+TLDR AI is part of the broader TLDR newsletter family, which has built a total audience of over 7 million across nine subject-specific editions. The AI edition covers research, tools, and industry news in a bullet-heavy format that prioritizes scanning over reading. Each issue takes under five minutes.
+
+**What it does well:** Efficiency. TLDR AI is optimized for people who want to move quickly through a large amount of information. The format is consistent and predictable — you always know what you're getting. It also covers a wider range of AI topics than most newsletters, including research papers and GitHub releases, not just product announcements.
+
+**Where it falls short:** The bullet format that makes it fast to scan also makes it harder to actually understand anything. Stories get two or three sentences. Context is minimal. TLDR AI is better as a radar than as a source of understanding — good for noticing what's happening, less useful for knowing what it means.
+
+**Best for:** People who need a broad daily radar on AI developments and already have enough background to interpret headlines without context.
+
+---
+
+### 3. Superhuman AI
+
+**superhuman.ai | Daily | Free | 1.5M+ subscribers**
+
+Superhuman AI, created by Zain Kahn, targets business professionals with a promise: "Get smarter about AI in 3 minutes a day." Roughly 60 percent of subscribers hold managerial positions, which gives some indication of the intended audience. It reads like an AI briefing designed for executives rather than engineers.
+
+**What it does well:** Accessibility. Superhuman doesn't assume technical knowledge, and it explains why AI developments matter for business rather than just reporting that they happened. The tone is confident and readable without being condescending.
+
+**Where it falls short:** The business-first framing means technical depth is limited. Researchers and engineers will find it too surface-level. The framing can also feel slightly promotional at times, with tool mentions that read more like endorsements than evaluations.
+
+**Best for:** Business and marketing professionals who want to stay conversant in AI without getting into the technical weeds.
+
+---
+
+### 4. The Neuron
+
+**theneuron.ai | Daily | Free | 500K+ subscribers**
+
+The Neuron was co-founded by Pete Huang and Noah Edelman, who grew it from zero to 500,000 subscribers in under two years before it was acquired by TechnologyAdvice. It's consistently recommended as the best AI newsletter for beginners, and that positioning is accurate.
+
+**What it does well:** Explanation. Where most AI newsletters report what happened, The Neuron explains what it means. Complex concepts are broken down clearly without losing accuracy. The writing is warmer and more human than competitors, which makes it easier to read regularly.
+
+**Where it falls short:** The beginner-friendly framing is a ceiling as much as a strength. Readers who want technical analysis, primary research coverage, or deep industry context will graduate past it quickly. It also reflects its acquisition context — the editorial voice has shifted somewhat since the TechnologyAdvice deal.
+
+**Best for:** People who are new to following AI closely and want to build foundational understanding.
+
+---
+
+### 5. Ben's Bites
+
+**bensbites.com | Weekdays | Free (Substack) | 120K+ subscribers**
+
+Ben's Bites is written by Ben Tossell, an exited founder turned investor who covers AI from the perspective of someone building with it and funding it. The audience is smaller than competitors but notably concentrated in the founder and investor community.
+
+**What it does well:** Perspective. Ben's Bites has a genuine editorial voice — something most AI newsletters lack. Tossell writes from real experience, which means the curation reflects actual judgment rather than algorithmic aggregation. It's especially good on early-stage AI products and tools that haven't yet reached mainstream coverage.
+
+**Where it falls short:** The founder/investor lens is a feature for some readers and a limitation for others. If you're following AI from a policy, research, or enterprise adoption perspective, Ben's Bites may not serve your needs. The Substack format also means it's less structured than competitors — more like reading someone's curated reading list than a newsletter.
+
+**Best for:** Founders, investors, and product people building in or around AI.
+
+---
+
+### 6. The Batch (DeepLearning.AI)
+
+**deeplearning.ai/the-batch | Weekly | Free | Large academic + practitioner audience**
+
+The Batch is Andrew Ng's newsletter, published through DeepLearning.AI. It is the most educational newsletter on this list — less news-focused, more oriented toward helping readers actually understand what's happening at a technical and conceptual level.
+
+**What it does well:** Depth and context. Andrew Ng writes with the perspective of someone who has been at the center of AI research and development for decades. The Batch explains the significance of developments rather than just reporting them. It covers research meaningfully, and includes Ng's own analysis and opinion, which is unusually valuable given his vantage point.
+
+**Where it falls short:** Weekly cadence means it won't keep you current on fast-moving developments. It also skews toward an audience with technical background — the explanations assume more prior knowledge than beginner-focused alternatives. If you need daily AI news, The Batch won't meet that need.
+
+**Best for:** Practitioners, ML engineers, and anyone who wants to understand AI developments, not just track them.
+
+---
+
+### 7. Import AI
+
+**jack-clark.net | Weekly | Free | Research and policy community**
+
+Import AI is written by Jack Clark, co-founder of Anthropic and one of the more influential voices in AI policy. It is the most technical and research-oriented newsletter on this list by a significant margin — each issue includes detailed analysis of new research papers, safety considerations, and the long-term implications of current AI development.
+
+**What it does well:** Primary source coverage. Import AI reads primary research and synthesizes it in a way that's rigorous without being impenetrable. It covers AI safety, policy, and governance more seriously than any other newsletter. If you want to understand what researchers and safety advocates are actually thinking, this is the closest thing to a primary window.
+
+**Where it falls short:** This is not a newsletter for casual readers. The writing assumes technical background and genuine interest in the field's deeper questions. It's slow-paced by design — Import AI is not trying to cover everything, only the things Clark thinks matter most.
+
+**Best for:** Researchers, policy professionals, and technically sophisticated readers who want serious analysis.
+
+---
+
+### 8. Alpha Signal
+
+**alphasignal.ai | Weekly | Free | ML practitioners**
+
+Alpha Signal focuses on machine learning research, GitHub repositories, and significant technical developments. It's less a news publication and more a research digest — useful for staying current on what's being built and published at the frontier of ML.
+
+**What it does well:** Technical currency. For ML engineers who need to know what research is gaining traction, which GitHub projects are worth watching, and where the field is actually moving, Alpha Signal does this more systematically than competitors. It's a practical tool for practitioners, not general readers.
+
+**Where it falls short:** Narrow audience by design. Non-technical readers will find it difficult to parse. It also skips the editorial context that helps general readers understand why something matters.
+
+**Best for:** ML engineers, researchers, and technical practitioners who want a weekly research digest.
+
+---
+
+## Comparison Table
+
+| Newsletter | Frequency | Price | Audience | Technical Level | Personalized? |
+|-----------|-----------|-------|---------|----------------|--------------|
+| The Rundown AI | Daily | Free | General professional | Low | No |
+| TLDR AI | Daily (weekdays) | Free | Tech-aware | Low-medium | No |
+| Superhuman AI | Daily | Free | Business/executive | Low | No |
+| The Neuron | Daily | Free | Beginners | Low | No |
+| Ben's Bites | Weekdays | Free | Founders/investors | Medium | No |
+| The Batch | Weekly | Free | Practitioners | Medium-high | No |
+| Import AI | Weekly | Free | Researchers/policy | High | No |
+| Alpha Signal | Weekly | Free | ML engineers | High | No |
+
+---
+
+## A Different Option: Personalized Briefings
+
+Every newsletter on this list covers AI as a topic, selected by its editorial team, delivered uniformly to all subscribers. That works well if AI as a category is what you want. It works less well if you have specific questions within AI — or if AI is one of several things you're trying to stay informed about.
+
+Brain Brief is built around a different model: you specify the topics (up to 10, anything you choose — from AI policy to climate technology to private equity), and each morning you receive a personalized briefing on exactly those topics, synthesized by AI, with sources cited throughout. There's no editorial curation, because the curation is yours. There's no one-size-fits-all coverage, because the briefing is built for you.
+
+This makes Brain Brief a different kind of tool from the newsletters above. It's not an AI newsletter. It's a personalized briefing service that can cover AI, among other things, if that's what you want. If you're already happy with The Rundown or TLDR AI for AI coverage and just need something that goes broader — or goes deeper on your specific corner of the field — that's the problem Brain Brief is designed to solve.
+
+Seven-day free trial at [brainbrief.app](https://brainbrief.app).
+
+---
+
+## How to Choose
+
+If you read one thing: **The Rundown AI** for general AI news, or **The Batch** if you want to actually understand the field.
+
+If you're a builder or investor: **Ben's Bites**.
+
+If you're a researcher or work in policy: **Import AI**.
+
+If you're an ML engineer: **Alpha Signal** or **TLDR AI**.
+
+If you're new to following AI: **The Neuron**.
+
+If you want coverage on your specific topics — AI or otherwise — **Brain Brief**.
+
+---
+
+*Last updated: April 2026. Subscriber counts are approximate and sourced from publicly available reporting.*`,
+  },
 ];
 
 /** Get all blog posts sorted by date (newest first) */

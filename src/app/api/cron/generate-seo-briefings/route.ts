@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { generateBriefing } from "@/lib/gemini";
 import { generateSubjectLine } from "@/lib/email";
 import { getAllTopics } from "@/content/topics";
+import { submitToIndexNow, getAllPublicUrls } from "@/lib/indexnow";
 
 /**
  * Cron endpoint: generates daily briefings for all SEO topic pages.
@@ -195,6 +196,19 @@ export async function GET(request: Request) {
     );
   }
 
+  // Notify IndexNow about updated topic pages (non-blocking, only if we generated content)
+  let indexNowResult = { submitted: 0 };
+  if (successCount > 0) {
+    try {
+      const urls = getAllPublicUrls();
+      const inResult = await submitToIndexNow(urls);
+      indexNowResult = { submitted: inResult.submitted ?? 0 };
+      console.log(`[seo-cron] IndexNow: ${inResult.submitted} URLs submitted, status=${inResult.status}`);
+    } catch (err) {
+      console.error("[seo-cron] IndexNow submission failed:", err);
+    }
+  }
+
   return NextResponse.json({
     success: true,
     total: allTopics.length,
@@ -202,5 +216,6 @@ export async function GET(request: Request) {
     failed: failCount,
     skipped: existingTopicNames.size,
     elapsed: `${(elapsed / 1000).toFixed(0)}s`,
+    indexNowSubmitted: indexNowResult.submitted,
   });
 }

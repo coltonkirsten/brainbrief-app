@@ -287,6 +287,7 @@ export default async function LandingPage() {
             Brain<span className="text-accent">Brief</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <Link href="/topics" className="hover:text-primary transition-colors">Topics</Link>
             <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
             <Link href="/feedback" className="hover:text-primary transition-colors">Feedback</Link>
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>

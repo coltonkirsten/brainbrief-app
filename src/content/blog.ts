@@ -1319,12 +1319,12 @@ If you want coverage on your specific topics — AI or otherwise — **Brain Bri
 *Last updated: April 2026. Subscriber counts are approximate and sourced from publicly available reporting.*`,
   },
   {
-    slug: "we-generated-1000-ai-briefings",
+    slug: "what-1000-ai-briefings-taught-us",
     title: "We Generated 1,000 AI Briefings — Here's What We Learned",
     metaDescription:
       "We generated 1,130 AI briefings for 13 users across 97 topics. Here's what we learned about personalization, retention, and the 100% grounding problem.",
     keyword: "AI-generated news briefing",
-    coverImage: "/blog/we-generated-1000-ai-briefings.png",
+    coverImage: "/blog/what-1000-ai-briefings-taught-us.png",
     publishedAt: "2026-04-20",
     readingTime: 14,
     content: `This is not a marketing piece.
@@ -1431,7 +1431,7 @@ These fixes delayed our planned launch date. In retrospect, the delay was correc
 
 ## 7. What This Means for the Future
 
-We want to be careful here. Thirteen users and 1,000 briefings is a dataset, not a proof. The following claims are hypotheses grounded in early data, not conclusions.
+We want to be careful here. Thirteen users and ~1,130 briefings is a dataset, not a proof. The following claims are hypotheses grounded in early data, not conclusions.
 
 **First:** Genuine personalization — not preference surfacing within a category, but topic selection at the level of specific interest — produces qualitatively different engagement than editorial curation. User R's 34-day consecutive streak and a 1-of-3 early conversion signal among engaged external trialers suggest this, but the sample is small.
 

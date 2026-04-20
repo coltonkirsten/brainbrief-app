@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
         destination: "/subscribe",
         permanent: false,
       },
+      {
+        // Short-lived slug that went live briefly on Apr 20, 2026 during the
+        // post #16 publish sequence — redirect to the final canonical slug
+        // to preserve IndexNow submissions and any early external references.
+        source: "/blog/we-generated-1000-ai-briefings",
+        destination: "/blog/what-1000-ai-briefings-taught-us",
+        permanent: true,
+      },
     ];
   },
   async headers() {

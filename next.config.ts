@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Keep @sparticuz/chromium and puppeteer-core as external server packages so
+  // Next.js / Turbopack does NOT bundle them. @sparticuz/chromium ships a
+  // native Chromium tarball inside its package directory (bin/) that the
+  // function needs to read at runtime; bundling relocates the JS but loses
+  // the binary tree, which fails with "input directory ... does not exist".
+  serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
   async redirects() {
     return [
       {

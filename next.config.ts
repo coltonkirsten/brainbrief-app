@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
   // function needs to read at runtime; bundling relocates the JS but loses
   // the binary tree, which fails with "input directory ... does not exist".
   serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
+  // Force Vercel's Node File Tracer to ship the brotli-compressed Chromium
+  // tarball + companion fonts/swiftshader files into the function's
+  // /var/task/node_modules tree. Without this, NFT only follows JS imports
+  // and skips the .br binary tarball that @sparticuz/chromium needs at
+  // runtime.
+  outputFileTracingIncludes: {
+    "/api/internal/render-tiktok-slide": [
+      "./node_modules/@sparticuz/chromium/bin/**/*",
+    ],
+  },
   async redirects() {
     return [
       {

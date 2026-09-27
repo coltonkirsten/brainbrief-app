@@ -290,7 +290,16 @@ export async function GET(request: Request) {
       return { userId, success: false, error: "No profile found" };
     }
 
-    const topicNames = topicInfos.map((t) => t.name);
+    // Rotate which topic leads each day. The topics query has no ORDER BY,
+    // so Postgres returns rows in physical (≈ insertion) order and the user's
+    // oldest topic led every briefing and every subject line, forever
+    // (Colton's "clawdbot" led daily Mar–Sep 2026). Sort by id for a stable
+    // base order, then rotate by UTC day so each topic takes turns up top.
+    const dayIndex = Math.floor(Date.now() / 86_400_000);
+    const stable = [...topicInfos].sort((a, b) => a.id.localeCompare(b.id));
+    const offset = stable.length ? dayIndex % stable.length : 0;
+    const orderedTopics = [...stable.slice(offset), ...stable.slice(0, offset)];
+    const topicNames = orderedTopics.map((t) => t.name);
 
     // Check trial/subscription status — skip users who can't receive briefings
     const trialInfo = getTrialInfo(profile);
